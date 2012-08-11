@@ -171,14 +171,26 @@ public class Validator extends ValidateMessage
     {
 
       String relationshipCode = nextOfKin.getRelationshipCode();
-      String[] responsibleParties = { NextOfKin.RELATIONSHIP_CARE_GIVER, NextOfKin.RELATIONSHIP_FATHER, NextOfKin.RELATIONSHIP_GARNDPARENT,
-          NextOfKin.RELATIONSHIP_MOTHER, NextOfKin.RELATIONSHIP_PARENT };
-      for (String compare : responsibleParties)
+      // Check for unexpected relationship
+      if (NextOfKin.RELATIONSHIP_CHILD.equals(relationshipCode) || NextOfKin.RELATIONSHIP_FOSTER_CHILD.equals(relationshipCode)
+          || NextOfKin.RELATIONSHIP_STEPCHILD.equals(relationshipCode))
       {
-        if (compare.equals(relationshipCode))
+        // Normally don't expect under age patient to have a child recorded on
+        // record. Often this issue happens when the relationship is being
+        // recorded backwards, from the patient to the NK1, instead of from
+        // the NK1 to the patient.
+        registerIssue(pi.NextOfKinRelationshipIsUnexpected);
+      } else
+      {
+        String[] responsibleParties = { NextOfKin.RELATIONSHIP_CARE_GIVER, NextOfKin.RELATIONSHIP_FATHER, NextOfKin.RELATIONSHIP_GARNDPARENT,
+            NextOfKin.RELATIONSHIP_MOTHER, NextOfKin.RELATIONSHIP_PARENT, NextOfKin.RELATIONSHIP_GUARDIAN };
+        for (String compare : responsibleParties)
         {
-          isResponsibleParty = true;
-          break;
+          if (compare.equals(relationshipCode))
+          {
+            isResponsibleParty = true;
+            break;
+          }
         }
       }
     }
@@ -255,16 +267,44 @@ public class Validator extends ValidateMessage
       registerIssue(pi.VaccinationActionCodeIsValuedAsDelete);
     }
 
-    if (notEmpty(vaccination.getInformationSourceCode(), pi.VaccinationInformationSourceIsMissing))
+    // If vaccination is not actually administered then this is a waiver. Need
+    // to check that now, here to see if we need to enforce a value in RXA-9 to
+    // indicate that the vaccination is historical or administered.
+    // By default we assume that the vaccination was completed.
+    handleCodeReceived(vaccination.getCompletion(), PotentialIssues.Field.VACCINATION_COMPLETION_STATUS);
+    if (vaccination.isCompletionCompleted())
     {
-      handleCodeReceived(vaccination.getInformationSource(), PotentialIssues.Field.VACCINATION_INFORMATION_SOURCE);
-      vaccination.setAdministered(Vaccination.INFO_SOURCE_ADMIN.equals(vaccination.getInformationSourceCode()));
-      if (vaccination.isAdministered())
+      registerIssue(pi.VaccinationCompletionStatusIsValuedAsCompleted);
+    } else if (vaccination.isCompletionRefused())
+    {
+      registerIssue(pi.VaccinationCompletionStatusIsValuedAsRefused);
+    } else if (vaccination.isCompletionNotAdministered())
+    {
+      registerIssue(pi.VaccinationCompletionStatusIsValuedAsNotAdministered);
+    } else if (vaccination.isCompletionPartiallyAdministered())
+    {
+      registerIssue(pi.VaccinationCompletionStatusIsValuedAsPartiallyAdministered);
+    }
+
+    boolean vaccinationAdministeredOrHistorical = false;
+    if (vaccination.getCompletion().isEmpty() || vaccination.isCompletionCompletedOrPartiallyAdministered())
+    {
+      vaccinationAdministeredOrHistorical = true;
+    }
+
+    if (vaccinationAdministeredOrHistorical)
+    {
+      if (notEmpty(vaccination.getInformationSourceCode(), pi.VaccinationInformationSourceIsMissing))
       {
-        registerIssue(pi.VaccinationInformationSourceIsValuedAsAdministered);
-      } else if (Vaccination.INFO_SOURCE_HIST.equals(vaccination.getInformationSourceCode()))
-      {
-        registerIssue(pi.VaccinationInformationSourceIsValuedAsHistorical);
+        handleCodeReceived(vaccination.getInformationSource(), PotentialIssues.Field.VACCINATION_INFORMATION_SOURCE);
+        vaccination.setAdministered(Vaccination.INFO_SOURCE_ADMIN.equals(vaccination.getInformationSourceCode()));
+        if (vaccination.isAdministered())
+        {
+          registerIssue(pi.VaccinationInformationSourceIsValuedAsAdministered);
+        } else if (Vaccination.INFO_SOURCE_HIST.equals(vaccination.getInformationSourceCode()))
+        {
+          registerIssue(pi.VaccinationInformationSourceIsValuedAsHistorical);
+        }
       }
     }
 
@@ -562,20 +602,7 @@ public class Validator extends ValidateMessage
 
     // TODO VaccinationBodyRouteIsInvalidForVaccineIndicated
     // TODO VaccinationBodySiteIsInvalidForVaccineIndicated
-    handleCodeReceived(vaccination.getCompletion(), PotentialIssues.Field.VACCINATION_COMPLETION_STATUS);
-    if (vaccination.isCompletionCompleted())
-    {
-      registerIssue(pi.VaccinationCompletionStatusIsValuedAsCompleted);
-    } else if (vaccination.isCompletionRefused())
-    {
-      registerIssue(pi.VaccinationCompletionStatusIsValuedAsRefused);
-    } else if (vaccination.isCompletionNotAdministered())
-    {
-      registerIssue(pi.VaccinationCompletionStatusIsValuedAsNotAdministered);
-    } else if (vaccination.isCompletionPartiallyAdministered())
-    {
-      registerIssue(pi.VaccinationCompletionStatusIsValuedAsPartiallyAdministered);
-    }
+
     handleCodeReceived(vaccination.getConfidentiality(), PotentialIssues.Field.VACCINATION_CONFIDENTIALITY_CODE);
 
     if (vaccination.getConfidentialityCode().equals("R") || vaccination.getConfidentialityCode().equals("V"))
@@ -780,7 +807,7 @@ public class Validator extends ValidateMessage
     if (notEmpty(header.getMessageDate(), pi.Hl7MshMessageDateIsMissing))
     {
       // Give the calendar a 12 hour lee-way. This accomodates systems that use
-      // a clock that is out of time. 
+      // a clock that is out of time.
       Calendar calendar = Calendar.getInstance();
       calendar.setTime(header.getMessageDate());
       calendar.add(Calendar.HOUR, -12);
@@ -1190,8 +1217,74 @@ public class Validator extends ValidateMessage
       {
         handleCodeReceived(phone.getTelEquip(), piPhoneTelEquip);
       }
-      // TODO PatientPhoneIsInvalid
+      if (!isValidPhone(phone))
+      {
+        registerIssue(pi.getIssue(piPhone, PotentialIssue.ISSUE_TYPE_IS_INVALID));
+      }
     }
+  }
+
+  protected static boolean isValidPhone(PhoneNumber phone)
+  {
+    if (phone.getCountryCode().equals("") || phone.getCountryCode().equals("1") || phone.getCountryCode().equals("+1"))
+    {
+      // Validating all phone numbers using the North American Numbering Plan
+      // (NANP)
+      if (!phone.getAreaCode().equals(""))
+      {
+        if (!validPhone3Digit(phone.getAreaCode()))
+        {
+          return false;
+        }
+      }
+      if (!phone.getLocalNumber().equals(""))
+      {
+        String num = phone.getLocalNumber();
+        StringBuilder numOnly = new StringBuilder();
+        for (int i = 0; i < num.length(); i++)
+        {
+          if (num.charAt(i) >= '0' && num.charAt(i) <= '9')
+          {
+            numOnly.append(num.charAt(i));
+          }
+        }
+        num = numOnly.toString();
+        if (num.length() != 7)
+        {
+          return false;
+        }
+        if (!validPhone3Digit(num.substring(0, 3)))
+        {
+          return false;
+        }
+        if (num.substring(1, 3).equals("11"))
+        {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+
+  private static boolean validPhone3Digit(String s)
+  {
+    if (s == null || s.length() != 3)
+    {
+      return false;
+    }
+    if (s.charAt(0) < '2' || s.charAt(0) > '9')
+    {
+      return false;
+    }
+    if (s.charAt(1) < '0' || s.charAt(1) > '9')
+    {
+      return false;
+    }
+    if (s.charAt(2) < '0' || s.charAt(2) > '9')
+    {
+      return false;
+    }
+    return true;
   }
 
   private boolean validateAddress(Address address)

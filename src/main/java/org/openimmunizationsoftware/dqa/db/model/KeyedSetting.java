@@ -43,6 +43,8 @@ public class KeyedSetting implements Serializable
   public static final String WEEKLY_EXPORT_START_TIME = "weekly.export.start_time";
   public static final String UPLOAD_ENABLED = "upload.enabled";
   public static final String UPLOAD_DIR = "upload.dir";
+  public static final String DQA_REPORT_READY_FOR_PRODUCTION_ENABLED = "dqa_report.ready_for_production.enabled";
+  public static final String DQA_REPORT_READY_FOR_PRODUCTION_TRIGGER_LEVEL = "dqa_report.ready_for_production.trigger_level";
 
   
   

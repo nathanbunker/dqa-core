@@ -19,11 +19,12 @@ import org.openimmunizationsoftware.dqa.parse.VaccinationUpdateParserHL7;
 import org.openimmunizationsoftware.dqa.quality.QualityCollector;
 import org.openimmunizationsoftware.dqa.validate.Validator;
 
-public class MessageProcessor {
+public class MessageProcessor
+{
 
-// set for webservice
-// results.setBatchId(qualityCollector.getMessageBatch().getBatchId());
-  
+  // set for webservice
+  // results.setBatchId(qualityCollector.getMessageBatch().getBatchId());
+
   public static String processDebugOutput(Session session, SubmitterProfile profile, QualityCollector qualityCollector)
   {
     StringWriter stringWriter = new StringWriter();
@@ -94,21 +95,47 @@ public class MessageProcessor {
     return stringWriter.toString();
   }
 
-
-  public static MessageReceived processMessage( boolean debugFlag, VaccinationUpdateParserHL7 parser, String sb, SubmitterProfile profile, Session session, QualityCollector qualityCollector) 
+  /**
+   * @deprecated
+   * @param debugFlag
+   * @param parser
+   * @param sb
+   * @param profile
+   * @param session
+   * @param qualityCollector
+   * @return
+   */
+  public static MessageReceived processMessage(boolean debugFlag, VaccinationUpdateParserHL7 parser, String sb, SubmitterProfile profile,
+      Session session, QualityCollector qualityCollector)
   {
+    MessageProcessRequest request = new MessageProcessRequest();
+    request.setDebugFlag(debugFlag);
+    request.setMessageText(sb);
+    request.setParser(parser);
+    request.setProfile(profile);
+    request.setSession(session);
+    request.setQualityCollector(qualityCollector);
+
+    return processMessage(request).getMessageReceived();
+  }
+
+  public static MessageProcessResponse processMessage(MessageProcessRequest request)
+  {
+    MessageProcessResponse response = new MessageProcessResponse();
     MessageReceived messageReceived = new MessageReceived();
-    messageReceived.setDebug(debugFlag);
-   
-    Transaction tx = session.beginTransaction();
+    messageReceived.setMessageKey(request.getMessageKey());
+    response.setMessageReceived(messageReceived);
+    messageReceived.setDebug(request.isDebugFlag());
+
+    Transaction tx = request.getSession().beginTransaction();
     try
     {
 
-      profile.initPotentialIssueStatus(session);
-      messageReceived.setProfile(profile);
-      messageReceived.setRequestText(sb);
-      parser.createVaccinationUpdateMessage(messageReceived);
-      if (profile.isProfileStatusTest()
+      request.getProfile().initPotentialIssueStatus(request.getSession());
+      messageReceived.setProfile(request.getProfile());
+      messageReceived.setRequestText(request.getMessageText());
+      request.getParser().createVaccinationUpdateMessage(messageReceived);
+      if (request.getProfile().isProfileStatusTest()
           && messageReceived.getMessageHeader().getProcessingStatusCode()
               .equals(org.openimmunizationsoftware.dqa.db.model.MessageHeader.PROCESSING_ID_DEBUGGING))
       {
@@ -116,15 +143,15 @@ public class MessageProcessor {
       }
       if (!messageReceived.hasErrors())
       {
-        Validator validator = new Validator(profile, session);
+        Validator validator = new Validator(request.getProfile(), request.getSession());
         validator.validateVaccinationUpdateMessage(messageReceived, null);
       }
-      qualityCollector.registerProcessedMessage(messageReceived);
+      request.getQualityCollector().registerProcessedMessage(messageReceived);
 
-      String ackMessage = parser.makeAckMessage(messageReceived);
+      String ackMessage = request.getParser().makeAckMessage(messageReceived);
       messageReceived.setResponseText(ackMessage);
       messageReceived.setIssueAction(IssueAction.ACCEPT);
-      MessageReceivedManager.saveMessageReceived(profile, messageReceived, session);
+      MessageReceivedManager.saveMessageReceived(request.getProfile(), messageReceived, request.getSession());
 
       tx.commit();
       messageReceived.setSuccessful(true);
@@ -138,7 +165,7 @@ public class MessageProcessor {
       messageReceived.setSuccessful(false);
       messageReceived.setException(exception);
     }
-    return messageReceived;
+    return response;
   }
 
   private static final String PAD = "                                                                                                          ";
@@ -156,7 +183,7 @@ public class MessageProcessor {
     s += PAD_SLASH;
     return s.substring(0, size - 1) + "-";
   }
-  
+
   private static void processMessageBatch(PrintWriter out, QualityCollector qualityCollector)
   {
     MessageBatch mb = qualityCollector.getMessageBatch();
