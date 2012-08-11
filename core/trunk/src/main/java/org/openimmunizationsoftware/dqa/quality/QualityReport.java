@@ -18,6 +18,7 @@ import org.openimmunizationsoftware.dqa.db.model.BatchIssues;
 import org.openimmunizationsoftware.dqa.db.model.BatchReport;
 import org.openimmunizationsoftware.dqa.db.model.CodeReceived;
 import org.openimmunizationsoftware.dqa.db.model.CodeTable;
+import org.openimmunizationsoftware.dqa.db.model.KeyedSetting;
 import org.openimmunizationsoftware.dqa.db.model.MessageHeader;
 import org.openimmunizationsoftware.dqa.db.model.IssueAction;
 import org.openimmunizationsoftware.dqa.db.model.MessageBatch;
@@ -25,6 +26,7 @@ import org.openimmunizationsoftware.dqa.db.model.PotentialIssue;
 import org.openimmunizationsoftware.dqa.db.model.SubmitterProfile;
 import org.openimmunizationsoftware.dqa.db.model.VaccineCvx;
 import org.openimmunizationsoftware.dqa.db.model.VaccineGroup;
+import org.openimmunizationsoftware.dqa.manager.KeyedSettingManager;
 import org.openimmunizationsoftware.dqa.manager.VaccineGroupManager;
 import org.openimmunizationsoftware.dqa.quality.model.ModelForm;
 import org.openimmunizationsoftware.dqa.quality.model.ModelSection;
@@ -126,6 +128,7 @@ public class QualityReport
   private String filename = "";
   private PrintWriter out = null;
   private ModelForm modelForm = null;
+  private KeyedSettingManager ksm = null;
 
   private int messageCount = 0;
   private int nextOfKinCount = 0;
@@ -139,6 +142,7 @@ public class QualityReport
     this.profile = profile;
     this.out = out;
     this.modelForm = qualityCollector.getModelForm();
+    this.ksm = KeyedSettingManager.getKeyedSettingManager();
   }
 
   public void setFilename(String filename)
@@ -526,15 +530,26 @@ public class QualityReport
 
     QualityScoring scoring = qualityCollector.getCompletenessScoring();
 
-    if (scoring.getScoringSet(QualityScoring.PATIENT_REQUIRED).getScore() >= 0.99
-        && scoring.getScoringSet(QualityScoring.VACCINATION_REQUIRED).getScore() >= 0.99)
+    if (ksm.getKeyedValueBoolean(KeyedSetting.DQA_REPORT_READY_FOR_PRODUCTION_ENABLED, true))
     {
-      out.println("    <h3>Ready for Production</h3>");
-      out.println("    <p>All required fields are present, interface is ready for production.</p>");
-    } else
-    {
-      out.println("    <h3>Not Ready for Production</h3>");
-      out.println("    <p>Required fields are not all present, interface is not ready for production.</p>");
+      int triggerLevel = ksm.getKeyedValueInt(KeyedSetting.DQA_REPORT_READY_FOR_PRODUCTION_TRIGGER_LEVEL, 50);
+      if (report.getMessageCount() > triggerLevel)
+      {
+        if (scoring.getScoringSet(QualityScoring.PATIENT_REQUIRED).getScore() >= 0.99
+            && scoring.getScoringSet(QualityScoring.VACCINATION_REQUIRED).getScore() >= 0.99)
+        {
+          out.println("    <h3>Ready for Production</h3>");
+          out.println("    <p>All required fields are present, interface is ready for production.</p>");
+        } else
+        {
+          out.println("    <h3>Not Ready for Production</h3>");
+          out.println("    <p>Required fields are not all present, interface is not ready for production.</p>");
+        }
+      } else
+      {
+        out.println("    <p>At least " + triggerLevel + " messages must be submitted to enable production readiness check.</p>");
+      }
+
     }
     out.println("    <h2>Scoring Summary</h2>");
     printScoringSummary("DQA", report.getOverallScore());

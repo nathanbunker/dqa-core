@@ -12,6 +12,22 @@ public class PhoneNumber
   private String areaCode = "";
   private String localNumber = "";
   private String extension = "";
+  
+  public PhoneNumber()
+  {
+    // default
+  }
+  
+  public PhoneNumber(String phoneNumberString)
+  {
+    setNumber(phoneNumberString);
+  }
+  
+  public PhoneNumber(String areaCode, String localNumber)
+  {
+    setAreaCode(areaCode);
+    setLocalNumber(localNumber);
+  }
 
   public String getNumber()
   {

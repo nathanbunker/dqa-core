@@ -13,6 +13,7 @@
     <property name="responseText" column="response_text" type="string"/>
     <many-to-one name="issueAction" column="action_code" class="IssueAction"/>
     <many-to-one name="submitStatus" column="submit_code" class="SubmitStatus"/>
+    <property name="messageKey" column="message_key" type="string"/>
   </class>
 </hibernate-mapping>
 

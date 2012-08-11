@@ -19,6 +19,7 @@ import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.openimmunizationsoftware.dqa.InitializationException;
+import org.openimmunizationsoftware.dqa.db.model.IssueAction;
 import org.openimmunizationsoftware.dqa.db.model.PotentialIssue;
 import org.openimmunizationsoftware.dqa.db.model.PotentialIssueStatus;
 
@@ -159,6 +160,7 @@ public class PotentialIssues implements Reload
   public PotentialIssue NextOfKinRelationshipIsInvalid = null;
   public PotentialIssue NextOfKinRelationshipIsMissing = null;
   public PotentialIssue NextOfKinRelationshipIsNotResponsibleParty = null;
+  public PotentialIssue NextOfKinRelationshipIsUnexpected = null;
   public PotentialIssue NextOfKinRelationshipIsUnrecognized = null;
   public PotentialIssue NextOfKinSsnIsMissing = null;
   public PotentialIssue ObservationValueTypeIsDeprecated = null;
@@ -991,6 +993,7 @@ public class PotentialIssues implements Reload
     NextOfKinRelationshipIsInvalid = getPotentialIssue(session, "Next-of-kin", "relationship", "is invalid", "");
     NextOfKinRelationshipIsMissing = getPotentialIssue(session, "Next-of-kin", "relationship", "is missing", "");
     NextOfKinRelationshipIsNotResponsibleParty = getPotentialIssue(session, "Next-of-kin", "relationship", "is not responsible party", "");
+    NextOfKinRelationshipIsUnexpected = getPotentialIssue(session, "Next-of-kin", "relationship", "is unexpected", "");
     NextOfKinRelationshipIsUnrecognized = getPotentialIssue(session, "Next-of-kin", "relationship", "is unrecognized", "");
     NextOfKinSsnIsMissing = getPotentialIssue(session, "Next-of-kin", "SSN", "is missing", "");
     ObservationValueTypeIsDeprecated = getPotentialIssue(session, "Observation", "value type", "is deprecated", "");
@@ -1486,6 +1489,7 @@ public class PotentialIssues implements Reload
     addToFieldIssueMap(Field.NEXT_OF_KIN_RELATIONSHIP, NextOfKinRelationshipIsInvalid);
     addToFieldIssueMap(Field.NEXT_OF_KIN_RELATIONSHIP, NextOfKinRelationshipIsMissing);
     addToFieldIssueMap(Field.NEXT_OF_KIN_RELATIONSHIP, NextOfKinRelationshipIsNotResponsibleParty);
+    addToFieldIssueMap(Field.NEXT_OF_KIN_RELATIONSHIP, NextOfKinRelationshipIsUnexpected);
     addToFieldIssueMap(Field.NEXT_OF_KIN_RELATIONSHIP, NextOfKinRelationshipIsUnrecognized);
     addToFieldIssueMap(Field.NEXT_OF_KIN_SSN, NextOfKinSsnIsMissing);
     addToFieldIssueMap(Field.OBSERVATION_VALUE_TYPE, ObservationValueTypeIsDeprecated);
@@ -1874,11 +1878,12 @@ public class PotentialIssues implements Reload
     return pi;
   }
 
-  public String getDocumentation(Field field, Map<PotentialIssue, PotentialIssueStatus> potentialIssueStatusMap)
+  public String getDocumentation(Field field, Map<PotentialIssue, PotentialIssueStatus> potentialIssueStatusMap, boolean errorsOnly)
   {
     if (fieldDocumentation.containsKey(field))
     {
       StringBuilder sb = new StringBuilder(fieldDocumentation.get(field));
+      boolean foundError = false;
       if (potentialIssueStatusMap != null)
       {
         HashMap<String, PotentialIssue> potentialIssueMap = fieldIssueMaps.get(field);
@@ -1890,36 +1895,43 @@ public class PotentialIssues implements Reload
         {
           PotentialIssue issue = potentialIssueMap.get(potentialIssueType);
           PotentialIssueStatus potentialIssueStatus = potentialIssueStatusMap.get(issue);
-          sb.append("  <tr>");
-          sb.append("    <td>" + issue.getDisplayText() + "</td>");
-          if (potentialIssueStatus != null)
+          if (!errorsOnly || (potentialIssueStatus != null && potentialIssueStatus.getAction().equals(IssueAction.ERROR)))
           {
-            sb.append("    <td>" + potentialIssueStatus.getAction().getActionLabel() + "</td>");
-          } else
-          {
-            sb.append("    <td>-</td>");
-          }
-          String description = documentationTextProperties.getProperty(issue.getDisplayText());
-          if (description == null)
-          {
-
-            if (!issue.getFieldValue().equals(""))
+            foundError = true;
+            sb.append("  <tr>");
+            sb.append("    <td>" + issue.getDisplayText() + "</td>");
+            if (potentialIssueStatus != null)
             {
-              description = documentationTextProperties.getProperty(issue.getIssueType() + " " + issue.getFieldValue());
+              sb.append("    <td>" + potentialIssueStatus.getAction().getActionLabel() + "</td>");
             } else
             {
-              description = documentationTextProperties.getProperty(issue.getIssueType());
+              sb.append("    <td>-</td>");
             }
+            String description = documentationTextProperties.getProperty(issue.getDisplayText());
             if (description == null)
             {
-              // TODO remove
-              description = "#### NOT FOUND #### USE " + issue.getIssueType() + "=";
+
+              if (!issue.getFieldValue().equals(""))
+              {
+                description = documentationTextProperties.getProperty(issue.getIssueType() + " " + issue.getFieldValue());
+              } else
+              {
+                description = documentationTextProperties.getProperty(issue.getIssueType());
+              }
+              if (description == null)
+              {
+                description = "#### NOT FOUND #### USE " + issue.getIssueType() + "=";
+              }
             }
+            sb.append("    <td>" + description + "</td>");
+            sb.append("  </tr>");
           }
-          sb.append("    <td>" + description + "</td>");
-          sb.append("  </tr>");
         }
         sb.append("</table>");
+      }
+      if (errorsOnly && !foundError)
+      {
+        return "";
       }
       return sb.toString();
     }

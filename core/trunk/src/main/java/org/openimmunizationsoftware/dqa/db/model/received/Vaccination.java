@@ -14,9 +14,9 @@ import org.openimmunizationsoftware.dqa.db.model.received.types.OrganizationName
 
 public class Vaccination implements Skippable, Serializable
 {
-  
+
   private static final long serialVersionUID = 1l;
-  
+
   public static final String ACTION_CODE_ADD = "A";
   public static final String ACTION_CODE_DELETE = "D";
   public static final String ACTION_CODE_UPDATE = "U";
@@ -395,6 +395,12 @@ public class Vaccination implements Skippable, Serializable
   public boolean isCompletionPartiallyAdministered()
   {
     return completion.getCode() != null && completion.getCode().equals(COMPLETION_PARTIALLY_ADMINISTERED);
+  }
+
+  public boolean isCompletionCompletedOrPartiallyAdministered()
+  {
+    return completion.getCode() != null
+        && (completion.getCode().equals(COMPLETION_COMPLETED) || completion.getCode().equals(COMPLETION_PARTIALLY_ADMINISTERED));
   }
 
   public boolean isCompletionRefused()

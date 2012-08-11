@@ -32,6 +32,17 @@ public class MessageReceived implements Serializable
   private boolean debugOn = false;
   private boolean successfulCompletion = true;
   private Exception exception = null;
+  private String messageKey = "";
+
+  public String getMessageKey()
+  {
+    return messageKey;
+  }
+
+  public void setMessageKey(String messageKey)
+  {
+    this.messageKey = messageKey;
+  }
 
   public void setMessageHeader(MessageHeader header)
   {
