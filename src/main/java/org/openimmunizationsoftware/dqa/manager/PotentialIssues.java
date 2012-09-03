@@ -1890,7 +1890,7 @@ public class PotentialIssues implements Reload
         List<String> potentialIssueTypeList = new ArrayList<String>(potentialIssueMap.keySet());
         Collections.sort(potentialIssueTypeList);
         sb.append("<table>");
-        sb.append("  <tr><th>Issue</th><th>Status</th><th>Description</th></tr>");
+        sb.append("  <tr><th>Issue</th><th>HL7 Ref</th><th>Status</th><th>Description</th></tr>");
         for (String potentialIssueType : potentialIssueTypeList)
         {
           PotentialIssue issue = potentialIssueMap.get(potentialIssueType);
@@ -1900,6 +1900,14 @@ public class PotentialIssues implements Reload
             foundError = true;
             sb.append("  <tr>");
             sb.append("    <td>" + issue.getDisplayText() + "</td>");
+            String hl7Reference = issue.getHl7Reference();
+            if (hl7Reference == null || hl7Reference.equals(""))
+            {
+              sb.append("    <td>-</td>");
+            } else
+            {
+              sb.append("    <td>" + hl7Reference + "</td>");
+            }
             if (potentialIssueStatus != null)
             {
               sb.append("    <td>" + potentialIssueStatus.getAction().getActionLabel() + "</td>");
