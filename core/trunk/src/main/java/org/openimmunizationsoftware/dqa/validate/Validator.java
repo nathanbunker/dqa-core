@@ -431,10 +431,10 @@ public class Validator extends ValidateMessage
       }
       if (vaccination.getAdminDate() != null)
       {
-        if (vaccineCvx.getValidStartDate().after(vaccination.getAdminDate()) || vaccination.getAdminDate().after(vaccineCvx.getValidEndDate()))
+        if (vaccineCvx.getValidStartDate().after(vaccination.getAdminDate()) || trunc(vaccination.getAdminDate()).after(vaccineCvx.getValidEndDate()))
         {
           registerIssue(pi.VaccinationAdminCodeIsInvalid, vaccineCr);
-        } else if (vaccineCvx.getUseStartDate().after(vaccination.getAdminDate()) || vaccination.getAdminDate().after(vaccineCvx.getUseEndDate()))
+        } else if (vaccineCvx.getUseStartDate().after(vaccination.getAdminDate()) || trunc(vaccination.getAdminDate()).after(vaccineCvx.getUseEndDate()))
         {
           registerIssue(pi.VaccinationAdminCodeIsDeprecated, vaccineCr);
         }
@@ -520,33 +520,34 @@ public class Validator extends ValidateMessage
       {
         if (vaccination.getExpirationDate() != null)
         {
-          if (vaccination.getAdminDate().after(vaccination.getExpirationDate()))
+          if (trunc(vaccination.getAdminDate()).after(vaccination.getExpirationDate()))
           {
             registerIssue(pi.VaccinationAdminDateIsAfterLotExpirationDate);
           }
         }
       }
-      if (vaccination.getAdminDate().after(message.getReceivedDate()))
+      if (trunc(vaccination.getAdminDate()).after(message.getReceivedDate()))
       {
         registerIssue(pi.VaccinationAdminDateIsAfterMessageSubmitted);
       }
       if (patient.getDeathDate() != null)
       {
-        if (vaccination.getAdminDate().after(patient.getDeathDate()))
+        if (trunc(vaccination.getAdminDate()).after(patient.getDeathDate()))
         {
           registerIssue(pi.VaccinationAdminDateIsAfterPatientDeathDate);
         }
       }
       if (patient.getBirthDate() != null)
       {
-        if (vaccination.getAdminDate().before(patient.getBirthDate()))
+        if (vaccination.getAdminDate().before(trunc(patient.getBirthDate())))
         {
           registerIssue(pi.VaccinationAdminDateIsBeforeBirth);
         }
       }
       if (vaccination.getSystemEntryDate() != null)
       {
-        if (vaccination.getAdminDate().after(vaccination.getSystemEntryDate()))
+        
+        if (trunc(vaccination.getAdminDate()).after(vaccination.getSystemEntryDate()))
         {
           registerIssue(pi.VaccinationAdminDateIsAfterSystemEntryDate);
         }
@@ -653,9 +654,9 @@ public class Validator extends ValidateMessage
     }
     handleCodeReceived(vaccination.getRefusal(), PotentialIssues.Field.VACCINATION_REFUSAL_REASON, vaccination.isCompletionRefused());
 
-    if (notEmpty(vaccination.getSystemEntryDate(), pi.VaccinationSystemEntryTimeIsMissing))
+    if (notEmpty(vaccination.getSystemEntryDate(), pi.VaccinationSystemEntryTimeIsMissing) && message.getReceivedDate() != null)
     {
-      if (now.before(vaccination.getSystemEntryDate()))
+      if (message.getReceivedDate().before(trunc(vaccination.getSystemEntryDate())))
       {
         registerIssue(pi.VaccinationSystemEntryTimeIsInFuture);
       }
@@ -897,13 +898,13 @@ public class Validator extends ValidateMessage
       registerIssue(pi.PatientBirthDateIsMissing);
     } else
     {
-      if (message.getReceivedDate().before(patient.getBirthDate()))
+      if (message.getReceivedDate().before(trunc(patient.getBirthDate())))
       {
         registerIssue(pi.PatientBirthDateIsInFuture);
       }
       if (message.getMessageHeader().getMessageDate() != null)
       {
-        if (message.getMessageHeader().getMessageDate().before(patient.getBirthDate()))
+        if (message.getMessageHeader().getMessageDate().before(trunc(patient.getBirthDate())))
         {
           registerIssue(pi.PatientBirthDateIsAfterSubmission);
         }
@@ -1104,11 +1105,11 @@ public class Validator extends ValidateMessage
     handleCodeReceived(patient.getFinancialEligibility(), PotentialIssues.Field.PATIENT_VFC_STATUS);
     if (patient.getFinancialEligibilityDate() != null)
     {
-      if (patient.getBirthDate() != null && patient.getFinancialEligibilityDate().before(patient.getBirthDate()))
+      if (patient.getBirthDate() != null && patient.getFinancialEligibilityDate().before(trunc(patient.getBirthDate())))
       {
         registerIssue(pi.PatientVfcEffectiveDateIsBeforeBirth);
       }
-      if (message.getReceivedDate().before(patient.getFinancialEligibilityDate()))
+      if (message.getReceivedDate().before(trunc(patient.getFinancialEligibilityDate())))
       {
         registerIssue(pi.PatientVfcEffectiveDateIsInFuture);
       }
@@ -1124,11 +1125,11 @@ public class Validator extends ValidateMessage
         {
           if (notEmpty(patient.getDeathDate(), pi.PatientDeathDateIsMissing))
           {
-            if (patient.getBirthDate() != null && patient.getDeathDate().before(patient.getBirthDate()))
+            if (patient.getBirthDate() != null && patient.getDeathDate().before(trunc(patient.getBirthDate())))
             {
               registerIssue(pi.PatientDeathDateIsBeforeBirth);
             }
-            if (message.getReceivedDate().before(patient.getDeathDate()))
+            if (message.getReceivedDate().before(trunc(patient.getDeathDate())))
             {
               registerIssue(pi.PatientDeathDateIsInFuture);
             }
@@ -1688,5 +1689,16 @@ public class Validator extends ValidateMessage
       }
     }
     return true;
+  }
+  
+  protected static Date trunc(Date d)
+  {
+    Calendar cal = Calendar.getInstance();
+    cal.setTime(d);
+    cal.set(Calendar.HOUR_OF_DAY, 0);
+    cal.set(Calendar.MINUTE, 0);
+    cal.set(Calendar.SECOND, 0);
+    cal.set(Calendar.MILLISECOND, 0);
+    return cal.getTime();
   }
 }
