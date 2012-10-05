@@ -112,7 +112,7 @@ public class VaccineCvx implements Serializable
   @Override
   public int hashCode()
   {
-    return cvxCode.hashCode();
+    return getCvxCode().hashCode();
   }
   
   public int getCvxId()

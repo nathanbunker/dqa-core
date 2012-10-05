@@ -18,6 +18,7 @@ import org.openimmunizationsoftware.dqa.db.model.SubmitterProfile;
 import org.openimmunizationsoftware.dqa.db.model.VaccineCpt;
 import org.openimmunizationsoftware.dqa.db.model.VaccineCvx;
 import org.openimmunizationsoftware.dqa.db.model.VaccineMvx;
+import org.openimmunizationsoftware.dqa.db.model.VaccineProduct;
 
 public class CodesReceived
 {
@@ -157,6 +158,11 @@ public class CodesReceived
 
   private Map<CodeTable, Map<String, CodeReceived>> codeTableMaps = new HashMap<CodeTable, Map<String, CodeReceived>>();
   private CodesReceived parent = null;
+  
+  public CodesReceived getParent()
+  {
+    return parent;
+  }
 
   private CodesReceived(boolean parent) {
     if (parent)
@@ -182,6 +188,10 @@ public class CodesReceived
         {
           query = session.createQuery("from VaccineMvx");
           addToCodeTableMapsMvx(codeTable, query.list(), (SubmitterProfile) session.get(SubmitterProfile.class, 1));
+        } else if (codeTable.getTableId() == CodeTable.Type.VACCINE_PRODUCT.getTableId())
+        {
+          query = session.createQuery("from VaccineProduct");
+          addToCodeTableMapsVaccineProduct(codeTable, query.list(), (SubmitterProfile) session.get(SubmitterProfile.class, 1));
         } else
         {
           String sql = "from CodeMaster where table = ?";
@@ -249,6 +259,23 @@ public class CodesReceived
       codeReceived.setCodeValue(vaccineCvx.getCvxCode());
       codeReceived.setProfile(profile);
       codeReceived.setTable(codeTable);
+      codeReceivedMap.put(codeReceived.getReceivedValue(), codeReceived);
+    }
+    codeTableMaps.put(codeTable, codeReceivedMap);
+  }
+  
+  protected void addToCodeTableMapsVaccineProduct(CodeTable codeTable, List<VaccineProduct> vaccineProductList, SubmitterProfile profile)
+  {
+    Map<String, CodeReceived> codeReceivedMap = new HashMap<String, CodeReceived>();
+    for (VaccineProduct vaccineProduct : vaccineProductList)
+    {
+      CodeReceived codeReceived = new CodeReceived();
+      codeReceived.setReceivedValue(vaccineProduct.getProductCode());
+      codeReceived.setCodeStatus(CodeStatus.VALID);
+      codeReceived.setCodeValue(vaccineProduct.getProductCode());
+      codeReceived.setProfile(profile);
+      codeReceived.setTable(codeTable);
+      codeReceived.setCodeLabel(vaccineProduct.getProductName());
       codeReceivedMap.put(codeReceived.getReceivedValue(), codeReceived);
     }
     codeTableMaps.put(codeTable, codeReceivedMap);

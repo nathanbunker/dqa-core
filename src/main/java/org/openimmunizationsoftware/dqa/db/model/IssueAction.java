@@ -65,7 +65,7 @@ public class IssueAction implements Serializable
   @Override
   public String toString()
   {
-    return actionLabel;
+    return this.getActionLabel();
   }
   
   @Override

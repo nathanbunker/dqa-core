@@ -117,9 +117,9 @@ public class CodeReceived implements Serializable
     if (obj instanceof CodeReceived)
     {
       CodeReceived compareTo = (CodeReceived) obj;
-      if (profile != null && table != null & receivedValue != null)
+      if (getProfile() != null && getTable() != null & getReceivedValue() != null)
       {
-        return profile.equals(compareTo.getProfile()) && table.equals(compareTo.getTable()) && receivedValue.equals(compareTo.getReceivedValue());        
+        return getProfile().equals(compareTo.getProfile()) && getTable().equals(compareTo.getTable()) && getReceivedValue().equals(compareTo.getReceivedValue());        
       }
     }
     return super.equals(obj);
@@ -128,9 +128,9 @@ public class CodeReceived implements Serializable
   @Override
   public int hashCode()
   {
-    if (profile != null && table != null & receivedValue != null)
+    if (getProfile() != null && getTable() != null & getReceivedValue() != null)
     {
-      return (profile.getProfileId() + "." + table.getTableId() + "." + receivedValue).hashCode();
+      return (getProfile().getProfileId() + "." + getTable().getTableId() + "." + getReceivedValue()).hashCode();
     }
     return super.hashCode();
   }

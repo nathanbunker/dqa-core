@@ -342,6 +342,18 @@ public class Validator extends ValidateMessage
       {
         vaccineCpt = vaccineCpts.get(0);
       }
+      if (vaccineCpt != null && vaccination.getAdminDate() != null)
+      {
+        if (vaccineCpt.getValidStartDate().after(vaccination.getAdminDate())
+            || trunc(vaccination.getAdminDate()).after(vaccineCpt.getValidEndDate()))
+        {
+          registerIssue(pi.VaccinationCptCodeIsInvalidForDateAdministered, vaccination.getAdminCpt().getCodeReceived());
+        } else if (vaccineCpt.getUseStartDate().after(vaccination.getAdminDate())
+            || trunc(vaccination.getAdminDate()).after(vaccineCpt.getUseEndDate()))
+        {
+          registerIssue(pi.VaccinationCptCodeIsUnexpectedForDateAdministered, vaccination.getAdminCpt().getCodeReceived());
+        }
+      }
     }
     if (cvxCode != null && !cvxCode.equals(""))
     {
@@ -352,6 +364,18 @@ public class Validator extends ValidateMessage
       } catch (NumberFormatException nfe)
       {
         // ignore
+      }
+      if (vaccineCvx != null && vaccination.getAdminDate() != null)
+      {
+        if (vaccineCvx.getValidStartDate().after(vaccination.getAdminDate())
+            || trunc(vaccination.getAdminDate()).after(vaccineCvx.getValidEndDate()))
+        {
+          registerIssue(pi.VaccinationCvxCodeIsInvalidForDateAdministered, vaccineCr);
+        } else if (vaccineCvx.getUseStartDate().after(vaccination.getAdminDate())
+            || trunc(vaccination.getAdminDate()).after(vaccineCvx.getUseEndDate()))
+        {
+          registerIssue(pi.VaccinationCvxCodeIsUnexpectedForDateAdministered, vaccineCr);
+        }
       }
     }
     boolean useCptInsteadOfCvx = (vaccineCvx == null || vaccination.getAdminCvx().isInvalid() || vaccination.getAdminCvx().isIgnored())
@@ -433,10 +457,11 @@ public class Validator extends ValidateMessage
       {
         if (vaccineCvx.getValidStartDate().after(vaccination.getAdminDate()) || trunc(vaccination.getAdminDate()).after(vaccineCvx.getValidEndDate()))
         {
-          registerIssue(pi.VaccinationAdminCodeIsInvalid, vaccineCr);
-        } else if (vaccineCvx.getUseStartDate().after(vaccination.getAdminDate()) || trunc(vaccination.getAdminDate()).after(vaccineCvx.getUseEndDate()))
+          registerIssue(pi.VaccinationAdminCodeIsInvalidForDateAdministered, vaccineCr);
+        } else if (vaccineCvx.getUseStartDate().after(vaccination.getAdminDate())
+            || trunc(vaccination.getAdminDate()).after(vaccineCvx.getUseEndDate()))
         {
-          registerIssue(pi.VaccinationAdminCodeIsDeprecated, vaccineCr);
+          registerIssue(pi.VaccinationAdminCodeIsUnexpectedForDateAdministered, vaccineCr);
         }
         if (patient.getBirthDate() != null)
         {
@@ -456,23 +481,46 @@ public class Validator extends ValidateMessage
     }
     if (vaccination.isAdministered())
     {
+      if (vaccineMvx != null && !vaccineMvx.getMvxCode().equals("") && vaccination.getAdminDate() != null)
+      {
+        documentParagraph("Verifying that manufacturer is being used correctly considering the administration date.");
+        if (vaccineMvx.getValidEndDate().after(vaccination.getAdminDate()) || vaccination.getAdminDate().before(vaccineMvx.getValidStartDate()))
+        {
+          registerIssue(pi.VaccinationManufacturerCodeIsInvalidForDateAdministered, vaccination.getManufacturer().getCodeReceived());
+          if (isDocument())
+          {
+            SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy");
+            documentParagraph("Manufacture code " + vaccination.getManufacturerCode() + " is not valid before "
+                + sdf.format(vaccineMvx.getValidStartDate()) + " or after " + sdf.format(vaccineMvx.getValidEndDate())
+                + " for the administration date " + sdf.format(vaccination.getAdminDate()) + " ");
+          }
+        } else if (vaccineMvx.getUseEndDate().after(vaccination.getAdminDate()) || vaccination.getAdminDate().before(vaccineMvx.getUseStartDate()))
+        {
+          registerIssue(pi.VaccinationManufacturerCodeIsUnexpectedForDateAdministered, vaccination.getManufacturer().getCodeReceived());
+          if (isDocument())
+          {
+            SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy");
+            documentParagraph("Manufacture code " + vaccination.getManufacturerCode() + " is not expected before "
+                + sdf.format(vaccineMvx.getUseStartDate()) + " or after " + sdf.format(vaccineMvx.getUseEndDate()) + " for the administration date "
+                + sdf.format(vaccination.getAdminDate()) + " ");
+          }
+        }
+      }
       if (vaccineMvx != null && !vaccineMvx.getMvxCode().equals("") && vaccineCvx != null && !vaccineCvx.getCvxCode().equals("")
           && !vaccineCvx.getCvxCode().equals("998") && !vaccineCvx.getCvxCode().equals("999")
           && (vaccination.getManufacturer().isValid() || vaccination.getManufacturer().isDeprecated()))
       {
-        List<VaccineProduct> vaccineProducts = VaccineProductManager.getVaccineProductManager().getVaccineProducts(vaccineCvx, vaccineMvx);
-        if (vaccineProducts == null)
+        vaccination.getProduct().setCode(vaccineCvx.getCvxCode() + "-" + vaccineMvx.getMvxCode());
+        handleCodeReceived(vaccination.getProduct(), PotentialIssues.Field.VACCINATION_PRODUCT);
+        List<VaccineProduct> vaccineProductList = VaccineProductManager.getVaccineProductManager().getVaccineProducts(vaccineCvx, vaccineMvx);
+        VaccineProduct valVp = null;
+        if (vaccineProductList != null)
         {
-          registerIssue(pi.VaccinationProductIsUnrecognized);
-        } else
-        {
-
           VaccineProduct useVp = null;
-          VaccineProduct valVp = null;
           if (vaccination.getAdminDate() != null)
           {
             documentParagraph("Vaccination product is recognized and the vaccination date is given. Verifying that vaccination product is valid for the date administered. ");
-            for (VaccineProduct vp : vaccineProducts)
+            for (VaccineProduct vp : vaccineProductList)
             {
               if (!vp.getValidStartDate().after(vaccination.getAdminDate()) && !vaccination.getAdminDate().after(vp.getValidEndDate()))
               {
@@ -498,11 +546,11 @@ public class Validator extends ValidateMessage
               if (useVp == null)
               {
                 // shouldn't be used at this point
-                registerIssue(pi.VaccinationProductIsDeprecated);
+                registerIssue(pi.VaccinationProductIsUnexpectedForDateAdministered);
               }
             } else
             {
-              registerIssue(pi.VaccinationProductIsInvalid);
+              registerIssue(pi.VaccinationProductIsInvalidForDateAdministered);
             }
           }
         }
@@ -546,7 +594,7 @@ public class Validator extends ValidateMessage
       }
       if (vaccination.getSystemEntryDate() != null)
       {
-        
+
         if (trunc(vaccination.getAdminDate()).after(vaccination.getSystemEntryDate()))
         {
           registerIssue(pi.VaccinationAdminDateIsAfterSystemEntryDate);
@@ -1683,14 +1731,14 @@ public class Validator extends ValidateMessage
   {
     for (char c : s.toUpperCase().toCharArray())
     {
-      if ((c < 'A' || c > 'Z') && c != '-' && c != '\'' && c != ' ')
+      if ((c < 'A' || c > 'Z') && c != '-' && c != '\'' && c != ' ' && c != '.')
       {
         return false;
       }
     }
     return true;
   }
-  
+
   protected static Date trunc(Date d)
   {
     Calendar cal = Calendar.getInstance();
