@@ -75,7 +75,7 @@ public class SubmitStatus implements Serializable
   {
     if (obj instanceof SubmitStatus)
     {
-      return this.submitCode.equals(((SubmitStatus) obj).getSubmitCode());
+      return getSubmitCode().equals(((SubmitStatus) obj).getSubmitCode());
     }
     return toString().equals(obj.toString());
   }
@@ -83,6 +83,6 @@ public class SubmitStatus implements Serializable
   @Override
   public int hashCode()
   {
-    return submitCode.hashCode();
+    return getSubmitCode().hashCode();
   }
 }

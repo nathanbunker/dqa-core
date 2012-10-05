@@ -88,7 +88,7 @@ public class VaccineMvx implements Serializable
   @Override
   public int hashCode()
   {
-    return mvxCode.hashCode();
+    return getMvxCode().hashCode();
   }
 
 }

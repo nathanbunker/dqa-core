@@ -25,6 +25,7 @@
     <mapping resource="org/openimmunizationsoftware/dqa/db/model/CodeReceived.hbm.xml"/>
     <mapping resource="org/openimmunizationsoftware/dqa/db/model/CodeStatus.hbm.xml"/>
     <mapping resource="org/openimmunizationsoftware/dqa/db/model/CodeTable.hbm.xml"/>
+    <mapping resource="org/openimmunizationsoftware/dqa/db/model/DatabaseLog.hbm.xml"/>
     <mapping resource="org/openimmunizationsoftware/dqa/db/model/IssueAction.hbm.xml"/>
     <mapping resource="org/openimmunizationsoftware/dqa/db/model/IssueFound.hbm.xml"/> 
     <mapping resource="org/openimmunizationsoftware/dqa/db/model/KeyedSetting.hbm.xml"/>

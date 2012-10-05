@@ -182,7 +182,7 @@ public static final int MASTER_HL7 = 1;
   @Override
   public int hashCode()
   {
-    return profileId;
+    return getProfileId();
   }
 
   public boolean isProfileStatusClosed()

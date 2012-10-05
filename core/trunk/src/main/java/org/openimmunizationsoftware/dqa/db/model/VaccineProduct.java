@@ -17,6 +17,11 @@ public class VaccineProduct implements Serializable
   private Date useStartDate = null;
   private Date useEndDate = null;
   private Date validEndDate = null;
+  
+  public String getProductCode()
+  {
+    return cvx.getCvxCode() + "-" + mvx.getMvxCode();
+  }
 
   public int getProductId()
   {

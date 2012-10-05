@@ -5,7 +5,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -17,7 +16,7 @@ import org.openimmunizationsoftware.dqa.db.model.VaccineProduct;
 public class VaccineProductManager
 {
   private static VaccineProductManager singleton = null;
-  
+
   public static VaccineProductManager getVaccineProductManager()
   {
     if (singleton == null)
@@ -26,11 +25,10 @@ public class VaccineProductManager
     }
     return singleton;
   }
-  
+
   private Map<String, List<VaccineProduct>> vaccineProducts = new HashMap<String, List<VaccineProduct>>();
-  
-  private VaccineProductManager()
-  {
+
+  private VaccineProductManager() {
     SessionFactory factory = OrganizationManager.getSessionFactory();
     Session session = factory.openSession();
     Transaction tx = session.beginTransaction();
@@ -51,9 +49,10 @@ public class VaccineProductManager
     tx.commit();
     session.close();
   }
-  
+
   public List<VaccineProduct> getVaccineProducts(VaccineCvx cvxCode, VaccineMvx mvxCode)
   {
-    return vaccineProducts.get(cvxCode.getCvxCode() + "-" + mvxCode.getMvxCode());
+    List<VaccineProduct> vaccineProductList = vaccineProducts.get(cvxCode.getCvxCode() + "-" + mvxCode.getMvxCode());
+    return vaccineProductList;
   }
 }

@@ -15,7 +15,7 @@ import org.openimmunizationsoftware.dqa.db.model.received.types.OrganizationName
 public class Vaccination implements Skippable, Serializable
 {
 
-  private static final long serialVersionUID = 1l;
+  private static final long serialVersionUID = 2l;
 
   public static final String ACTION_CODE_ADD = "A";
   public static final String ACTION_CODE_DELETE = "D";
