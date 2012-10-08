@@ -344,8 +344,7 @@ public class Validator extends ValidateMessage
       }
       if (vaccineCpt != null && vaccination.getAdminDate() != null)
       {
-        if (vaccineCpt.getValidStartDate().after(vaccination.getAdminDate())
-            || trunc(vaccination.getAdminDate()).after(vaccineCpt.getValidEndDate()))
+        if (vaccineCpt.getValidStartDate().after(vaccination.getAdminDate()) || trunc(vaccination.getAdminDate()).after(vaccineCpt.getValidEndDate()))
         {
           registerIssue(pi.VaccinationCptCodeIsInvalidForDateAdministered, vaccination.getAdminCpt().getCodeReceived());
         } else if (vaccineCpt.getUseStartDate().after(vaccination.getAdminDate())
@@ -367,8 +366,7 @@ public class Validator extends ValidateMessage
       }
       if (vaccineCvx != null && vaccination.getAdminDate() != null)
       {
-        if (vaccineCvx.getValidStartDate().after(vaccination.getAdminDate())
-            || trunc(vaccination.getAdminDate()).after(vaccineCvx.getValidEndDate()))
+        if (vaccineCvx.getValidStartDate().after(vaccination.getAdminDate()) || trunc(vaccination.getAdminDate()).after(vaccineCvx.getValidEndDate()))
         {
           registerIssue(pi.VaccinationCvxCodeIsInvalidForDateAdministered, vaccineCr);
         } else if (vaccineCvx.getUseStartDate().after(vaccination.getAdminDate())
@@ -484,7 +482,7 @@ public class Validator extends ValidateMessage
       if (vaccineMvx != null && !vaccineMvx.getMvxCode().equals("") && vaccination.getAdminDate() != null)
       {
         documentParagraph("Verifying that manufacturer is being used correctly considering the administration date.");
-        if (vaccineMvx.getValidEndDate().after(vaccination.getAdminDate()) || vaccination.getAdminDate().before(vaccineMvx.getValidStartDate()))
+        if (vaccineMvx.getValidStartDate().after(vaccination.getAdminDate()) || vaccination.getAdminDate().after(vaccineMvx.getValidEndDate()))
         {
           registerIssue(pi.VaccinationManufacturerCodeIsInvalidForDateAdministered, vaccination.getManufacturer().getCodeReceived());
           if (isDocument())
@@ -494,7 +492,7 @@ public class Validator extends ValidateMessage
                 + sdf.format(vaccineMvx.getValidStartDate()) + " or after " + sdf.format(vaccineMvx.getValidEndDate())
                 + " for the administration date " + sdf.format(vaccination.getAdminDate()) + " ");
           }
-        } else if (vaccineMvx.getUseEndDate().after(vaccination.getAdminDate()) || vaccination.getAdminDate().before(vaccineMvx.getUseStartDate()))
+        } else if (vaccineMvx.getUseStartDate().after(vaccination.getAdminDate()) || vaccination.getAdminDate().after(vaccineMvx.getUseEndDate()))
         {
           registerIssue(pi.VaccinationManufacturerCodeIsUnexpectedForDateAdministered, vaccination.getManufacturer().getCodeReceived());
           if (isDocument())
@@ -1166,21 +1164,15 @@ public class Validator extends ValidateMessage
     {
       if (patient.getDeathIndicator().equals("Y"))
       {
-        if (patient.getDeathDate() == null)
+        if (notEmpty(patient.getDeathDate(), pi.PatientDeathDateIsMissing))
         {
-          registerIssue(pi.PatientDeathIndicatorIsInconsistent);
-        } else
-        {
-          if (notEmpty(patient.getDeathDate(), pi.PatientDeathDateIsMissing))
+          if (patient.getBirthDate() != null && patient.getDeathDate().before(trunc(patient.getBirthDate())))
           {
-            if (patient.getBirthDate() != null && patient.getDeathDate().before(trunc(patient.getBirthDate())))
-            {
-              registerIssue(pi.PatientDeathDateIsBeforeBirth);
-            }
-            if (message.getReceivedDate().before(trunc(patient.getDeathDate())))
-            {
-              registerIssue(pi.PatientDeathDateIsInFuture);
-            }
+            registerIssue(pi.PatientDeathDateIsBeforeBirth);
+          }
+          if (message.getReceivedDate().before(trunc(patient.getDeathDate())))
+          {
+            registerIssue(pi.PatientDeathDateIsInFuture);
           }
         }
       } else
@@ -1400,15 +1392,17 @@ public class Validator extends ValidateMessage
         }
       }
     }
-    if (piAddressType != null)
-    {
-      notEmpty(address.getTypeCode(), piAddressType);
-    }
 
     if (isEmpty(address.getStreet()) || isEmpty(city) || isEmpty(address.getZip()) || isEmpty(address.getState()))
     {
       registerIssue(pi.getIssue(piAddress, PotentialIssue.ISSUE_TYPE_IS_MISSING));
       return false;
+    }
+
+    if (piAddressType != null)
+    {
+      // Only validate if address type is set if address has been set 
+      notEmpty(address.getTypeCode(), piAddressType);
     }
     return true;
   }
