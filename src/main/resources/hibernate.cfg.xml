@@ -35,6 +35,10 @@
     <mapping resource="org/openimmunizationsoftware/dqa/db/model/Organization.hbm.xml"/>
     <mapping resource="org/openimmunizationsoftware/dqa/db/model/PotentialIssue.hbm.xml"/>
     <mapping resource="org/openimmunizationsoftware/dqa/db/model/PotentialIssueStatus.hbm.xml"/>
+    <mapping resource="org/openimmunizationsoftware/dqa/db/model/RemoteConnection.hbm.xml"/>
+    <mapping resource="org/openimmunizationsoftware/dqa/db/model/RemoteFile.hbm.xml"/>
+    <mapping resource="org/openimmunizationsoftware/dqa/db/model/RemoteLog.hbm.xml"/>
+    <mapping resource="org/openimmunizationsoftware/dqa/db/model/RemoteStat.hbm.xml"/>
     <mapping resource="org/openimmunizationsoftware/dqa/db/model/ReportTemplate.hbm.xml"/>
     <mapping resource="org/openimmunizationsoftware/dqa/db/model/ReportType.hbm.xml"/>
     <mapping resource="org/openimmunizationsoftware/dqa/db/model/ReportVaccineGroup.hbm.xml"/>
