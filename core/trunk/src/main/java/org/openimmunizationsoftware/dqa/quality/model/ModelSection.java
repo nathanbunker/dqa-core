@@ -30,11 +30,13 @@ public class ModelSection
       {
         if (path.length() == 0)
         {
-          return section.getWeight();          
+          return section.getWeight();
         }
         else
         {
-          return section.getWeight() * section.getAbsoluteWeight(path);
+          float absWeight = section.getAbsoluteWeight(path);
+          float weight = section.getWeight();
+          return weight * absWeight;
         }
       }
     }

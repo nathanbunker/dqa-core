@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.openimmunizationsoftware.dqa.SoftwareVersion;
 import org.openimmunizationsoftware.dqa.db.model.BatchCodeReceived;
 import org.openimmunizationsoftware.dqa.db.model.BatchIssues;
 import org.openimmunizationsoftware.dqa.db.model.BatchReport;
@@ -26,6 +27,7 @@ import org.openimmunizationsoftware.dqa.db.model.PotentialIssue;
 import org.openimmunizationsoftware.dqa.db.model.SubmitterProfile;
 import org.openimmunizationsoftware.dqa.db.model.VaccineCvx;
 import org.openimmunizationsoftware.dqa.db.model.VaccineGroup;
+import org.openimmunizationsoftware.dqa.manager.DatabaseLogManager;
 import org.openimmunizationsoftware.dqa.manager.KeyedSettingManager;
 import org.openimmunizationsoftware.dqa.manager.VaccineGroupManager;
 import org.openimmunizationsoftware.dqa.quality.model.ModelForm;
@@ -222,7 +224,8 @@ public class QualityReport
   private void printFooter()
   {
     out.println("    <pre>Report generated: " + dateTime.format(new Date()));
-    out.println("Report template: " + profile.getReportTemplate().getTemplateLabel() + "</pre>");
+    out.println("Report template:  " + profile.getReportTemplate().getTemplateLabel());
+    out.println("Software version: " + SoftwareVersion.VERSION + "</pre>");
   }
 
   private void printCompleteness(MessageBatch messageBatch)
@@ -252,10 +255,10 @@ public class QualityReport
     out.println("        <th align=\"center\">Description</th>");
     out.println("        <th align=\"center\">Weight</th>");
     out.println("      </tr>");
-    printScore(COMPLETENESS_SCORE_PATIENT, report.getCompletenessPatientScore(), per(modelForm.getWeight("completeness.patient")), REQUIRED);
-    printScore(COMPLETENESS_SCORE_VACCINATION, report.getCompletenessVaccinationScore(), per(modelForm.getWeight("completeness.vaccination")),
+    printScore(COMPLETENESS_SCORE_PATIENT, report.getCompletenessPatientScore(), per(modelForm.getAbsoluteWeight("completeness.patient")), REQUIRED);
+    printScore(COMPLETENESS_SCORE_VACCINATION, report.getCompletenessVaccinationScore(), per(modelForm.getAbsoluteWeight("completeness.vaccination")),
         REQUIRED);
-    printScore(COMPLETENESS_SCORE_VACCINE_GROUP, report.getCompletenessVaccineGroupScore(), per(modelForm.getWeight("completeness.vaccineGroup")),
+    printScore(COMPLETENESS_SCORE_VACCINE_GROUP, report.getCompletenessVaccineGroupScore(), per(modelForm.getAbsoluteWeight("completeness.vaccineGroup")),
         REQUIRED);
     out.println("    </table>");
 
