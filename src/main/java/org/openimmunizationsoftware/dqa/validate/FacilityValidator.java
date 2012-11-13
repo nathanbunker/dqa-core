@@ -36,19 +36,17 @@ public class FacilityValidator extends SectionValidator
       {
         int minLen = validator.ksm.getKeyedValueInt(KeyedSetting.VALIDATE_HEADER_SENDING_FACILITY_MIN_LEN, 0);
         int maxLen = validator.ksm.getKeyedValueInt(KeyedSetting.VALIDATE_HEADER_SENDING_FACILITY_MAX_LEN, 30);
-        boolean mustBeNumeric = validator.ksm.getKeyedValueBoolean(
-            KeyedSetting.VALIDATE_HEADER_SENDING_FACILITY_NUMERIC, false);
+        boolean mustBeNumeric = validator.ksm.getKeyedValueBoolean(KeyedSetting.VALIDATE_HEADER_SENDING_FACILITY_NUMERIC, false);
         if (validator.isDocument())
         {
           if (minLen == maxLen)
           {
-            validator.documentParagraph("A valid facility id must be" + (mustBeNumeric ? " numeric and " : " ")
-                + minLen + " characters long. ");
+            validator.documentParagraph("A valid facility id must be" + (mustBeNumeric ? " numeric and " : " ") + minLen + " characters long. ");
 
           } else
           {
-            validator.documentParagraph("A valid facility id must be" + (mustBeNumeric ? " numeric and " : " ")
-                + "between " + minLen + " and " + maxLen + " characters long. ");
+            validator.documentParagraph("A valid facility id must be" + (mustBeNumeric ? " numeric and " : " ") + "between " + minLen + " and "
+                + maxLen + " characters long. ");
 
           }
         }
@@ -65,49 +63,52 @@ public class FacilityValidator extends SectionValidator
   public void validateVaccination(Vaccination vaccination, Validator validator)
   {
     super.validateVaccination(vaccination, validator);
-    validator
-        .documentParagraph("Indicates in which facility or organization the vaccination was "
-            + "administered at. (Do not use to indicate the body site.) This field is normally expected when "
-            + "reporting administered vaccinations in order to account for where the vaccination was administered "
-            + "and to support vaccination inventory functions. For historical vaccinations this is not normally indicated. "
-            + "In addition, if the submitter receives vaccines for children (free vaccines) from the state, it"
-            + "is important that this field indicates the receiving location (organization with the VFC refrigerator) "
-            + "that matches what is expected from the state registry. ");
-    validator.documentValuesFound("Vaccination Facility Id Number", vaccination.getFacility().getId().getNumber());
-    if (validator.notEmpty(vaccination.getFacility().getIdNumber(), pi.VaccinationFacilityIdIsMissing, vaccination.isAdministered()))
+    if (vaccination.isAdministered())
     {
-      String id = vaccination.getFacility().getId().getNumber();
-      boolean mustBePfs = validator.ksm.getKeyedValueBoolean(KeyedSetting.VALIDATE_VACCINATION_FACILITY_PFS, false);
-      if (mustBePfs && !PfsSupport.verifyCorrect(id))
+      validator.documentParagraph("Indicates in which facility or organization the vaccination was "
+          + "administered at. (Do not use to indicate the body site.) This field is normally expected when "
+          + "reporting administered vaccinations in order to account for where the vaccination was administered "
+          + "and to support vaccination inventory functions. For historical vaccinations this is not normally indicated. "
+          + "In addition, if the submitter receives vaccines for children (free vaccines) from the state, it"
+          + "is important that this field indicates the receiving location (organization with the VFC refrigerator) "
+          + "that matches what is expected from the state registry. ");
+      validator.documentValuesFound("Vaccination Facility Id Number", vaccination.getFacility().getId().getNumber());
+      if (validator.notEmpty(vaccination.getFacility().getIdNumber(), pi.VaccinationFacilityIdIsMissing, vaccination.isAdministered()))
       {
-        validator.documentParagraph("Vaccination facility id must be a valid ImmTrac PFS number. "
-            + "Please contact ImmTrac to obtain a correct and valid PFS number.");
-        validator.registerIssue(pi.VaccinationFacilityIdIsInvalid);
-      } else
-      {
-        int minLen = validator.ksm.getKeyedValueInt(KeyedSetting.VALIDATE_VACCINATION_FACILITY_MIN_LEN, 0);
-        int maxLen = validator.ksm.getKeyedValueInt(KeyedSetting.VALIDATE_VACCINATION_FACILITY_MAX_LEN, 30);
-        boolean mustBeNumeric = validator.ksm.getKeyedValueBoolean(KeyedSetting.VALIDATE_VACCINATION_FACILITY_NUMERIC,
-            false);
-        if (validator.isDocument())
+        String id = vaccination.getFacility().getId().getNumber();
+        boolean mustBePfs = validator.ksm.getKeyedValueBoolean(KeyedSetting.VALIDATE_VACCINATION_FACILITY_PFS, false);
+        if (mustBePfs && !PfsSupport.verifyCorrect(id))
         {
-          if (minLen == maxLen)
+          validator.documentParagraph("Vaccination facility id must be a valid ImmTrac PFS number. "
+              + "Please contact ImmTrac to obtain a correct and valid PFS number.");
+          validator.registerIssue(pi.VaccinationFacilityIdIsInvalid);
+        } else
+        {
+          int minLen = validator.ksm.getKeyedValueInt(KeyedSetting.VALIDATE_VACCINATION_FACILITY_MIN_LEN, 0);
+          int maxLen = validator.ksm.getKeyedValueInt(KeyedSetting.VALIDATE_VACCINATION_FACILITY_MAX_LEN, 30);
+          boolean mustBeNumeric = validator.ksm.getKeyedValueBoolean(KeyedSetting.VALIDATE_VACCINATION_FACILITY_NUMERIC, false);
+          if (validator.isDocument())
           {
-            validator.documentParagraph("A valid facility id must be" + (mustBeNumeric ? " numeric and " : " ")
-                + minLen + " characters long. ");
+            if (minLen == maxLen)
+            {
+              validator.documentParagraph("A valid facility id must be" + (mustBeNumeric ? " numeric and " : " ") + minLen + " characters long. ");
 
-          } else
+            } else
+            {
+              validator.documentParagraph("A valid facility id must be" + (mustBeNumeric ? " numeric and " : " ") + "between " + minLen + " and "
+                  + maxLen + " characters long. ");
+
+            }
+          }
+          if (!goodId(id, minLen, maxLen, mustBeNumeric))
           {
-            validator.documentParagraph("A valid facility id must be" + (mustBeNumeric ? " numeric and " : " ")
-                + "between " + minLen + " and " + maxLen + " characters long. ");
-
+            validator.registerIssue(pi.VaccinationFacilityIdIsInvalid);
           }
         }
-        if (!goodId(id, minLen, maxLen, mustBeNumeric))
-        {
-          validator.registerIssue(pi.VaccinationFacilityIdIsInvalid);
-        }
       }
+    } else
+    {
+      validator.documentParagraph("Facility where vaccination is given at is not validated when the vaccination is not administered.");
     }
   }
 
