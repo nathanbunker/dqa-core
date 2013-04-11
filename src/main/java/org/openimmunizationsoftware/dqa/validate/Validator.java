@@ -1207,7 +1207,7 @@ public class Validator extends ValidateMessage
 
   private String validateNumber(String numericId, PotentialIssue invalidIssue, int length)
   {
-    if (numericId.length() != length || numericId.equals("123456789") || numericId.equals("98765432"))
+    if (numericId.length() != length || numericId.equals("123456789") || numericId.equals("987654321"))
     {
       registerIssue(invalidIssue);
       numericId = "";
