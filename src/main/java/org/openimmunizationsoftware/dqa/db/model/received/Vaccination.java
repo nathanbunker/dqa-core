@@ -63,7 +63,60 @@ public class Vaccination implements Skippable, Serializable
   private Date systemEntryDate = null;
   private long vaccinationId = 0l;
   private VaccineCvx vaccineCvx = null;
-  private Date visPublicationDate = null;
+  private CodedEntity fundingSource = new CodedEntity(CodeTable.Type.VACCINATION_FUNDING_SOURCE);
+  private String refusalReason = "";
+  private List <VaccinationVIS> vaccinationVisList = new ArrayList<VaccinationVIS>();
+  private VaccinationVIS vaccinationVIS = new VaccinationVIS();
+  {
+    vaccinationVisList.add(vaccinationVIS);
+  }
+  
+  public String getRefusalReason()
+  {
+    return refusalReason;
+  }
+
+  public void setRefusalReason(String refusalReason)
+  {
+    this.refusalReason = refusalReason;
+  }
+
+  public String getFundingSourceCode()
+  {
+    return fundingSource.getCode();
+  }
+
+  public void setFundingSourceCode(String fundingSourceCode)
+  {
+    this.fundingSource.setCode(fundingSourceCode);
+  }
+
+  public Date getVisPresentedDate()
+  {
+    return vaccinationVIS.getPresentedDate();
+  }
+
+  public void setVisPresentedDate(Date visPresentedDate)
+  {
+    this.vaccinationVIS.setPresentedDate(visPresentedDate);
+  }
+
+  public String getVisDocumentCode()
+  {
+    return vaccinationVIS.getDocumentCode();
+  }
+
+  public void setVisDocumentCode(String visDocumentCode)
+  {
+    this.vaccinationVIS.setDocumentCode(visDocumentCode);
+  }
+
+  public CodedEntity getFundingSource()
+  {
+    return fundingSource;
+  }
+
+
 
   public CodedEntity getAction()
   {
@@ -359,7 +412,7 @@ public class Vaccination implements Skippable, Serializable
 
   public Date getVisPublicationDate()
   {
-    return visPublicationDate;
+    return vaccinationVIS.getPublishedDate();
   }
 
   public boolean isActionAdd()
@@ -625,7 +678,7 @@ public class Vaccination implements Skippable, Serializable
 
   public void setVisPublicationDate(Date visPublicationDate)
   {
-    this.visPublicationDate = visPublicationDate;
+    this.vaccinationVIS.setPublishedDate(visPublicationDate);
   }
 
 }

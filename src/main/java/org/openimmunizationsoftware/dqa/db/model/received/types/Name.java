@@ -91,7 +91,7 @@ public class Name
     }
     if (middle != null && !middle.equals(""))
     {
-      sb.append(last);
+      sb.append(middle);
       sb.append(" ");
     }
     if (last != null && !last.equals(""))

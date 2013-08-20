@@ -9,6 +9,6 @@ public class ParseFactory
 {
   public static ValidateMessage getVaccinationUpdateParser(SubmitterProfile profile)
   {
-    return new VaccinationUpdateParserHL7(profile);
+    return new VaccinationParserHL7(profile);
   }
 }

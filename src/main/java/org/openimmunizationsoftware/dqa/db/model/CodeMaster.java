@@ -5,7 +5,8 @@ import java.io.Serializable;
 public class CodeMaster implements Serializable
 {
   
-  private static final long serialVersionUID = 1l;
+  private static final long serialVersionUID = 2l;
+  
   
   private int codeMasterId = 0;
   private CodeTable table = null;
@@ -13,6 +14,42 @@ public class CodeMaster implements Serializable
   private String codeLabel = "";
   private String useValue = "";
   private CodeStatus codeStatus = null;
+  private CodeMaster context = null;
+  private CodeTable indicates = null;
+  
+  public CodeTable getIndicates()
+  {
+    return indicates;
+  }
+  public void setIndicates(CodeTable indicates)
+  {
+    this.indicates = indicates;
+  }
+  public CodeMaster getContext()
+  {
+    return context;
+  }
+  public void setContext(CodeMaster context)
+  {
+    this.context = context;
+  }
+  
+  public String getContextValue()
+  {
+    if (context == null)
+    {
+      return null;
+    }
+    else
+    {
+      String parentContextValue = context.getContextValue();
+      if (parentContextValue == null)
+      {
+        return context.getCodeValue();
+      }
+      return parentContextValue + "-" + context.getCodeValue();
+    }
+  }
   
   public int getCodeMasterId()
   {

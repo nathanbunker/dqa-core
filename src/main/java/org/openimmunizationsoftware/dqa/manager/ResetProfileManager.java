@@ -25,7 +25,7 @@ public class ResetProfileManager
     {
       for (CodeReceived codeReceived : codesReceived.getCodesReceived(codeTable))
       {
-        CodeReceived codeReceivedParent = codesReceivedParent.getCodeReceived(codeReceived.getReceivedValue(), codeTable);
+        CodeReceived codeReceivedParent = codesReceivedParent.getCodeReceived(codeReceived.getReceivedValue(), codeTable, codeReceived.getContextValue());
         if (codeReceivedParent != null)
         {
           codeReceived.setCodeStatus(codeReceivedParent.getCodeStatus());

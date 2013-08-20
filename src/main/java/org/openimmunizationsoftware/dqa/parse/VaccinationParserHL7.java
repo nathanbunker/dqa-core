@@ -6,11 +6,18 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import org.hibernate.Session;
+import org.hibernate.engine.query.QueryMetadata;
 import org.openimmunizationsoftware.dqa.SoftwareVersion;
+import org.openimmunizationsoftware.dqa.db.model.CodeMaster;
+import org.openimmunizationsoftware.dqa.db.model.CodeTable;
+import org.openimmunizationsoftware.dqa.db.model.IssueAction;
 import org.openimmunizationsoftware.dqa.db.model.IssueFound;
 import org.openimmunizationsoftware.dqa.db.model.MessageReceived;
 import org.openimmunizationsoftware.dqa.db.model.MessageHeader;
+import org.openimmunizationsoftware.dqa.db.model.MessageReceivedGeneric;
 import org.openimmunizationsoftware.dqa.db.model.PotentialIssue;
+import org.openimmunizationsoftware.dqa.db.model.QueryReceived;
 import org.openimmunizationsoftware.dqa.db.model.SubmitterProfile;
 import org.openimmunizationsoftware.dqa.db.model.received.NextOfKin;
 import org.openimmunizationsoftware.dqa.db.model.received.Observation;
@@ -22,24 +29,20 @@ import org.openimmunizationsoftware.dqa.db.model.received.types.Id;
 import org.openimmunizationsoftware.dqa.db.model.received.types.Name;
 import org.openimmunizationsoftware.dqa.db.model.received.types.OrganizationName;
 import org.openimmunizationsoftware.dqa.db.model.received.types.PhoneNumber;
+import org.openimmunizationsoftware.dqa.manager.CodeMasterManager;
 import org.openimmunizationsoftware.dqa.manager.PotentialIssues;
+import org.openimmunizationsoftware.dqa.process.QueryResult;
 
-public class VaccinationUpdateParserHL7 extends VaccinationUpdateParser
+import static org.openimmunizationsoftware.dqa.parse.HL7Util.*;
+
+public class VaccinationParserHL7 extends VaccinationParser
 {
 
-  public static final String ACK_ACCEPT = "AA";
-  public static final String ACK_ERROR = "AE";
-  public static final String ACK_REJECT = "AR";
   public static final String PROCESSING_ID_DEBUG = "D";
 
   private char[] separators = new char[5];
-  private static final int BAR = 0;
-  private static final int CAR = 1;
-  private static final int TIL = 2;
-  private static final int SLA = 3;
-  private static final int AMP = 4;
 
-  public VaccinationUpdateParserHL7(SubmitterProfile profile) {
+  public VaccinationParserHL7(SubmitterProfile profile) {
     super(profile);
   }
 
@@ -50,6 +53,7 @@ public class VaccinationUpdateParserHL7 extends VaccinationUpdateParser
   private List<String> currentSegment;
   private int vaccinationCount = 0;
   private int nextOfKinCount = 0;
+  private Session session = null;
 
   private void setup()
   {
@@ -249,7 +253,7 @@ public class VaccinationUpdateParserHL7 extends VaccinationUpdateParser
 
   }
 
-  private void populateMSH(MessageReceived message)
+  private void populateMSH(MessageReceivedGeneric message)
   {
     MessageHeader header = message.getMessageHeader();
     header.setSendingApplication(getValue(3));
@@ -285,7 +289,7 @@ public class VaccinationUpdateParserHL7 extends VaccinationUpdateParser
     patient.setDeathIndicator(getValue(30));
     readCodeEntity(22, patient.getEthnicity());
     // TODO private OrganizationName facility = new OrganizationName();
-    readPatientId(patient);
+    readPatientId(3, patient);
     patient.setMotherMaidenName(getValue(6));
     readName(5, patient.getName());
     readPhoneNumber(13, patient.getPhone());
@@ -492,9 +496,9 @@ public class VaccinationUpdateParserHL7 extends VaccinationUpdateParser
     address.setCountyParishCode(field.length >= 9 ? field[8] : "");
   }
 
-  private void readPatientId(Patient patient)
+  private void readPatientId(int position, Patient patient)
   {
-    List<String[]> values = getRepeatValues(3);
+    List<String[]> values = getRepeatValues(position);
     if (values.size() > 0)
     {
       String[] fields = values.get(0);
@@ -748,7 +752,7 @@ public class VaccinationUpdateParserHL7 extends VaccinationUpdateParser
 
   private void readSeparators(String messageText)
   {
-    if (messageText.startsWith("MSH") && messageText.length() > 10)
+    if (HL7Util.setupSeparators(messageText, separators))
     {
       separators[BAR] = messageText.charAt(BAR + 3);
       separators[CAR] = messageText.charAt(CAR + 3);
@@ -777,11 +781,6 @@ public class VaccinationUpdateParserHL7 extends VaccinationUpdateParser
       }
     } else
     {
-      separators[BAR] = '|';
-      separators[CAR] = '^';
-      separators[TIL] = '~';
-      separators[SLA] = '\\';
-      separators[AMP] = '&';
       if (!messageText.startsWith("MSH"))
       {
         registerError(pi.Hl7MshSegmentIsMissing);
@@ -793,7 +792,271 @@ public class VaccinationUpdateParserHL7 extends VaccinationUpdateParser
         registerError(pi.GeneralParseException);
       }
     }
+  }
 
+  public String makeAckMessage(QueryReceived queryReceived, QueryResult queryResult, Session session)
+  {
+    this.session = session;
+    StringBuilder ack = new StringBuilder();
+    if (queryResult.getPatient() == null)
+    {
+      makeHeader(ack, queryReceived, HL7Util.QUERY_RESULT_NO_MATCHES, HL7Util.QUERY_RESPONSE_TYPE);
+      makeMSA(queryReceived, ack);
+      makeQAK(queryReceived, ack, "NF");
+      makeQPD(queryReceived, ack);
+    } else
+    {
+      makeHeader(ack, queryReceived, HL7Util.QUERY_RESULT_IMMUNIZATION_HISTORY, HL7Util.QUERY_RESPONSE_TYPE);
+      makeMSA(queryReceived, ack);
+      makeQAK(queryReceived, ack, "OK");
+      makeQPD(queryReceived, ack);
+      makePID(queryResult, ack);
+      int position = 0;
+      for (NextOfKin nextOfKin : queryResult.getNextOfKinList())
+      {
+        position++;
+        makeNK1(ack, nextOfKin, position);
+      }
+      for (Vaccination vaccination : queryResult.getVaccinationList())
+      {
+        makeORC(ack, vaccination);
+        makeRXA(ack, vaccination);
+        if (!vaccination.getBodyRouteCode().equals(""))
+        {
+          makeRXR(ack, vaccination);
+        }
+        if (!vaccination.getFinancialEligibilityCode().equals(""))
+        {
+          CodedEntity obsId = new CodedEntity(CodeTable.Type.OBSERVATION_IDENTIFIER);
+          CodedEntity obsValue = new CodedEntity(CodeTable.Type.FINANCIAL_STATUS_CODE);
+          CodedEntity obsMethod = null;
+          obsId.setCode("64994-7");
+          obsId.setTable("LN");
+          obsValue.setCode(vaccination.getFinancialEligibilityCode());
+          obsValue.setTable("HL70064");
+          makeOBX(ack, 1, obsId, obsValue, null, obsMethod);
+        }
+      }
+
+    }
+    return ack.toString();
+  }
+
+  public void makeOBX(StringBuilder ack, int position, CodedEntity obsId, CodedEntity obsValue, Date date, CodedEntity obsMethod)
+  {
+    SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
+    ack.append("OBX|");
+    ack.append(position + "|");
+    ack.append("CE|");
+    ack.append(makeCodedValue(obsId) + "|");
+    ack.append("|");
+    ack.append(makeCodedValue(obsValue) + "|");
+    ack.append("|");
+    ack.append("|");
+    ack.append("|");
+    ack.append("|");
+    ack.append("F|");
+    ack.append("|");
+    ack.append("|");
+    if (date != null)
+    {
+      ack.append(sdf.format(date));
+    }
+    ack.append("|");
+    ack.append("|");
+    ack.append("|");
+    if (obsMethod != null)
+    {
+      ack.append(makeCodedValue(obsMethod));
+    }
+    ack.append("|");
+    ack.append("\r");
+  }
+
+  public void makeRXR(StringBuilder ack, Vaccination vaccination)
+  {
+    ack.append("RXR|");
+
+    ack.append(makeCodedValue(vaccination.getBodyRoute(), "HL70162") + "|");
+    ack.append(makeCodedValue(vaccination.getBodySite(), "HL70163") + "|");
+    ack.append("\r");
+  }
+
+  public void makeRXA(StringBuilder ack, Vaccination vaccination)
+  {
+    SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
+    ack.append("RXA|");
+    ack.append("0|");
+    ack.append("1|");
+    ack.append(sdf.format(vaccination.getAdminDate()) + "|");
+    ack.append("|");
+    ack.append(makeCodedValue(vaccination.getAdminCvx(), "CVX") + "|");
+    ack.append(vaccination.getAmount() + "|");
+    ack.append(makeCodedValue(vaccination.getAmountUnit(), "UCUM") + "|");
+    ack.append("|");
+    ack.append(makeCodedValue(vaccination.getInformationSource(), "NIP001") + "|");
+    ack.append("|");
+    ack.append("|");
+    ack.append("|");
+    ack.append("|");
+    ack.append("|");
+    ack.append(vaccination.getLotNumber() + "|");
+    if (vaccination.getExpirationDate() != null)
+    {
+      ack.append(sdf.format(vaccination.getExpirationDate()));
+    }
+    ack.append("|");
+    ack.append(makeCodedValue(vaccination.getManufacturer(), "MVX") + "|");
+    ack.append("\r");
+  }
+
+  private String makeCodedValue(CodedEntity codedEntity)
+  {
+    return makeCodedValue(codedEntity, null);
+  }
+
+  private String makeCodedValue(CodedEntity codedEntity, String codeTableNameOverride)
+  {
+    if (codedEntity == null || codedEntity.getCode() == null || codedEntity.getCode().equals(""))
+    {
+      return "";
+    }
+    CodeMaster codeMaster = CodeMasterManager.getCodeMaster(codedEntity, null, session);
+    if (codeMaster != null)
+    {
+      codedEntity.setText(codeMaster.getCodeLabel());
+    }
+    if (codeTableNameOverride != null)
+    {
+      codedEntity.setTable(codeTableNameOverride);
+    }
+    String part1 = codedEntity.getCode() + "^" + codedEntity.getText() + "^" + codedEntity.getTable();
+    if (codedEntity.getAltCode().equals(""))
+    {
+      return part1;
+    }
+    String part2 = codedEntity.getAltCode() + "^" + codedEntity.getAltText() + "^" + codedEntity.getAltTable();
+    return part1 + "^" + part2;
+
+  }
+
+  public void makeORC(StringBuilder ack, Vaccination vaccination)
+  {
+    ack.append("ORC|");
+    ack.append("RE|");
+    ack.append(vaccination.getIdSubmitter() + "|");
+    ack.append(vaccination.getIdPlacer() + "|");
+    ack.append("\r");
+  }
+
+  private void makeQPD(QueryReceived queryReceived, StringBuilder ack)
+  {
+    SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
+    ack.append("QPD|");
+    ack.append(queryReceived.getMessageQueryName() + "|");
+    ack.append(queryReceived.getQueryTag() + "|");
+    Patient patient = queryReceived.getPatient();
+    if (patient != null)
+    {
+      ack.append(patient.getIdSubmitterNumber() + "^^^" + patient.getIdSubmitterAssigningAuthorityCode() + "^" + patient.getIdSubmitterTypeCode()
+          + "|");
+      ack.append(patient.getNameLast() + "^" + patient.getNameFirst() + "^" + patient.getNameMiddle() + "^" + patient.getNameSuffix() + "^"
+          + patient.getNamePrefix() + "^^" + patient.getNameTypeCode() + "|");
+      ack.append(patient.getMotherMaidenName() + "|");
+      ack.append(sdf.format(patient.getBirthDate()) + "|");
+      ack.append(patient.getSexCode() + "|");
+      Address add = patient.getAddress();
+      printAddress(ack, add);
+      ack.append("|");
+      PhoneNumber phone = patient.getPhone();
+      printPhone(ack, phone);
+      ack.append("|");
+      ack.append(patient.getBirthMultiple() + "|");
+      ack.append(patient.getBirthOrderCode() + "|");
+    }
+    ack.append("\r");
+  }
+
+  private void makeNK1(StringBuilder ack, NextOfKin nextOfKin, int position)
+  {
+    ack.append("NK1|");
+    ack.append(position + "|");
+    ack.append(nextOfKin.getNameLast() + "^" + nextOfKin.getNameFirst() + "^" + nextOfKin.getNameMiddle() + "^" + nextOfKin.getNameSuffix() + "^"
+        + nextOfKin.getNamePrefix() + "^^" + nextOfKin.getNameTypeCode() + "|");
+    ack.append(makeCodedValue(nextOfKin.getRelationship(), "HL70063") + "|");
+    printAddress(ack, nextOfKin.getAddress());
+    ack.append("|");
+    printPhone(ack, nextOfKin.getPhone());
+    ack.append("|");
+    ack.append("\r");
+  }
+
+  private void makePID(QueryResult queryResult, StringBuilder ack)
+  {
+    SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
+    ack.append("PID|");
+    ack.append("|");
+    ack.append("|");
+    Patient patient = queryResult.getPatient();
+    if (patient != null)
+    {
+      ack.append(patient.getIdSubmitterNumber() + "^^^" + patient.getIdSubmitterAssigningAuthorityCode() + "^" + patient.getIdSubmitterTypeCode()
+          + "|");
+      ack.append("|");
+      ack.append(patient.getNameLast() + "^" + patient.getNameFirst() + "^" + patient.getNameMiddle() + "^" + patient.getNameSuffix() + "^"
+          + patient.getNamePrefix() + "^^" + patient.getNameTypeCode() + "|");
+      ack.append(patient.getMotherMaidenName() + "|");
+      ack.append(sdf.format(patient.getBirthDate()) + "|");
+      ack.append(patient.getSexCode() + "|");
+      ack.append("|");
+      ack.append(makeCodedValue(patient.getRace(), "HL70005") + "|");
+      printAddress(ack, patient.getAddress());
+      ack.append("|");
+      ack.append("|");
+      printPhone(ack, patient.getPhone());
+      ack.append("|");
+      ack.append("|");
+      ack.append("|");
+      ack.append("|");
+      ack.append("|");
+      ack.append("|");
+      ack.append("|");
+      ack.append("|");
+      ack.append("|");
+      ack.append(makeCodedValue(patient.getEthnicity(), "CDCREC") + "|");
+      ack.append("|");
+      ack.append(patient.getBirthMultiple() + "|");
+      ack.append(patient.getBirthOrderCode() + "|");
+    }
+    ack.append("\r");
+  }
+
+  public void printPhone(StringBuilder ack, PhoneNumber phone)
+  {
+    if (phone != null && !phone.getNumber().equals(""))
+    {
+      ack.append("^" + phone.getTelUseCode() + "^" + phone.getTelEquipCode() + "^" + phone.getEmail() + "^" + phone.getCountryCode() + "^"
+          + phone.getAreaCode() + "^" + phone.getLocalNumber() + "^" + phone.getExtension());
+    }
+  }
+
+  public void printAddress(StringBuilder ack, Address add)
+  {
+    if (add != null)
+    {
+      ack.append(add.getStreet() + "^" + add.getStreet2() + "^" + add.getCity() + "^" + add.getStateCode() + "^" + add.getZip() + "^"
+          + add.getCountryCode() + "^" + add.getTypeCode() + "^^" + add.getCountyParishCode());
+    }
+  }
+
+  private void makeQAK(QueryReceived queryReceived, StringBuilder ack, String queryResponse)
+  {
+    ack.append("QAK|" + queryReceived.getQueryTag() + "|" + queryResponse + "|" + queryReceived.getMessageQueryName() + "|");
+  }
+
+  private void makeMSA(QueryReceived queryReceived, StringBuilder ack)
+  {
+    ack.append("MSA|AA|" + queryReceived.getMessageHeader().getMessageControl() + "|\r");
   }
 
   public String makeAckMessage(MessageReceived messageReceived)
@@ -801,6 +1064,8 @@ public class VaccinationUpdateParserHL7 extends VaccinationUpdateParser
     String controlId = messageReceived.getMessageHeader().getMessageControl();
     String processingId = message.getMessageHeader().getProcessingStatusCode();
     String ackCode = ACK_ACCEPT;
+    String severity = "I";
+    String hl7ErrorCode = "0";
     int countVaccNotSkipped = 0;
     for (Vaccination vaccination : messageReceived.getVaccinations())
     {
@@ -820,38 +1085,79 @@ public class VaccinationUpdateParserHL7 extends VaccinationUpdateParser
     {
       text = "Message accepted with " + countVaccNotSkipped + " vaccinations";
     }
-    if (messageReceived.hasErrors())
-    {
-      text = "Message rejected: ";
-      ackCode = ACK_ERROR;
-      for (IssueFound issueFound : messageReceived.getIssuesFound())
-      {
-        if (issueFound.isError())
-        {
-          text += issueFound.getDisplayText();
-          break;
-        }
-      }
-    }
     if (messageReceived.getPatient().isSkipped())
     {
       text = "Message skipped: ";
       ackCode = ACK_ACCEPT;
+      severity = "I";
       for (IssueFound issueFound : messageReceived.getIssuesFound())
       {
         if (issueFound.isSkip())
         {
           text += issueFound.getDisplayText();
+          hl7ErrorCode = issueFound.getIssue().getHl7ErrorCode();
+          break;
+        }
+      }
+    } else if (hasErrors(messageReceived))
+    {
+      text = "Message rejected: ";
+      ackCode = ACK_ERROR;
+      severity = "E";
+      for (IssueFound issueFound : messageReceived.getIssuesFound())
+      {
+        if (issueFound.isError())
+        {
+          text += issueFound.getDisplayText();
+          hl7ErrorCode = issueFound.getIssue().getHl7ErrorCode();
+          if (hl7ErrorCode != null && hl7ErrorCode.startsWith("2"))
+          {
+            ackCode = ACK_REJECT;
+          }
           break;
         }
       }
     }
-    if (text.length() > 80)
-    {
-      // HL7 has a max length for the ack text of 80 characters
-      text = text.substring(0, 80);
-    }
     StringBuilder ack = new StringBuilder();
+    makeHeader(ack, message, null, null);
+    ack.append("SFT|" + SoftwareVersion.VENDOR + "|" + SoftwareVersion.VERSION + "|" + SoftwareVersion.PRODUCT + "|" + SoftwareVersion.BINARY_ID
+        + "|\r");
+    ack.append("MSA|" + ackCode + "|" + controlId + "|\r");
+    makeERRSegment(ack, severity, hl7ErrorCode, text);
+    for (IssueFound issueFound : messageReceived.getIssuesFound())
+    {
+      if (issueFound.isError())
+      {
+        makeERRSegment(ack, issueFound);
+      }
+    }
+    for (IssueFound issueFound : messageReceived.getIssuesFound())
+    {
+      if (issueFound.isWarn())
+      {
+        makeERRSegment(ack, issueFound);
+      }
+      if (issueFound.isSkip())
+      {
+        makeERRSegment(ack, issueFound);
+      }
+    }
+    if (processingId.equals(PROCESSING_ID_DEBUG))
+    {
+      for (IssueFound issueFound : messageReceived.getIssuesFound())
+      {
+        if (issueFound.isAccept())
+        {
+          makeERRSegment(ack, issueFound);
+        }
+      }
+    }
+    return ack.toString();
+
+  }
+
+  public static void makeHeader(StringBuilder ack, MessageReceivedGeneric message, String profileId, String responseType)
+  {
     String receivingApplication = message.getMessageHeader().getSendingApplication();
     String receivingFacility = message.getMessageHeader().getSendingFacility();
     String sendingApplication = message.getMessageHeader().getReceivingApplication();
@@ -882,89 +1188,223 @@ public class VaccinationUpdateParserHL7 extends VaccinationUpdateParser
     ack.append("|" + receivingFacility); // MSH-6 Receiving Facility
     ack.append("|" + messageDate); // MSH-7 Date/Time of Message
     ack.append("|"); // MSH-8 Security
-    ack.append("|ACK^" + message.getMessageHeader().getMessageTrigger()); // MSH-9
+    if (responseType == null)
+    {
+      responseType = "ACK^" + message.getMessageHeader().getMessageTrigger();
+    }
+    ack.append("|" + responseType); // MSH-9
     // Message
     // Type
     ack.append("|" + messageDate + "." + getNextAckCount()); // MSH-10 Message
                                                              // Control ID
     ack.append("|P"); // MSH-11 Processing ID
     ack.append("|2.5.1"); // MSH-12 Version ID
-    ack.append("|\r");
-    ack.append("SFT|" + SoftwareVersion.VENDOR + "|" + SoftwareVersion.VERSION + "|" + SoftwareVersion.PRODUCT + "|" + SoftwareVersion.BINARY_ID
-        + "|\r");
-    ack.append("MSA|" + ackCode + "|" + controlId + "|" + escapeHL7Chars(text) + "|\r");
+    ack.append("|");
+    if (profileId != null)
+    {
+      ack.append("||NE|AL|||||" + profileId + "^CDCPHINVS|");
+    }
+    ack.append("\r");
+
+  }
+
+  private static boolean hasErrors(MessageReceivedGeneric messageReceived)
+  {
     for (IssueFound issueFound : messageReceived.getIssuesFound())
     {
+      if (issueFound.getIssueAction().equals(IssueAction.ERROR))
+      {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private void makeERRSegment(StringBuilder ack, String severity, String hl7ErrorCode, String textMessage)
+  {
+
+    ack.append("ERR||");
+    // 2 Error Location
+    ack.append("|");
+    // 3 HL7 Error Code
+    if (hl7ErrorCode != null)
+    {
+      ack.append(hl7ErrorCode);
+    }
+    ack.append("|");
+    // 4 Severity
+    ack.append(severity);
+    ack.append("|");
+    // 5 Application Error Code
+    ack.append("|");
+    // 6 Application Error Parameter
+    ack.append("|");
+    // 7 Diagnostic Information
+    ack.append("|");
+    // 8 User Message
+    ack.append("|");
+    ack.append(escapeHL7Chars(textMessage));
+    ack.append("|\r");
+
+  }
+
+  private void makeERRSegment(StringBuilder ack, IssueFound issueFound)
+  {
+    PotentialIssue issue = issueFound.getIssue();
+    String hl7ReferenceOrig = issue.getHl7Reference();
+    String[] hl7ReferenceParts;
+    if (hl7ReferenceOrig == null || hl7ReferenceOrig.equals(""))
+    {
+      hl7ReferenceParts = new String[] { "" };
+    } else
+    {
+      hl7ReferenceParts = hl7ReferenceOrig.split("\\/");
+    }
+    for (String hl7Reference : hl7ReferenceParts)
+    {
+      String hl7ErrorCode = issue.getHl7ErrorCode();
+      String severity = "I";
+
       if (issueFound.isError())
       {
-        ack.append("ERR|||0|E||||" + issueFound.getDisplayText() + "|\r");
-      }
-    }
-    for (IssueFound issueFound : messageReceived.getIssuesFound())
-    {
-      if (issueFound.isWarn())
+        severity = "E";
+      } else if (issueFound.isWarn())
       {
-        ack.append("ERR|||0|W||||" + issueFound.getDisplayText() + "|\r");
+        severity = "W";
+      } else if (issueFound.isSkip())
+      {
+        severity = "I";
       }
+      ack.append("ERR||");
+      // 2 Error Location
+      printErr3(ack, issueFound, hl7Reference);
+      ack.append("|");
+      // 3 HL7 Error Code
+      if (issueFound.isError())
+      {
+        if (hl7ErrorCode != null)
+        {
+          ack.append(hl7ErrorCode);
+        }
+      } else
+      {
+        ack.append("0");
+      }
+      ack.append("|");
+      // 4 Severity
+      ack.append(severity);
+      ack.append("|");
+      // 5 Application Error Code
+      ack.append(issue.getIssueId());
+      ack.append("|");
+      // 6 Application Error Parameter
+      ack.append("|");
+      // 7 Diagnostic Information
+      ack.append(escapeHL7Chars(issue.getIssueDescription()));
       if (issueFound.isSkip())
       {
-        ack.append("ERR|||0|W||||Skipped: " + issueFound.getDisplayText() + "|\r");
+        ack.append(" (This information was skipped, and not accepted)");
       }
+      // 8 User Message
+      ack.append("|");
+      ack.append(escapeHL7Chars(issueFound.getDisplayText()));
+      ack.append("|\r");
     }
-    if (processingId.equals(PROCESSING_ID_DEBUG))
+
+  }
+
+  private void printErr3(StringBuilder ack, IssueFound issueFound, String hl7Reference)
+  {
+    int pos = hl7Reference.indexOf("-");
+    if (pos == -1)
     {
-      for (IssueFound issueFound : messageReceived.getIssuesFound())
+      pos = hl7Reference.length();
+    }
+    if (pos > 0 && (pos + 1) <= hl7Reference.length())
+    {
+      ack.append(hl7Reference.substring(0, pos));
+      hl7Reference = hl7Reference.substring(pos + 1);
+      ack.append("^");
+      ack.append(issueFound.getPositionId());
+      if (hl7Reference.length() > 0)
       {
-        if (issueFound.isAccept())
+        ack.append("^");
+        pos = hl7Reference.indexOf("\\.");
+        if (pos == -1)
         {
-          ack.append("ERR|||0|I||||" + issueFound.getDisplayText() + "|\r");
+          ack.append(hl7Reference);
+          ack.append("^1");
+        } else
+        {
+          ack.append(hl7Reference.substring(0, pos));
+          ack.append("^1^");
+          ack.append(hl7Reference.substring(pos + 1));
         }
       }
     }
-    return ack.toString();
-
   }
 
-  private int ackCount = 1;
-
-  private int getNextAckCount()
+  @Override
+  public void createQueryMessage(QueryReceived queryReceived)
   {
-    if (ackCount == Integer.MAX_VALUE)
-    {
-      ackCount = 1;
-    }
-    return ackCount++;
-  }
+    String messageText = queryReceived.getRequestText();
 
-  public static String escapeHL7Chars(String s)
-  {
-    StringBuilder sb = new StringBuilder();
-    for (char c : s.toCharArray())
+    issuesFound = queryReceived.getIssuesFound();
+    setup();
+    readSeparators(messageText);
+    readFields(messageText);
+
+    patient = new Patient();
+    queryReceived.setPatient(patient);
+
+    currentSegment = segments.get(0);
+    populateMSH(queryReceived);
+    while (moveNext())
     {
-      if (c >= ' ')
+      if (segmentName.equals("QPD"))
       {
-        switch (c) {
-        case '~':
-          sb.append("\\R\\");
-          break;
-        case '\\':
-          sb.append("\\E\\");
-          break;
-        case '|':
-          sb.append("\\F\\");
-          break;
-        case '^':
-          sb.append("\\S\\");
-          break;
-        case '&':
-          sb.append("\\T\\");
-          break;
-        default:
-          sb.append(c);
-        }
+        populateQPD(queryReceived);
+      } else if (segmentName.equals("RCP"))
+      {
+        populateRCP(queryReceived);
       }
     }
-    return sb.toString();
+  }
+
+  private void populateQPD(QueryReceived queryReceived)
+  {
+
+    // 1 MessageQueryName should be Z34
+    queryReceived.setMessageQueryName(getValue(1));
+    // 2 QueryTag
+    queryReceived.setQueryTag(getValue(2));
+    // 3 PatientList
+    readPatientId(3, patient);
+    // 4 PatientName
+    readName(4, patient.getName());
+    // 5 PatientMotherMaiden
+    patient.setMotherMaidenName(getValue(5));
+    // 6 Patient Date of Birth
+    patient.setBirthDate(getValueDate(6, pi.PatientBirthDateIsInvalid));
+    // 7 Patient Sex
+    patient.setSexCode(getValue(7));
+    // 8 Patient Address
+    readAddress(8, patient.getAddress());
+    // 9 Patient home phone
+    readPhoneNumber(9, patient.getPhone());
+    // 10 Patient multiple birth indicator
+    patient.setBirthMultiple(getValue(10));
+    // 11 Patient birth order
+    patient.setBirthOrderCode(getValue(11));
+    // 12 client last updated date
+    // 13 client last update facility
+
+  }
+
+  private void populateRCP(QueryReceived queryReceived)
+  {
+
+    // not currently supporting fields in this one
   }
 
 }
