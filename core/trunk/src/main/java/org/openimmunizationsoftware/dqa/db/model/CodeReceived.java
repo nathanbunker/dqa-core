@@ -15,7 +15,18 @@ public class CodeReceived implements Serializable
   private String codeLabel = "";
   private CodeStatus codeStatus = null;
   private int receivedCount = 0;  
+  private String contextValue = "";
   
+  public String getContextValue()
+  {
+    return contextValue;
+  }
+
+  public void setContextValue(String contextValue)
+  {
+    this.contextValue = contextValue;
+  }
+
   public CodeReceived()
   {
     // default
@@ -77,9 +88,18 @@ public class CodeReceived implements Serializable
   {
     return receivedValue;
   }
+  public String getContextWithCodeValue()
+  {
+    if (contextValue != null && !contextValue.equals(""))
+    {
+      return contextValue + "-" + codeValue;
+    }
+    return codeValue;
+  }
+  
   public void setReceivedValue(String receivedValue)
   {
-    this.receivedValue = receivedValue;
+    this.receivedValue = receivedValue.toUpperCase();
   }
   public String getCodeValue()
   {

@@ -2,28 +2,28 @@ package org.openimmunizationsoftware.dqa.process;
 
 import org.hibernate.Session;
 import org.openimmunizationsoftware.dqa.db.model.SubmitterProfile;
-import org.openimmunizationsoftware.dqa.parse.VaccinationUpdateParserHL7;
+import org.openimmunizationsoftware.dqa.parse.PreParseMessageExaminer;
+import org.openimmunizationsoftware.dqa.parse.VaccinationParserHL7;
 import org.openimmunizationsoftware.dqa.quality.QualityCollector;
 
-public class MessageProcessRequest
+public class MessageProcessRequest extends PreParseMessageExaminer
 {
 
   private boolean debugFlag = false;
-  private VaccinationUpdateParserHL7 parser = null;
+  private VaccinationParserHL7 parser = null;
   private String messageText = null;
   private SubmitterProfile profile = null;
   private Session session = null;
   private QualityCollector qualityCollector = null;
-  private String messageKey = "";
+
   
-  public String getMessageKey()
+  public MessageProcessRequest(String messageText)
   {
-    return messageKey;
+    super(messageText);
+    this.messageText = messageText;
   }
-  public void setMessageKey(String messageKey)
-  {
-    this.messageKey = messageKey;
-  }
+  
+
   public boolean isDebugFlag()
   {
     return debugFlag;
@@ -32,11 +32,11 @@ public class MessageProcessRequest
   {
     this.debugFlag = debugFlag;
   }
-  public VaccinationUpdateParserHL7 getParser()
+  public VaccinationParserHL7 getParser()
   {
     return parser;
   }
-  public void setParser(VaccinationUpdateParserHL7 parser)
+  public void setParser(VaccinationParserHL7 parser)
   {
     this.parser = parser;
   }

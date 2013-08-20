@@ -44,9 +44,8 @@ public class CodesReceived
         out.println(" * " + codeTable.getTableLabel() + " [" + codeTable.getTableId() + "]");
         for (CodeReceived codeReceived : codeTableMaps.get(codeTable).values())
         {
-          out.println("    - '" + codeReceived.getReceivedValue() + "' ==> '" + codeReceived.getCodeValue() + "' #"
-              + codeReceived.getReceivedCount() + " [" + codeReceived.getCodeId() + "] profile="
-              + codeReceived.getProfile().getProfileId());
+          out.println("    - '" + codeReceived.getReceivedValue() + "' ==> '" + codeReceived.getCodeValue() + "' #" + codeReceived.getReceivedCount()
+              + " [" + codeReceived.getCodeId() + "] profile=" + codeReceived.getProfile().getProfileId());
         }
       }
     }
@@ -93,7 +92,27 @@ public class CodesReceived
     // HashMap<CodeTable, Map<String, CodeReceived>>();
   }
 
-  public void registerCodeReceived(CodeReceived codeReceived)
+  public void registerCodeReceived(CodeReceived codeReceived, CodeReceived context)
+  {
+    String receivedValue = codeReceived.getReceivedValue().toUpperCase();
+    if (context != null)
+    {
+      receivedValue = context.getContextWithCodeValue() + "-" + receivedValue;
+    }
+    registerCodeReceived(receivedValue, codeReceived);
+  }
+
+  public void registerCodeReceived(CodeReceived codeReceived, String contextValue)
+  {
+    String receivedValue = codeReceived.getReceivedValue().toUpperCase();
+    if (contextValue != null)
+    {
+      receivedValue = contextValue + "-" + receivedValue;
+    }
+    registerCodeReceived(receivedValue, codeReceived);
+  }
+
+  private void registerCodeReceived(String receivedValue, CodeReceived codeReceived)
   {
     Map<String, CodeReceived> codesReceived = codeTableMaps.get(codeReceived.getTable());
     if (codesReceived == null)
@@ -101,10 +120,30 @@ public class CodesReceived
       codesReceived = new HashMap<String, CodeReceived>();
       codeTableMaps.put(codeReceived.getTable(), codesReceived);
     }
-    codesReceived.put(codeReceived.getReceivedValue(), codeReceived);
+    codesReceived.put(receivedValue, codeReceived);
   }
 
-  public CodeReceived getCodeReceived(String receivedValue, CodeTable codeTable)
+  public CodeReceived getCodeReceived(String receivedValue, CodeTable codeTable, CodeReceived context)
+  {
+    receivedValue = receivedValue.toUpperCase();
+    if (context != null)
+    {
+      receivedValue = context.getContextWithCodeValue() + "-" + receivedValue;
+    }
+    return getCodeReceived(receivedValue, codeTable);
+  }
+
+  public CodeReceived getCodeReceived(String receivedValue, CodeTable codeTable, String contextValue)
+  {
+    receivedValue = receivedValue.toUpperCase();
+    if (contextValue != null)
+    {
+      receivedValue = contextValue + "-" + receivedValue;
+    }
+    return getCodeReceived(receivedValue, codeTable);
+  }
+
+  protected CodeReceived getCodeReceived(String receivedValue, CodeTable codeTable)
   {
     CodeReceived cr = null;
     Map<String, CodeReceived> codesReceived = codeTableMaps.get(codeTable);
@@ -158,7 +197,7 @@ public class CodesReceived
 
   private Map<CodeTable, Map<String, CodeReceived>> codeTableMaps = new HashMap<CodeTable, Map<String, CodeReceived>>();
   private CodesReceived parent = null;
-  
+
   public CodesReceived getParent()
   {
     return parent;
@@ -210,7 +249,12 @@ public class CodesReceived
     Map<String, CodeReceived> codeReceivedMap = new HashMap<String, CodeReceived>();
     for (CodeReceived codeReceived : codesReceived)
     {
-      codeReceivedMap.put(codeReceived.getReceivedValue(), codeReceived);
+      String receivedValue = codeReceived.getReceivedValue();
+       if (codeReceived.getContextValue() != null && !codeReceived.getContextValue().equals(""))
+       {
+         receivedValue = codeReceived.getContextValue() + "-" + receivedValue;
+       }
+      codeReceivedMap.put(receivedValue, codeReceived);
     }
     codeTableMaps.put(codeTable, codeReceivedMap);
   }
@@ -221,13 +265,19 @@ public class CodesReceived
     for (CodeMaster codeMaster : codeMasters)
     {
       CodeReceived codeReceived = new CodeReceived();
+      codeReceived.setCodeValue(codeMaster.getContextValue());
       codeReceived.setReceivedValue(codeMaster.getCodeValue());
       codeReceived.setCodeStatus(codeMaster.getCodeStatus());
       codeReceived.setCodeValue(codeMaster.getUseValue());
       codeReceived.setProfile(profile);
       codeReceived.setTable(codeTable);
       codeReceived.setCodeLabel(codeMaster.getCodeLabel());
-      codeReceivedMap.put(codeReceived.getReceivedValue(), codeReceived);
+      String receivedValue = codeReceived.getReceivedValue();
+      if (codeReceived.getContextValue() != null && !codeReceived.getContextValue().equals(""))
+      {
+        receivedValue = codeReceived.getContextValue() + "-" + receivedValue;
+      }
+      codeReceivedMap.put(receivedValue, codeReceived);
     }
     codeTableMaps.put(codeTable, codeReceivedMap);
   }
@@ -243,7 +293,7 @@ public class CodesReceived
       codeReceived.setCodeValue(vaccineCpt.getCptCode());
       codeReceived.setProfile(profile);
       codeReceived.setTable(codeTable);
-      codeReceivedMap.put(codeReceived.getReceivedValue(), codeReceived);
+      codeReceivedMap.put(codeReceived.getContextWithCodeValue(), codeReceived);
     }
     codeTableMaps.put(codeTable, codeReceivedMap);
   }
@@ -259,11 +309,11 @@ public class CodesReceived
       codeReceived.setCodeValue(vaccineCvx.getCvxCode());
       codeReceived.setProfile(profile);
       codeReceived.setTable(codeTable);
-      codeReceivedMap.put(codeReceived.getReceivedValue(), codeReceived);
+      codeReceivedMap.put(codeReceived.getContextWithCodeValue(), codeReceived);
     }
     codeTableMaps.put(codeTable, codeReceivedMap);
   }
-  
+
   protected void addToCodeTableMapsVaccineProduct(CodeTable codeTable, List<VaccineProduct> vaccineProductList, SubmitterProfile profile)
   {
     Map<String, CodeReceived> codeReceivedMap = new HashMap<String, CodeReceived>();
@@ -276,7 +326,7 @@ public class CodesReceived
       codeReceived.setProfile(profile);
       codeReceived.setTable(codeTable);
       codeReceived.setCodeLabel(vaccineProduct.getProductName());
-      codeReceivedMap.put(codeReceived.getReceivedValue(), codeReceived);
+      codeReceivedMap.put(codeReceived.getContextWithCodeValue(), codeReceived);
     }
     codeTableMaps.put(codeTable, codeReceivedMap);
   }
@@ -292,7 +342,7 @@ public class CodesReceived
       codeReceived.setCodeValue(vaccineMvx.getMvxCode());
       codeReceived.setProfile(profile);
       codeReceived.setTable(codeTable);
-      codeReceivedMap.put(codeReceived.getReceivedValue(), codeReceived);
+      codeReceivedMap.put(codeReceived.getContextWithCodeValue(), codeReceived);
     }
     codeTableMaps.put(codeTable, codeReceivedMap);
   }

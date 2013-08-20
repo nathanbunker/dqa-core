@@ -42,7 +42,7 @@ public class QualityReport
       "completeness.vaccinations");
   private static final ToolTip RECEIVED_VACCINATIONS_ADMININISTERED = new ToolTip("Administered", "Number of vaccinations indicated as administered",
       true).setLink("completeness.vaccineGroup");
-  private static final ToolTip RECEIVED_VACCINATIONS_HISTORICAL = new ToolTip("Historical", "Number of vaccinations not indicated as administered",
+  private static final ToolTip RECEIVED_VACCINATIONS_HISTORICAL = new ToolTip("Historical", "Number of vaccinations NOT indicated as administered",
       true);
   private static final ToolTip RECEIVED_VACCINATIONS_DELETED = new ToolTip("Deleted", "Number of vaccinations indicated as deleted", true);
   private static final ToolTip RECEIVED_VACCINATIONS_NOT_ADMINISTERED = new ToolTip("Not Administered",

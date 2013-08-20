@@ -39,6 +39,17 @@ public class PotentialIssue implements Serializable
   private ToolTip toolTip = null;
   private CodeTable table = null;
   private String hl7Reference = null;
+  private String hl7ErrorCode = null;
+
+  public String getHl7ErrorCode()
+  {
+    return hl7ErrorCode;
+  }
+
+  public void setHl7ErrorCode(String hl7ErrorCode)
+  {
+    this.hl7ErrorCode = hl7ErrorCode;
+  }
 
   public String getHl7Reference()
   {

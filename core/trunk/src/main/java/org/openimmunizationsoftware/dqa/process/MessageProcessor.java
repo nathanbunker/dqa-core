@@ -2,8 +2,10 @@ package org.openimmunizationsoftware.dqa.process;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.Iterator;
 import java.util.List;
 
+import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.openimmunizationsoftware.dqa.db.model.BatchReport;
@@ -12,10 +14,16 @@ import org.openimmunizationsoftware.dqa.db.model.CodeTable;
 import org.openimmunizationsoftware.dqa.db.model.IssueAction;
 import org.openimmunizationsoftware.dqa.db.model.MessageBatch;
 import org.openimmunizationsoftware.dqa.db.model.MessageReceived;
+import org.openimmunizationsoftware.dqa.db.model.MessageReceivedGeneric;
+import org.openimmunizationsoftware.dqa.db.model.QueryReceived;
 import org.openimmunizationsoftware.dqa.db.model.SubmitterProfile;
+import org.openimmunizationsoftware.dqa.db.model.received.NextOfKin;
+import org.openimmunizationsoftware.dqa.db.model.received.Patient;
+import org.openimmunizationsoftware.dqa.db.model.received.Vaccination;
 import org.openimmunizationsoftware.dqa.manager.CodesReceived;
 import org.openimmunizationsoftware.dqa.manager.MessageReceivedManager;
-import org.openimmunizationsoftware.dqa.parse.VaccinationUpdateParserHL7;
+import org.openimmunizationsoftware.dqa.parse.HL7Util;
+import org.openimmunizationsoftware.dqa.parse.VaccinationParserHL7;
 import org.openimmunizationsoftware.dqa.quality.QualityCollector;
 import org.openimmunizationsoftware.dqa.validate.Validator;
 
@@ -105,12 +113,11 @@ public class MessageProcessor
    * @param qualityCollector
    * @return
    */
-  public static MessageReceived processMessage(boolean debugFlag, VaccinationUpdateParserHL7 parser, String sb, SubmitterProfile profile,
+  public static MessageReceivedGeneric processMessage(boolean debugFlag, VaccinationParserHL7 parser, String sb, SubmitterProfile profile,
       Session session, QualityCollector qualityCollector)
   {
-    MessageProcessRequest request = new MessageProcessRequest();
+    MessageProcessRequest request = new MessageProcessRequest(sb);
     request.setDebugFlag(debugFlag);
-    request.setMessageText(sb);
     request.setParser(parser);
     request.setProfile(profile);
     request.setSession(session);
@@ -121,12 +128,39 @@ public class MessageProcessor
 
   public static MessageProcessResponse processMessage(MessageProcessRequest request)
   {
-    MessageProcessResponse response = new MessageProcessResponse();
-    MessageReceived messageReceived = new MessageReceived();
-    messageReceived.setMessageKey(request.getMessageKey());
-    response.setMessageReceived(messageReceived);
-    messageReceived.setDebug(request.isDebugFlag());
 
+    MessageProcessResponse response = new MessageProcessResponse();
+    MessageReceivedGeneric messageReceived;
+
+    if (request.isHL7v2())
+    {
+      if (request.getMessageType().equals(HL7Util.MESSAGE_TYPE_VXU))
+      {
+        messageReceived = new MessageReceived();
+        processVXU(request, (MessageReceived) messageReceived);
+      } else if (request.getMessageType().equals(HL7Util.MESSAGE_TYPE_QBP))
+      {
+        messageReceived = new QueryReceived();
+        processQBP(request, (QueryReceived) messageReceived);
+      } else
+      {
+        messageReceived = new MessageReceived();
+        String ackMessage = HL7Util.makeAckMessage(HL7Util.ACK_REJECT, HL7Util.SEVERITY_ERROR, "Message type '" + request.getMessageType()
+            + "' is either not recognized or is not supported", request);
+        messageReceived.setResponseText(ackMessage);
+      }
+    } else
+    {
+      messageReceived = new MessageReceived();
+      messageReceived.setResponseText("Unrecognized message format, expecting an HL7 v2 formatted message");
+      messageReceived.setSuccessfulCompletion(false);
+    }
+    response.setMessageReceived(messageReceived);
+    return response;
+  }
+
+  public static void processVXU(MessageProcessRequest request, MessageReceived messageReceived)
+  {
     Transaction tx = request.getSession().beginTransaction();
     try
     {
@@ -135,12 +169,6 @@ public class MessageProcessor
       messageReceived.setProfile(request.getProfile());
       messageReceived.setRequestText(request.getMessageText());
       request.getParser().createVaccinationUpdateMessage(messageReceived);
-      if (request.getProfile().isProfileStatusTest()
-          && messageReceived.getMessageHeader().getProcessingStatusCode()
-              .equals(org.openimmunizationsoftware.dqa.db.model.MessageHeader.PROCESSING_ID_DEBUGGING))
-      {
-        messageReceived.setDebug(true);
-      }
       if (!messageReceived.hasErrors())
       {
         Validator validator = new Validator(request.getProfile(), request.getSession());
@@ -154,18 +182,187 @@ public class MessageProcessor
       MessageReceivedManager.saveMessageReceived(request.getProfile(), messageReceived, request.getSession());
 
       tx.commit();
-      messageReceived.setSuccessful(true);
+      tx = null;
+      messageReceived.setSuccessfulCompletion(true);
 
     } catch (Exception exception)
     {
-      tx.rollback();
-      String ackMessage = "MSH|^~\\&|||||201105231008000||ACK^|201105231008000|P|2.3.1|\r" + "MSA|AE|TODO|Exception occurred: "
-          + exception.getMessage() + "|\r";
+      String ackMessage = HL7Util.makeAckMessage(HL7Util.ACK_ERROR, HL7Util.SEVERITY_ERROR, "Unable to process because of unexpected exception:  "
+          + exception.getMessage(), request);
       messageReceived.setResponseText(ackMessage);
-      messageReceived.setSuccessful(false);
+      messageReceived.setSuccessfulCompletion(false);
       messageReceived.setException(exception);
+    } finally
+    {
+      if (tx != null)
+      {
+        tx.rollback();
+        tx = null;
+      }
     }
-    return response;
+  }
+
+  public static void processQBP(MessageProcessRequest request, QueryReceived queryReceived)
+  {
+    Session session = request.getSession();
+    Transaction tx = session.beginTransaction();
+    try
+    {
+      request.getProfile().initPotentialIssueStatus(request.getSession());
+      queryReceived.setProfile(request.getProfile());
+      queryReceived.setRequestText(request.getMessageText());
+      request.getParser().createQueryMessage(queryReceived);
+
+      QueryResult queryResult = new QueryResult();
+
+      if (!queryReceived.hasErrors())
+      {
+        Query query = session.createQuery("from Patient where messageReceived.profile = ? and idSubmitterNumber = ? and "
+            + "(messageReceived.issueAction = 'W' or messageReceived.issueAction = 'A') order by messageReceived.receivedDate ASC ");
+        query.setParameter(0, request.getProfile());
+        query.setParameter(1, queryReceived.getPatient().getIdSubmitterNumber());
+        List<Patient> patientList = query.list();
+        for (Iterator<Patient> patientIt = patientList.iterator(); patientIt.hasNext();)
+        {
+          Patient patient = patientIt.next();
+          if (!patient.getNameFirst().equalsIgnoreCase(queryReceived.getPatient().getNameFirst())
+              || !patient.getNameLast().equalsIgnoreCase(queryReceived.getPatient().getNameLast()))
+          {
+            patientIt.remove();
+          }
+        }
+        if (patientList.size() > 0)
+        {
+          queryResult.setPatient(patientList.get(patientList.size() - 1));
+        }
+        List<NextOfKin> nextOfKinListComplete = queryResult.getNextOfKinList();
+        for (Patient patient : patientList)
+        {
+          MessageReceived messageReceived = patient.getMessageReceived();
+          query = session.createQuery("from NextOfKin where messageReceived = ?");
+          query.setParameter(0, messageReceived);
+          List<NextOfKin> nextOfKinList = query.list();
+          for (NextOfKin nextOfKin : nextOfKinList)
+          {
+            if (!nextOfKin.isSkipped())
+            {
+              int pos = 0;
+              while (pos < nextOfKinListComplete.size())
+              {
+                NextOfKin vc = nextOfKinListComplete.get(pos);
+                if (same(vc, nextOfKin))
+                {
+                  nextOfKinListComplete.remove(pos);
+
+                  break;
+                }
+                pos++;
+              }
+              nextOfKinListComplete.add(nextOfKin);
+            }
+          }
+        }
+        List<Vaccination> vaccinationListComplete = queryResult.getVaccinationList();
+        for (Patient patient : patientList)
+        {
+          MessageReceived messageReceived = patient.getMessageReceived();
+          query = session.createQuery("from Vaccination where messageReceived = ?");
+          query.setParameter(0, messageReceived);
+          List<Vaccination> vaccinationList = query.list();
+          for (Vaccination vaccination : vaccinationList)
+          {
+            if (!vaccination.isSkipped())
+            {
+              boolean addToList = true;
+              int pos = 0;
+              while (pos < vaccinationListComplete.size())
+              {
+                Vaccination vc = vaccinationListComplete.get(pos);
+                if (same(vc, vaccination))
+                {
+                  vaccinationListComplete.remove(pos);
+                  if (vaccination.isActionDelete())
+                  {
+                    addToList = false;
+                  }
+                  break;
+                }
+                pos++;
+              }
+              if (addToList)
+              {
+                vaccinationListComplete.add(vaccination);
+              }
+            }
+          }
+        }
+
+      }
+
+      String ackMessage = request.getParser().makeAckMessage(queryReceived, queryResult, session);
+      queryReceived.setResponseText(ackMessage);
+      queryReceived.setIssueAction(IssueAction.ACCEPT);
+
+      tx.commit();
+      tx = null;
+      queryReceived.setSuccessfulCompletion(true);
+
+    } catch (Exception exception)
+    {
+      String ackMessage = HL7Util.makeAckMessage(HL7Util.ACK_ERROR, HL7Util.SEVERITY_ERROR, "Unable to process because of unexpected exception:  "
+          + exception.getMessage(), request);
+      queryReceived.setResponseText(ackMessage);
+      queryReceived.setSuccessfulCompletion(false);
+      queryReceived.setException(exception);
+    } finally
+    {
+      if (tx != null)
+      {
+        tx.rollback();
+        tx = null;
+      }
+    }
+  }
+
+  private static boolean same(NextOfKin nk1, NextOfKin nk2)
+  {
+    boolean firstNameConflicts;
+    boolean lastNameConflicts;
+    if (nk1.getNameFirst() == null || nk2.getNameFirst() == null)
+    {
+      firstNameConflicts = nk1.getNameFirst() != null || nk2.getNameFirst() != null;
+    } else
+    {
+      firstNameConflicts = !nk1.getNameFirst().equals(nk2.getNameFirst());
+    }
+    if (nk1.getNameLast() == null || nk2.getNameLast() == null)
+    {
+      lastNameConflicts = nk1.getNameLast() != null || nk2.getNameLast() != null;
+    } else
+    {
+      lastNameConflicts = !nk1.getNameLast().equals(nk2.getNameLast());
+    }
+    return !firstNameConflicts && !lastNameConflicts;
+  }
+
+  private static boolean same(Vaccination v1, Vaccination v2)
+  {
+    boolean s;
+    if (v1.getAdminDate() == null && v2.getAdminDate() == null)
+    {
+      s = true;
+    } else if (v1.getAdminDate() == null || v2.getAdminDate() == null)
+    {
+      s = false;
+    } else
+    {
+      s = v1.getAdminDate().equals(v2.getAdminDate());
+    }
+    if (s)
+    {
+      return v1.getAdminCvxCode().equals(v2.getAdminCvxCode());
+    }
+    return s;
   }
 
   private static final String PAD = "                                                                                                          ";

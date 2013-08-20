@@ -182,7 +182,7 @@ public class Validator extends ValidateMessage
         registerIssue(pi.NextOfKinRelationshipIsUnexpected);
       } else
       {
-        String[] responsibleParties = { NextOfKin.RELATIONSHIP_CARE_GIVER, NextOfKin.RELATIONSHIP_FATHER, NextOfKin.RELATIONSHIP_GARNDPARENT,
+        String[] responsibleParties = { NextOfKin.RELATIONSHIP_CARE_GIVER, NextOfKin.RELATIONSHIP_FATHER, NextOfKin.RELATIONSHIP_GRANDPARENT,
             NextOfKin.RELATIONSHIP_MOTHER, NextOfKin.RELATIONSHIP_PARENT, NextOfKin.RELATIONSHIP_GUARDIAN };
         for (String compare : responsibleParties)
         {
@@ -1347,10 +1347,15 @@ public class Validator extends ValidateMessage
     {
       address.getCountry().setCode(address.getState().getCode());
     }
-
     handleCodeReceived(address.getCountry(), piAddressCountry);
-    handleCodeReceived(address.getCountyParish(), piAddressCounty);
-    handleCodeReceived(address.getState(), piAddressState);
+    CodeReceived countryCodeReceived = address.getCountry().getCodeReceived();
+    if (countryCodeReceived == null || countryCodeReceived.getCodeValue() == null || countryCodeReceived.getCodeValue().equals(""))
+    {
+      countryCodeReceived = new CodeReceived();
+      countryCodeReceived.setCodeValue("USA");
+    }
+    handleCodeReceived(address.getState(), piAddressState, countryCodeReceived);
+    handleCodeReceived(address.getCountyParish(), piAddressCounty, address.getState().getCodeReceived());
     notEmpty(address.getStreet(), piAddressStreet);
     notEmpty(address.getStreet2(), piAddressStreet2);
     if (notEmpty(address.getZip(), piAddressZip))
@@ -1401,7 +1406,7 @@ public class Validator extends ValidateMessage
 
     if (piAddressType != null)
     {
-      // Only validate if address type is set if address has been set 
+      // Only validate if address type is set if address has been set
       notEmpty(address.getTypeCode(), piAddressType);
     }
     return true;
@@ -1470,16 +1475,27 @@ public class Validator extends ValidateMessage
   protected void handleCodeReceived(Id id, PotentialIssues.Field field)
   {
 
-    handleCodeReceived(id, field, true);
+    handleCodeReceived(id, field, true, null);
+  }
+
+  protected void handleCodeReceived(Id id, PotentialIssues.Field field, CodeReceived context)
+  {
+
+    handleCodeReceived(id, field, true, context);
   }
 
   protected void handleCodeReceived(Id id, PotentialIssues.Field field, boolean notSilent)
+  {
+    handleCodeReceived(id, field, notSilent, null);
+  }
+
+  protected void handleCodeReceived(Id id, PotentialIssues.Field field, boolean notSilent, CodeReceived context)
   {
     CodeReceived cr = null;
     if (notEmpty(id.getNumber(), field))
     {
       CodeTable codeTable = CodesReceived.getCodeTable(id.getTableType());
-      cr = getCodeReceived(id.getNumber(), id.getName().getFullName(), codeTable);
+      cr = getCodeReceived(id.getNumber(), id.getName().getFullName(), codeTable, context);
       cr.incReceivedCount();
       session.saveOrUpdate(cr);
       if (cr.getCodeStatus().isValid())
@@ -1517,16 +1533,26 @@ public class Validator extends ValidateMessage
 
   protected void handleCodeReceived(CodedEntity codedEntity, PotentialIssues.Field field)
   {
-    handleCodeReceived(codedEntity, field, true);
+    handleCodeReceived(codedEntity, field, true, null);
+  }
+
+  protected void handleCodeReceived(CodedEntity codedEntity, PotentialIssues.Field field, CodeReceived context)
+  {
+    handleCodeReceived(codedEntity, field, true, context);
   }
 
   protected void handleCodeReceived(CodedEntity codedEntity, PotentialIssues.Field field, boolean notSilent)
+  {
+    handleCodeReceived(codedEntity, field, notSilent, null);
+  }
+
+  protected void handleCodeReceived(CodedEntity codedEntity, PotentialIssues.Field field, boolean notSilent, CodeReceived context)
   {
     CodeReceived cr = null;
     if (notEmpty(codedEntity.getCode(), field, notSilent))
     {
       CodeTable codeTable = CodesReceived.getCodeTable(codedEntity.getTableType());
-      cr = getCodeReceived(codedEntity.getCode(), codedEntity.getText(), codeTable);
+      cr = getCodeReceived(codedEntity.getCode(), codedEntity.getText(), codeTable, context);
       cr.incReceivedCount();
       session.update(cr);
       if (cr.getCodeStatus().isValid())
@@ -1573,12 +1599,12 @@ public class Validator extends ValidateMessage
     return s.substring(0, length);
   }
 
-  protected CodeReceived getCodeReceived(String receivedValue, String receivedLabel, CodeTable codeTable)
+  protected CodeReceived getCodeReceived(String receivedValue, String receivedLabel, CodeTable codeTable, CodeReceived context)
   {
     receivedValue = trunc(receivedValue, 50);
     receivedLabel = trunc(receivedLabel, 30);
     CodesReceived crs = profile.getCodesReceived(session);
-    CodeReceived cr = crs.getCodeReceived(receivedValue, codeTable);
+    CodeReceived cr = crs.getCodeReceived(receivedValue, codeTable, context);
     if (cr == null)
     {
       cr = new CodeReceived();
@@ -1588,15 +1614,19 @@ public class Validator extends ValidateMessage
       cr.setCodeValue(codeTable.getDefaultCodeValue());
       cr.setCodeStatus(CodeStatus.UNRECOGNIZED);
       cr.setCodeLabel(receivedLabel);
-      profile.registerCodeReceived(cr, session);
+      if (context != null)
+      {
+        cr.setContextValue(context.getContextWithCodeValue());
+      }
+      profile.registerCodeReceived(cr, context, session);
       session.saveOrUpdate(cr);
     } else if (!cr.getProfile().equals(profile))
     {
       cr = new CodeReceived(cr, profile, receivedLabel);
-      profile.registerCodeReceived(cr, session);
+      profile.registerCodeReceived(cr, context, session);
       session.saveOrUpdate(cr);
       // first time code was received
-    }
+    } 
 
     if (qualityCollector != null)
     {

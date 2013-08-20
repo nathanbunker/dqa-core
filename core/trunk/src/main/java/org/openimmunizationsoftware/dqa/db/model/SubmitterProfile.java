@@ -88,9 +88,9 @@ public static final int MASTER_HL7 = 1;
     }
   }
 
-  public void registerCodeReceived(CodeReceived codeReceived, Session session)
+  public void registerCodeReceived(CodeReceived codeReceived, CodeReceived context, Session session)
   {
-    getCodesReceived(session).registerCodeReceived(codeReceived);
+    getCodesReceived(session).registerCodeReceived(codeReceived, context);
   }
 
   public String getDataFormat()

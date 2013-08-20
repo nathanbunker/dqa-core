@@ -1,17 +1,17 @@
 package org.openimmunizationsoftware.dqa.process;
 
-import org.openimmunizationsoftware.dqa.db.model.MessageReceived;
+import org.openimmunizationsoftware.dqa.db.model.MessageReceivedGeneric;
 
 public class MessageProcessResponse
 {
-  private MessageReceived messageReceived = null;
+  private MessageReceivedGeneric messageReceived = null;
 
-  public MessageReceived getMessageReceived()
+  public MessageReceivedGeneric getMessageReceived()
   {
     return messageReceived;
   }
 
-  public void setMessageReceived(MessageReceived messageReceived)
+  public void setMessageReceived(MessageReceivedGeneric messageReceived)
   {
     this.messageReceived = messageReceived;
   }

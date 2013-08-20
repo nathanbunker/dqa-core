@@ -20,7 +20,7 @@ public class NextOfKin implements Skippable, Serializable
   public static final String RELATIONSHIP_CHILD = "CHD";
   public static final String RELATIONSHIP_FATHER = "FTH";
   public static final String RELATIONSHIP_FOSTER_CHILD = "FCH";
-  public static final String RELATIONSHIP_GARNDPARENT = "GRP";
+  public static final String RELATIONSHIP_GRANDPARENT = "GRP";
   public static final String RELATIONSHIP_GUARDIAN = "GRD";
   public static final String RELATIONSHIP_MOTHER = "MTH";
   public static final String RELATIONSHIP_OTHER = "OTH";
