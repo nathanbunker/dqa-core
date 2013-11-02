@@ -15,5 +15,7 @@
     <property name="issueDescription" column="issue_description" type="string"/>
     <many-to-one name="table" column="table_id" class="CodeTable" lazy="false"/>
     <property name="hl7Reference" column="hl7_reference" type="string"/>
+    <property name="hl7ErrorCode" column="hl7_error_code" type="string"/>
+    <property name="appErrorCode" column="app_error_code" type="string"/>
   </class>
 </hibernate-mapping>

@@ -13,9 +13,22 @@ public class VaccinationVIS  implements Skippable, Serializable
   private int positionId = 0;
   private boolean skipped = false;
   private CodedEntity document = new CodedEntity(CodeTable.Type.VACCINATION_VIS_DOC_TYPE);
+  private CodedEntity cvx = new CodedEntity(CodeTable.Type.VACCINATION_VIS_CVX_CODE);
   private Date publishedDate = null;
   private Date presentedDate = null;
-  
+
+  public String getCvxCode()
+  {
+    return cvx.getCode();
+  }
+  public void setCvxCode(String cvxCode)
+  {
+    cvx.setCode(cvxCode);
+  }
+  public CodedEntity getCvx()
+  {
+    return cvx;
+  }
   public int getVisId()
   {
     return visId;

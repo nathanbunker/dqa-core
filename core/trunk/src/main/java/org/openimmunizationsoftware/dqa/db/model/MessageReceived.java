@@ -20,7 +20,18 @@ public class MessageReceived extends MessageReceivedGeneric
   private Map<String, Vaccination> vaccinationMap = new HashMap<String, Vaccination>();
   private List<Vaccination> vaccinations = new ArrayList<Vaccination>();
   
+  private int internalTemporaryId = 0;
   
+  public int getInternalTemporaryId()
+  {
+    return internalTemporaryId;
+  }
+
+  public void setInternalTemporaryId(int internalTemporaryId)
+  {
+    this.internalTemporaryId = internalTemporaryId;
+  }
+
   public List<NextOfKin> getNextOfKins()
   {
     return nextOfKins;

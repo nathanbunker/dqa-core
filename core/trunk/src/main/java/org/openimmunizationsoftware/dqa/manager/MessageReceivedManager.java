@@ -9,6 +9,11 @@ import org.openimmunizationsoftware.dqa.db.model.SubmitterProfile;
 import org.openimmunizationsoftware.dqa.db.model.received.NextOfKin;
 import org.openimmunizationsoftware.dqa.db.model.received.Patient;
 import org.openimmunizationsoftware.dqa.db.model.received.Vaccination;
+import org.openimmunizationsoftware.dqa.db.model.received.VaccinationVIS;
+import org.openimmunizationsoftware.dqa.db.model.received.types.PatientAddress;
+import org.openimmunizationsoftware.dqa.db.model.received.types.PatientIdNumber;
+import org.openimmunizationsoftware.dqa.db.model.received.types.PatientImmunity;
+import org.openimmunizationsoftware.dqa.db.model.received.types.PatientPhone;
 
 public class MessageReceivedManager
 {
@@ -20,6 +25,22 @@ public class MessageReceivedManager
     Patient patient = messageReceived.getPatient();
     patient.setMessageReceived(messageReceived);
     session.save(patient);
+    for (PatientIdNumber patientIdNumber : patient.getPatientIdNumberList())
+    {
+      session.save(patientIdNumber);
+    }
+    for (PatientPhone patientPhone : patient.getPatientPhoneList())
+    {
+      session.save(patientPhone);
+    }
+    for (PatientAddress patientAddress : patient.getPatientAddressList())
+    {
+      session.save(patientAddress);
+    }
+    for (PatientImmunity patientImmunity : patient.getPatientImmunityList())
+    {
+      session.save(patientImmunity);
+    }
     MessageHeader messageHeader = messageReceived.getMessageHeader();
     messageHeader.setMessageReceived(messageReceived);
     session.save(messageHeader);
@@ -27,6 +48,11 @@ public class MessageReceivedManager
     {
       vaccination.setMessageReceived(messageReceived);
       session.saveOrUpdate(vaccination);
+      for (VaccinationVIS vaccinationVIS : vaccination.getVaccinationVisList())
+      {
+        vaccinationVIS.setVaccination(vaccination);
+        session.saveOrUpdate(vaccinationVIS);
+      }
     }
     for (NextOfKin nextOfKin : messageReceived.getNextOfKins())
     {

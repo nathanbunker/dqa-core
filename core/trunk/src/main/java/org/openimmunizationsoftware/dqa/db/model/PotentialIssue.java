@@ -40,6 +40,17 @@ public class PotentialIssue implements Serializable
   private CodeTable table = null;
   private String hl7Reference = null;
   private String hl7ErrorCode = null;
+  private String appErrorCode = null;
+
+  public String getAppErrorCode()
+  {
+    return appErrorCode;
+  }
+
+  public void setAppErrorCode(String appErrorCode)
+  {
+    this.appErrorCode = appErrorCode;
+  }
 
   public String getHl7ErrorCode()
   {

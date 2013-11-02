@@ -2,6 +2,8 @@ package org.openimmunizationsoftware.dqa.process;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
@@ -12,20 +14,37 @@ import org.openimmunizationsoftware.dqa.db.model.BatchReport;
 import org.openimmunizationsoftware.dqa.db.model.CodeReceived;
 import org.openimmunizationsoftware.dqa.db.model.CodeTable;
 import org.openimmunizationsoftware.dqa.db.model.IssueAction;
+import org.openimmunizationsoftware.dqa.db.model.KeyedSetting;
 import org.openimmunizationsoftware.dqa.db.model.MessageBatch;
 import org.openimmunizationsoftware.dqa.db.model.MessageReceived;
 import org.openimmunizationsoftware.dqa.db.model.MessageReceivedGeneric;
+import org.openimmunizationsoftware.dqa.db.model.PotentialIssue;
 import org.openimmunizationsoftware.dqa.db.model.QueryReceived;
 import org.openimmunizationsoftware.dqa.db.model.SubmitterProfile;
 import org.openimmunizationsoftware.dqa.db.model.received.NextOfKin;
 import org.openimmunizationsoftware.dqa.db.model.received.Patient;
 import org.openimmunizationsoftware.dqa.db.model.received.Vaccination;
+import org.openimmunizationsoftware.dqa.db.model.received.VaccinationVIS;
+import org.openimmunizationsoftware.dqa.db.model.received.types.PatientAddress;
+import org.openimmunizationsoftware.dqa.db.model.received.types.PatientIdNumber;
+import org.openimmunizationsoftware.dqa.db.model.received.types.PatientImmunity;
+import org.openimmunizationsoftware.dqa.db.model.received.types.PatientPhone;
 import org.openimmunizationsoftware.dqa.manager.CodesReceived;
+import org.openimmunizationsoftware.dqa.manager.KeyedSettingManager;
 import org.openimmunizationsoftware.dqa.manager.MessageReceivedManager;
+import org.openimmunizationsoftware.dqa.manager.PotentialIssues;
 import org.openimmunizationsoftware.dqa.parse.HL7Util;
 import org.openimmunizationsoftware.dqa.parse.VaccinationParserHL7;
 import org.openimmunizationsoftware.dqa.quality.QualityCollector;
 import org.openimmunizationsoftware.dqa.validate.Validator;
+import org.tch.fc.ConnectFactory;
+import org.tch.fc.ConnectorInterface;
+import org.tch.fc.model.ForecastActual;
+import org.tch.fc.model.ForecastItem;
+import org.tch.fc.model.Service;
+import org.tch.fc.model.Software;
+import org.tch.fc.model.TestCase;
+import org.tch.fc.model.TestEvent;
 
 public class MessageProcessor
 {
@@ -145,14 +164,24 @@ public class MessageProcessor
       } else
       {
         messageReceived = new MessageReceived();
-        String ackMessage = HL7Util.makeAckMessage(HL7Util.ACK_REJECT, HL7Util.SEVERITY_ERROR, "Message type '" + request.getMessageType()
-            + "' is either not recognized or is not supported", request);
+        String ackMessage;
+        if (request.getMessageType().equals(""))
+        {
+          PotentialIssue pi = PotentialIssues.getPotentialIssues().Hl7MshMessageTypeIsMissing;
+          ackMessage = HL7Util.makeAckMessage(HL7Util.ACK_REJECT, HL7Util.SEVERITY_ERROR, pi.getDisplayText(), request, pi);
+        } else
+        {
+          PotentialIssue pi = PotentialIssues.getPotentialIssues().Hl7MshMessageTypeIsUnrecognized;
+          ackMessage = HL7Util.makeAckMessage(HL7Util.ACK_REJECT, HL7Util.SEVERITY_ERROR, pi.getDisplayText(), request, pi);
+        }
         messageReceived.setResponseText(ackMessage);
       }
     } else
     {
       messageReceived = new MessageReceived();
-      messageReceived.setResponseText("Unrecognized message format, expecting an HL7 v2 formatted message");
+      PotentialIssue pi = PotentialIssues.getPotentialIssues().Hl7MshSegmentIsMissing;
+      String ackMessage = HL7Util.makeAckMessage(HL7Util.ACK_REJECT, HL7Util.SEVERITY_ERROR, pi.getDisplayText(), request, pi);
+      messageReceived.setResponseText(ackMessage);
       messageReceived.setSuccessfulCompletion(false);
     }
     response.setMessageReceived(messageReceived);
@@ -187,8 +216,9 @@ public class MessageProcessor
 
     } catch (Exception exception)
     {
+      PotentialIssue pi = PotentialIssues.getPotentialIssues().GeneralProcessingException;
       String ackMessage = HL7Util.makeAckMessage(HL7Util.ACK_ERROR, HL7Util.SEVERITY_ERROR, "Unable to process because of unexpected exception:  "
-          + exception.getMessage(), request);
+          + exception.getMessage(), request, pi);
       messageReceived.setResponseText(ackMessage);
       messageReceived.setSuccessfulCompletion(false);
       messageReceived.setException(exception);
@@ -261,8 +291,36 @@ public class MessageProcessor
               nextOfKinListComplete.add(nextOfKin);
             }
           }
+          query = session.createQuery("from PatientIdNumber where patient = ?");
+          query.setParameter(0, patient);
+          List<PatientIdNumber> patientIdNumberList = query.list();
+          for (PatientIdNumber patientIdNumber : patientIdNumberList)
+          {
+            patient.getPatientIdNumberList().add(patientIdNumber);
+          }
+
+          query = session.createQuery("from PatientPhone where patient = ?");
+          query.setParameter(0, patient);
+          List<PatientPhone> patientPhoneList = query.list();
+          for (PatientPhone patientPhone : patientPhoneList)
+          {
+            patient.getPatientPhoneList().add(patientPhone);
+          }
+
+          query = session.createQuery("from PatientAddress where patient = ?");
+          query.setParameter(0, patient);
+          List<PatientAddress> patientAddressList = query.list();
+          if (patientAddressList.size() > 0)
+          {
+            patient.getPatientAddressList().set(0, patientAddressList.get(0));
+          }
+          for (int i = 1; i < patientAddressList.size(); i++)
+          {
+            patient.getPatientAddressList().add(patientAddressList.get(i));
+          }
         }
         List<Vaccination> vaccinationListComplete = queryResult.getVaccinationList();
+        List<PatientImmunity> patientImmunityListComplete = queryResult.getPatient().getPatientImmunityList();
         for (Patient patient : patientList)
         {
           MessageReceived messageReceived = patient.getMessageReceived();
@@ -295,8 +353,92 @@ public class MessageProcessor
               }
             }
           }
+          query = session.createQuery("from PatientImmunity where patient = ?");
+          query.setParameter(0, patient);
+          List<PatientImmunity> patientImmunityList = query.list();
+          for (PatientImmunity patientImmunity : patientImmunityList)
+          {
+            if (!patientImmunity.isSkipped())
+            {
+              int pos = 0;
+              boolean addToList = true;
+              while (pos < patientImmunityListComplete.size())
+              {
+                PatientImmunity pi = patientImmunityListComplete.get(pos);
+                if (pi.getImmunityCode().equals(patientImmunity.getImmunityCode()))
+                {
+                  addToList = false;
+                  break;
+                }
+                pos++;
+              }
+              if (addToList)
+              {
+                patientImmunityListComplete.add(patientImmunity);
+              }
+            }
+          }
+        }
+        for (Vaccination vaccination : vaccinationListComplete)
+        {
+          query = session.createQuery("from VaccinationVIS where vaccination = ?");
+          query.setParameter(0, vaccination);
+          List<VaccinationVIS> vaccinationVISList = query.list();
+          vaccination.getVaccinationVisList().addAll(vaccinationVISList);
         }
 
+      }
+
+      if (queryResult.getPatient() != null)
+      {
+
+        KeyedSettingManager ksm = KeyedSettingManager.getKeyedSettingManager();
+        if (ksm.getKeyedValueBoolean(KeyedSetting.CDS_SOFTWARE_SERVICE_ENABLED, false))
+        {
+          String cdsServiceType = ksm.getKeyedValue(KeyedSetting.CDS_SOFTWARE_SERVICE_TYPE, "");
+          String cdsServiceUrl = ksm.getKeyedValue(KeyedSetting.CDS_SOFTWARE_SERVICE_URL, "");
+          if (!cdsServiceType.equals("") && !cdsServiceUrl.equals(""))
+          {
+            // Do forecast
+            Patient patient = queryResult.getPatient();
+            TestCase testCase = new TestCase();
+            testCase.setEvalDate(new Date());
+
+            testCase.setPatientSex(patient.getSexCode().equals("M") ? "M" : "F"); // force
+                                                                                  // to
+                                                                                  // be
+                                                                                  // either
+                                                                                  // male
+                                                                                  // or
+                                                                                  // female
+            testCase.setPatientDob(patient.getBirthDate());
+            List<TestEvent> testEventList = new ArrayList<TestEvent>();
+            for (Vaccination vaccination : queryResult.getVaccinationList())
+            {
+              String cvxString = vaccination.getAdminCvxCode();
+              if (!cvxString.equals(""))
+              {
+                try
+                {
+                  TestEvent testEvent = new TestEvent(Integer.parseInt(cvxString), vaccination.getAdminDate());
+                  testEventList.add(testEvent);
+                  vaccination.setTestEvent(testEvent);
+                } catch (NumberFormatException nfe)
+                {
+                  // ignore, forecast can't use bad CVX code
+                }
+              }
+            }
+            testCase.setTestEventList(testEventList);
+            Software software = new Software();
+            software.setServiceUrl(cdsServiceUrl);
+            software.setService(Service.getService(cdsServiceType));
+
+            ConnectorInterface connector = ConnectFactory.createConnecter(software, ForecastItem.getForecastItemList());
+            List<ForecastActual> forecastActualList = connector.queryForForecast(testCase);
+            queryResult.setForecastActualList(forecastActualList);
+          }
+        }
       }
 
       String ackMessage = request.getParser().makeAckMessage(queryReceived, queryResult, session);
@@ -309,8 +451,9 @@ public class MessageProcessor
 
     } catch (Exception exception)
     {
+      PotentialIssue pi = PotentialIssues.getPotentialIssues().GeneralProcessingException;
       String ackMessage = HL7Util.makeAckMessage(HL7Util.ACK_ERROR, HL7Util.SEVERITY_ERROR, "Unable to process because of unexpected exception:  "
-          + exception.getMessage(), request);
+          + exception.getMessage(), request, pi);
       queryReceived.setResponseText(ackMessage);
       queryReceived.setSuccessfulCompletion(false);
       queryReceived.setException(exception);

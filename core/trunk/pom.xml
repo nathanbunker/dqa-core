@@ -3,7 +3,7 @@
   <groupId>org.openimmunizationsoftware.dqa</groupId>
   <artifactId>ois-dqa-core</artifactId>
   <packaging>jar</packaging>
-  <version>1.6-SNAPSHOT</version>
+  <version>1.7-SNAPSHOT</version>
   <name>DQA-CORE</name>
   <description></description>
   <organization>
@@ -103,6 +103,12 @@
       <artifactId>hsqldb</artifactId>
       <version>1.8.0.10</version>
       <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.tch.fc</groupId>
+      <artifactId>ForecastConnector</artifactId>
+      <version>2.11</version>
     </dependency>
 
 
