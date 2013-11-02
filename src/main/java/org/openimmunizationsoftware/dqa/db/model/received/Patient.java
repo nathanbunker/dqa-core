@@ -1,7 +1,9 @@
 package org.openimmunizationsoftware.dqa.db.model.received;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 import org.openimmunizationsoftware.dqa.db.model.CodeTable;
 import org.openimmunizationsoftware.dqa.db.model.MessageReceived;
@@ -10,14 +12,17 @@ import org.openimmunizationsoftware.dqa.db.model.received.types.CodedEntity;
 import org.openimmunizationsoftware.dqa.db.model.received.types.Id;
 import org.openimmunizationsoftware.dqa.db.model.received.types.Name;
 import org.openimmunizationsoftware.dqa.db.model.received.types.OrganizationName;
-import org.openimmunizationsoftware.dqa.db.model.received.types.PhoneNumber;
+import org.openimmunizationsoftware.dqa.db.model.received.types.PatientAddress;
+import org.openimmunizationsoftware.dqa.db.model.received.types.PatientIdNumber;
+import org.openimmunizationsoftware.dqa.db.model.received.types.PatientImmunity;
+import org.openimmunizationsoftware.dqa.db.model.received.types.PatientPhone;
 
 public class Patient implements Skippable, Serializable
 {
-  
+
   private static final long serialVersionUID = 1l;
-  
-  private Address address = new Address();
+
+  private List<PatientAddress> patientAddressList = new ArrayList<PatientAddress>();
   private Name alias = new Name();
   private Date birthDate = null;
   private String birthMultiple = "";
@@ -29,15 +34,16 @@ public class Patient implements Skippable, Serializable
   private OrganizationName facility = new OrganizationName();
   private CodedEntity financialEligibility = new CodedEntity(CodeTable.Type.FINANCIAL_STATUS_CODE);
   private Date financialEligibilityDate = null;
-  private Id idMedicaid = new Id(CodeTable.Type.PATIENT_ID);
-  private Id idRegistry = new Id(CodeTable.Type.PATIENT_ID);
-  private Id idSsn = new Id(CodeTable.Type.PATIENT_ID);
-  private Id idSubmitter = new Id(CodeTable.Type.PATIENT_ID);
+  private PatientIdNumber idMedicaid = new PatientIdNumber();
+  private PatientIdNumber idRegistry = new PatientIdNumber();
+  private PatientIdNumber idSsn = new PatientIdNumber();
+  private PatientIdNumber idSubmitter = new PatientIdNumber();
+  private List<PatientIdNumber> patientIdNumberList = new ArrayList<PatientIdNumber>(); 
   private MessageReceived messageReceived = null;
   private String motherMaidenName = "";
   private Name name = new Name();
   private long patientId = 0;
-  private PhoneNumber phone = new PhoneNumber();
+  private PatientPhone phone = new PatientPhone();
   private Id physician = new Id(CodeTable.Type.PHYSICIAN_NUMBER);
   private CodedEntity primaryLanguage = new CodedEntity(CodeTable.Type.PERSON_LANGUAGE);
   private CodedEntity protection = new CodedEntity(CodeTable.Type.PATIENT_PROTECTION);
@@ -49,50 +55,83 @@ public class Patient implements Skippable, Serializable
   private CodedEntity sex = new CodedEntity(CodeTable.Type.PATIENT_SEX);
   private boolean isUnderAged = false;
   private boolean skipped = false;
+  private List<PatientPhone> patientPhoneList = new ArrayList<PatientPhone>();
+  private List<PatientImmunity> patientImmunityList = new ArrayList<PatientImmunity>();
 
-  public Address getAddress()
+  public List<PatientImmunity> getPatientImmunityList()
   {
+    return patientImmunityList;
+  }
+
+  public List<PatientIdNumber> getPatientIdNumberList()
+  {
+    return patientIdNumberList;
+  }
+
+  public List<PatientPhone> getPatientPhoneList()
+  {
+    return patientPhoneList;
+  }
+
+  public List<PatientAddress> getPatientAddressList()
+  {
+    return patientAddressList;
+  }
+
+  public PatientAddress getAddress()
+  {
+    PatientAddress address = null;
+    if (patientAddressList.size() == 0)
+    {
+      address = new PatientAddress();
+      address.setPatient(this);
+      address.setPositionId(1);
+      patientAddressList.add(address);
+    } else
+    {
+      address = patientAddressList.get(0);
+    }
     return address;
   }
 
   public String getAddressCity()
   {
-    return address.getCity();
+    return getAddress().getCity();
   }
 
   public String getAddressCountryCode()
   {
-    return address.getCountry().getCode();
+    return getAddress().getCountry().getCode();
   }
 
   public String getAddressCountyParishCode()
   {
-    return address.getCountyParishCode();
+    return getAddress().getCountyParishCode();
   }
 
   public String getAddressStateCode()
   {
-    return address.getStateCode();
+    return getAddress().getStateCode();
   }
 
   public String getAddressStreet()
   {
-    return address.getStreet();
+    return getAddress().getStreet();
   }
 
   public String getAddressStreet2()
   {
-    return address.getStreet2();
+    return getAddress().getStreet2();
   }
 
   public String getAddressTypeCode()
   {
-    return address.getTypeCode();
+    return getAddress().getTypeCode();
   }
 
   public String getAddressZip()
   {
-    return address.getZip();
+    return getAddress().getZip();
   }
 
   public Name getAlias()
@@ -200,7 +239,7 @@ public class Patient implements Skippable, Serializable
     return financialEligibility.getCode();
   }
 
-  public Id getIdMedicaid()
+  public PatientIdNumber getIdMedicaid()
   {
     return idMedicaid;
   }
@@ -210,7 +249,7 @@ public class Patient implements Skippable, Serializable
     return idMedicaid.getNumber();
   }
 
-  public Id getIdRegistry()
+  public PatientIdNumber getIdRegistry()
   {
     return idRegistry;
   }
@@ -220,7 +259,7 @@ public class Patient implements Skippable, Serializable
     return idRegistry.getNumber();
   }
 
-  public Id getIdSsn()
+  public PatientIdNumber getIdSsn()
   {
     return idSsn;
   }
@@ -230,7 +269,7 @@ public class Patient implements Skippable, Serializable
     return idSsn.getNumber();
   }
 
-  public Id getIdSubmitter()
+  public PatientIdNumber getIdSubmitter()
   {
     return idSubmitter;
   }
@@ -300,7 +339,7 @@ public class Patient implements Skippable, Serializable
     return patientId;
   }
 
-  public PhoneNumber getPhone()
+  public PatientPhone getPhone()
   {
     return phone;
   }
@@ -402,42 +441,42 @@ public class Patient implements Skippable, Serializable
 
   public void setAddressCity(String addressCity)
   {
-    address.setCity(addressCity);
+    getAddress().setCity(addressCity);
   }
 
   public void setAddressCountryCode(String addressCountryCode)
   {
-    address.getCountry().setCode(addressCountryCode);
+    getAddress().getCountry().setCode(addressCountryCode);
   }
 
   public void setAddressCountyParishCode(String addressCountyParishCode)
   {
-    address.getCountyParish().setCode(addressCountyParishCode);
+    getAddress().getCountyParish().setCode(addressCountyParishCode);
   }
 
   public void setAddressStateCode(String addressStateCode)
   {
-    address.getState().setCode(addressStateCode);
+    getAddress().getState().setCode(addressStateCode);
   }
 
   public void setAddressStreet(String addressStreet)
   {
-    address.setStreet(addressStreet);
+    getAddress().setStreet(addressStreet);
   }
 
   public void setAddressStreet2(String addressStreet2)
   {
-    address.setStreet2(addressStreet2);
+    getAddress().setStreet2(addressStreet2);
   }
 
   public void setAddressTypeCode(String addressTypeCode)
   {
-    address.getType().setCode(addressTypeCode);
+    getAddress().getType().setCode(addressTypeCode);
   }
 
   public void setAddressZip(String addressZip)
   {
-    address.setZip(addressZip);
+    getAddress().setZip(addressZip);
   }
 
   public void setAliasFirst(String nameFirst)
@@ -689,6 +728,5 @@ public class Patient implements Skippable, Serializable
   {
     this.isUnderAged = isUnderAged;
   }
-
 
 }

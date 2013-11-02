@@ -3,6 +3,10 @@ package org.openimmunizationsoftware.dqa.parse;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.openimmunizationsoftware.dqa.db.model.PotentialIssue;
+import org.openimmunizationsoftware.dqa.manager.PotentialIssueManager;
+import org.openimmunizationsoftware.dqa.manager.PotentialIssues;
+
 public class PreParseMessageExaminer
 {
   private boolean isHL7v2 = false;
@@ -14,7 +18,13 @@ public class PreParseMessageExaminer
   private String sendingFacility = "";
   private String processingId = "";
   private boolean debugOn = false;
+  private PotentialIssue isssueEncountered = null;
   
+  public PotentialIssue getIsssueEncountered()
+  {
+    return isssueEncountered;
+  }
+
   public String getProcessingId()
   {
     return processingId;
@@ -111,6 +121,12 @@ public class PreParseMessageExaminer
     isHL7v2 = HL7Util.setupSeparators(messageText, separators);
     if (isHL7v2)
     {
+      if (!HL7Util.checkSeparatorsAreValid(separators))
+      {
+        isssueEncountered = PotentialIssues.getPotentialIssues().Hl7MshEncodingCharacterIsInvalid;
+        HL7Util.setDefault(separators);
+      }
+      
       // truncate after first CR, just need to look at first line
       int pos = messageText.indexOf('\r');
       if (pos > -1)

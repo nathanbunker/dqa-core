@@ -11,6 +11,7 @@ import org.openimmunizationsoftware.dqa.db.model.VaccineCvx;
 import org.openimmunizationsoftware.dqa.db.model.received.types.CodedEntity;
 import org.openimmunizationsoftware.dqa.db.model.received.types.Id;
 import org.openimmunizationsoftware.dqa.db.model.received.types.OrganizationName;
+import org.tch.fc.model.TestEvent;
 
 public class Vaccination implements Skippable, Serializable
 {
@@ -66,6 +67,24 @@ public class Vaccination implements Skippable, Serializable
   private CodedEntity fundingSource = new CodedEntity(CodeTable.Type.VACCINATION_FUNDING_SOURCE);
   private String refusalReason = "";
   private List <VaccinationVIS> vaccinationVisList = new ArrayList<VaccinationVIS>();
+  private TestEvent testEvent = null;
+  
+  
+  public List<VaccinationVIS> getVaccinationVisList()
+  {
+    return vaccinationVisList;
+  }
+  
+  public TestEvent getTestEvent()
+  {
+    return testEvent;
+  }
+
+  public void setTestEvent(TestEvent testEvent)
+  {
+    this.testEvent = testEvent;
+  }
+
   private VaccinationVIS vaccinationVIS = new VaccinationVIS();
   {
     vaccinationVisList.add(vaccinationVIS);

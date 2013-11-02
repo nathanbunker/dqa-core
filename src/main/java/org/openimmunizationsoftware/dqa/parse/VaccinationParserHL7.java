@@ -1,20 +1,29 @@
 package org.openimmunizationsoftware.dqa.parse;
 
-import java.text.SimpleDateFormat;
+import static org.openimmunizationsoftware.dqa.parse.HL7Util.ACK_ACCEPT;
+import static org.openimmunizationsoftware.dqa.parse.HL7Util.ACK_ERROR;
+import static org.openimmunizationsoftware.dqa.parse.HL7Util.ACK_REJECT;
+import static org.openimmunizationsoftware.dqa.parse.HL7Util.AMP;
+import static org.openimmunizationsoftware.dqa.parse.HL7Util.BAR;
+import static org.openimmunizationsoftware.dqa.parse.HL7Util.CAR;
+import static org.openimmunizationsoftware.dqa.parse.HL7Util.SLA;
+import static org.openimmunizationsoftware.dqa.parse.HL7Util.TIL;
+import static org.openimmunizationsoftware.dqa.parse.HL7Util.escapeHL7Chars;
+import static org.openimmunizationsoftware.dqa.parse.HL7Util.getNextAckCount;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 import org.hibernate.Session;
-import org.hibernate.engine.query.QueryMetadata;
 import org.openimmunizationsoftware.dqa.SoftwareVersion;
 import org.openimmunizationsoftware.dqa.db.model.CodeMaster;
 import org.openimmunizationsoftware.dqa.db.model.CodeTable;
 import org.openimmunizationsoftware.dqa.db.model.IssueAction;
 import org.openimmunizationsoftware.dqa.db.model.IssueFound;
-import org.openimmunizationsoftware.dqa.db.model.MessageReceived;
 import org.openimmunizationsoftware.dqa.db.model.MessageHeader;
+import org.openimmunizationsoftware.dqa.db.model.MessageReceived;
 import org.openimmunizationsoftware.dqa.db.model.MessageReceivedGeneric;
 import org.openimmunizationsoftware.dqa.db.model.PotentialIssue;
 import org.openimmunizationsoftware.dqa.db.model.QueryReceived;
@@ -23,17 +32,22 @@ import org.openimmunizationsoftware.dqa.db.model.received.NextOfKin;
 import org.openimmunizationsoftware.dqa.db.model.received.Observation;
 import org.openimmunizationsoftware.dqa.db.model.received.Patient;
 import org.openimmunizationsoftware.dqa.db.model.received.Vaccination;
+import org.openimmunizationsoftware.dqa.db.model.received.VaccinationVIS;
 import org.openimmunizationsoftware.dqa.db.model.received.types.Address;
 import org.openimmunizationsoftware.dqa.db.model.received.types.CodedEntity;
 import org.openimmunizationsoftware.dqa.db.model.received.types.Id;
 import org.openimmunizationsoftware.dqa.db.model.received.types.Name;
 import org.openimmunizationsoftware.dqa.db.model.received.types.OrganizationName;
+import org.openimmunizationsoftware.dqa.db.model.received.types.PatientAddress;
+import org.openimmunizationsoftware.dqa.db.model.received.types.PatientIdNumber;
+import org.openimmunizationsoftware.dqa.db.model.received.types.PatientImmunity;
+import org.openimmunizationsoftware.dqa.db.model.received.types.PatientPhone;
 import org.openimmunizationsoftware.dqa.db.model.received.types.PhoneNumber;
 import org.openimmunizationsoftware.dqa.manager.CodeMasterManager;
 import org.openimmunizationsoftware.dqa.manager.PotentialIssues;
 import org.openimmunizationsoftware.dqa.process.QueryResult;
-
-import static org.openimmunizationsoftware.dqa.parse.HL7Util.*;
+import org.tch.fc.model.EvaluationActual;
+import org.tch.fc.model.ForecastActual;
 
 public class VaccinationParserHL7 extends VaccinationParser
 {
@@ -83,18 +97,32 @@ public class VaccinationParserHL7 extends VaccinationParser
     message = messageReceived;
     issuesFound = message.getIssuesFound();
     setup();
-    readSeparators(messageText);
+    boolean okayToParse = readSeparators(messageText);
+    if (!okayToParse)
+    {
+      return;
+    }
     readFields(messageText);
 
     patient = message.getPatient();
     currentSegment = segments.get(0);
     boolean foundPID = false;
     boolean foundPV1 = false;
+    boolean foundOBX = false;
+    boolean foundRXA = false;
+    boolean foundORC = false;
+    boolean foundNK1 = false;
+    boolean foundRXR = false;
+    boolean previouslyStartedAdminSegments = false;
     populateMSH(message);
     while (moveNext())
     {
       if (segmentName.equals("PID"))
       {
+        if (previouslyStartedAdminSegments)
+        {
+          registerIssue(pi.Hl7SegmentsOutOfOrder);
+        }
         if (foundPID)
         {
           registerIssue(pi.Hl7PidSegmentIsRepeated);
@@ -105,6 +133,10 @@ public class VaccinationParserHL7 extends VaccinationParser
         }
       } else if (segmentName.equals("PV1"))
       {
+        if (previouslyStartedAdminSegments)
+        {
+          registerIssue(pi.Hl7SegmentsOutOfOrder);
+        }
         if (foundPV1)
         {
           registerIssue(pi.Hl7Pv1SegmentIsRepeated);
@@ -116,16 +148,23 @@ public class VaccinationParserHL7 extends VaccinationParser
         }
       } else if (segmentName.equals("PD1"))
       {
+        if (previouslyStartedAdminSegments)
+        {
+          registerIssue(pi.Hl7SegmentsOutOfOrder);
+        }
         foundPID = assertPIDFound(foundPID);
         populatePD1(message);
       } else if (segmentName.equals("NK1"))
       {
-        if (foundPV1)
+        
+        foundNK1 = true;
+        if (foundPV1 || previouslyStartedAdminSegments)
         {
           registerIssue(pi.Hl7SegmentsOutOfOrder);
         }
         foundPID = assertPIDFound(foundPID);
         nextOfKinCount++;
+        positionId = nextOfKinCount;
         nextOfKin = new NextOfKin();
         skippableItem = nextOfKin;
         nextOfKin.setPositionId(nextOfKinCount);
@@ -134,33 +173,47 @@ public class VaccinationParserHL7 extends VaccinationParser
         populateNK1(message);
       } else if (segmentName.equals("ORC") || segmentName.equals("RXA"))
       {
-        if (!foundPV1)
+        if (previouslyStartedAdminSegments)
         {
-          registerIssue(pi.Hl7Pv1SegmentIsMissing);
-          foundPV1 = true;
+          if (!foundOBX)
+          {
+            registerIssue(pi.Hl7ObxSegmentIsMissing);
+          }
+          if (!foundRXR)
+          {
+            registerIssue(pi.Hl7RxrSegmentIsMissing);
+          }
         }
-        foundPID = assertPIDFound(foundPID);
-        if (vaccination == null)
-        {
-          positionId = 0;
-        }
-        positionId++;
+        previouslyStartedAdminSegments = true;
+        foundORC = false;
+        foundRXA = false;
+        foundRXR = false;
+        foundOBX = false;
+
         vaccinationCount++;
+        positionId = vaccinationCount;
         vaccination = new Vaccination();
         skippableItem = vaccination;
         vaccination.setPositionId(vaccinationCount);
         message.getVaccinations().add(vaccination);
         if (segmentName.equals("ORC"))
         {
+          foundORC = true;
           populateORC(messageReceived);
-          if (!moveNext() || !segmentName.equals("RXA"))
+          boolean moved = false;
+          if (!(moved = moveNext()) || !segmentName.equals("RXA"))
           {
+            if (moved && segmentName.equals("ORC"))
+            {
+              registerIssue(pi.Hl7OrcSegmentIsRepeated);
+            }
             registerIssue(pi.Hl7RxaSegmentIsMissing);
             moveBack();
             continue;
           }
         } else
         {
+          foundRXA = true;
           if (!message.getMessageHeader().getMessageVersion().startsWith("2.3") && !message.getMessageHeader().getMessageVersion().startsWith("2.4"))
           {
             registerIssue(pi.Hl7OrcSegmentIsMissing);
@@ -174,6 +227,11 @@ public class VaccinationParserHL7 extends VaccinationParser
           registerIssue(pi.Hl7RxaSegmentIsMissing);
           continue;
         }
+        if (foundRXR)
+        {
+          registerIssue(pi.Hl7RxrSegmentIsRepeated);
+        }
+        foundRXR = true;
         populateRXR(message);
       } else if (segmentName.equals("OBX"))
       {
@@ -183,6 +241,7 @@ public class VaccinationParserHL7 extends VaccinationParser
           continue;
         }
         populateOBX(message);
+        foundOBX = true;
       } else
       {
         if (segmentName.length() > 0 && segmentName.charAt(0) > ' ')
@@ -209,6 +268,27 @@ public class VaccinationParserHL7 extends VaccinationParser
     {
       registerIssue(pi.Hl7Pv1SegmentIsMissing);
     }
+    if (!foundNK1)
+    {
+      registerIssue(pi.Hl7Nk1SegmentIsMissing);
+    }
+    if (!foundPV1)
+    {
+      registerIssue(pi.Hl7Pv1SegmentIsMissing);
+      foundPV1 = true;
+    }
+    if (previouslyStartedAdminSegments)
+    {
+      if (!foundRXR)
+      {
+        registerIssue(pi.Hl7RxrSegmentIsMissing);
+      }
+      if (!foundOBX)
+      {
+        registerIssue(pi.Hl7ObxSegmentIsMissing);
+      }
+    }
+
   }
 
   private boolean assertPIDFound(boolean foundPID)
@@ -255,12 +335,13 @@ public class VaccinationParserHL7 extends VaccinationParser
 
   private void populateMSH(MessageReceivedGeneric message)
   {
+    positionId = 1;
     MessageHeader header = message.getMessageHeader();
     header.setSendingApplication(getValue(3));
     header.setSendingFacility(getValue(4));
     header.setReceivingApplication(getValue(5));
     header.setReceivingFacility(getValue(6));
-    header.setMessageDate(getValueDate(7, pi.Hl7MshMessageDateIsInvalid));
+    header.setMessageDate(getValueDate(7, pi.Hl7MshMessageDateIsInvalid, pi.Hl7MshMessageDateIsMissingTimezone));
     String[] field = getValues(9);
     header.setMessageType(field.length >= 1 ? field[0] : "");
     header.setMessageTrigger(field.length >= 2 ? field[1] : "");
@@ -278,21 +359,21 @@ public class VaccinationParserHL7 extends VaccinationParser
 
   private void populatePID(MessageReceived message)
   {
-
-    readAddress(11, patient.getAddress());
+    positionId = 1;
+    readAddress(11, patient);
     // private Name alias = new Name();
-    patient.setBirthDate(getValueDate(7, pi.PatientBirthDateIsInvalid));
+    patient.setBirthDate(getValueDate(7, pi.PatientBirthDateIsInvalid, null));
     patient.setBirthMultiple(getValue(24));
     patient.setBirthOrderCode(getValue(25));
     patient.setBirthPlace(getValue(23));
-    patient.setDeathDate(getValueDate(29, pi.PatientDeathDateIsInvalid));
+    patient.setDeathDate(getValueDate(29, pi.PatientDeathDateIsInvalid, null));
     patient.setDeathIndicator(getValue(30));
     readCodeEntity(22, patient.getEthnicity());
     // TODO private OrganizationName facility = new OrganizationName();
     readPatientId(3, patient);
     patient.setMotherMaidenName(getValue(6));
     readName(5, patient.getName());
-    readPhoneNumber(13, patient.getPhone());
+    readPhoneNumber(13, patient);
     readCodeEntity(15, patient.getPrimaryLanguage());
     readCodeEntity(10, patient.getRace());
     patient.setSexCode(getValue(8));
@@ -325,8 +406,8 @@ public class VaccinationParserHL7 extends VaccinationParser
   {
     registerIssueIfEmpty(1, pi.Hl7RxaGiveSubIdIsMissing);
     registerIssueIfEmpty(2, pi.Hl7RxaAdminSubIdCounterIsMissing);
-    vaccination.setAdminDate(getValueDate(3, pi.VaccinationAdminDateIsInvalid));
-    vaccination.setAdminDateEnd(getValueDate(4, null));
+    vaccination.setAdminDate(getValueDate(3, pi.VaccinationAdminDateIsInvalid, null));
+    vaccination.setAdminDateEnd(getValueDate(4, null, null));
     readCodeEntity(5, vaccination.getAdmin());
     CodedEntity admin = vaccination.getAdmin();
     readCptCvxCodes(admin);
@@ -336,12 +417,12 @@ public class VaccinationParserHL7 extends VaccinationParser
     // TODO 10 XCN private Id givenBy = new Id();
     readLocationWithAddress(11, vaccination.getFacility());
     vaccination.setLotNumber(getValue(15));
-    vaccination.setExpirationDate(getValueDate(16, pi.VaccinationLotExpirationDateIsInvalid));
+    vaccination.setExpirationDate(getValueDate(16, pi.VaccinationLotExpirationDateIsInvalid, null));
     readCodeEntity(17, vaccination.getManufacturer());
     readCodeEntity(18, vaccination.getRefusal());
     vaccination.setCompletionCode(getValue(20));
     vaccination.setActionCode(getValue(21));
-    vaccination.setSystemEntryDate(getValueDate(22, pi.VaccinationSystemEntryTimeIsInvalid));
+    vaccination.setSystemEntryDate(getValueDate(22, pi.VaccinationSystemEntryTimeIsInvalid, null));
   }
 
   private void populateRXR(MessageReceived message)
@@ -356,6 +437,7 @@ public class VaccinationParserHL7 extends VaccinationParser
     vaccination.getObservations().add(obs);
     readCodeEntity(2, obs.getValueType());
     readCodeEntity(3, obs.getObservationIdentifier());
+    obs.setObservationSubId(getValue(4));
     obs.setObservationValue(getValue(5));
   }
 
@@ -433,6 +515,7 @@ public class VaccinationParserHL7 extends VaccinationParser
 
   private void populatePV1(MessageReceived message)
   {
+    positionId = 1;
     patient.setPatientClassCode(getValue(2));
     String[] field = getValues(20);
     if (field.length > 0)
@@ -440,8 +523,35 @@ public class VaccinationParserHL7 extends VaccinationParser
       patient.setFinancialEligibilityCode(field[0]);
       if (field.length > 1)
       {
-        patient.setFinancialEligibilityDate(createDate(pi.PatientVfcEffectiveDateIsInvalid, field[1]));
+        patient.setFinancialEligibilityDate(createDate(pi.PatientVfcEffectiveDateIsInvalid, null, field[1]));
       }
+    }
+  }
+
+  private void readPhoneNumber(int fieldNumber, Patient patient)
+  {
+    List<PatientPhone> patientPhoneList = patient.getPatientPhoneList();
+    List<String[]> fieldList = getRepeatValues(fieldNumber);
+    int position = 0;
+    PatientPhone phoneNumber = null;
+    for (String[] field : fieldList)
+    {
+      position++;
+      if (phoneNumber == null)
+      {
+        phoneNumber = patient.getPhone();
+      } else
+      {
+        phoneNumber = new PatientPhone();
+      }
+      phoneNumber.setPatient(patient);
+      phoneNumber.setPositionId(position);
+      patientPhoneList.add(phoneNumber);
+      if (field.length == 0)
+      {
+        continue;
+      }
+      readPhoneNumber(phoneNumber, field);
     }
   }
 
@@ -452,6 +562,11 @@ public class VaccinationParserHL7 extends VaccinationParser
     {
       return;
     }
+    readPhoneNumber(phoneNumber, field);
+  }
+
+  public void readPhoneNumber(PhoneNumber phoneNumber, String[] field)
+  {
     phoneNumber.setNumber(field.length >= 1 ? field[0] : "");
     if (field.length >= 2 && field[1].length() > 0)
     {
@@ -483,9 +598,28 @@ public class VaccinationParserHL7 extends VaccinationParser
     }
   }
 
+  private void readAddress(int fieldNumber, Patient patient)
+  {
+    List<String[]> fieldList = getRepeatValues(fieldNumber);
+    int positionId = 0;
+    for (String[] field : fieldList)
+    {
+      positionId++;
+      PatientAddress address = new PatientAddress();
+      address.setPatient(patient);
+      address.setPositionId(positionId);
+      patient.getPatientAddressList().add(address);
+      readAddress(field, address);
+    }
+  }
+
   private void readAddress(int fieldNumber, Address address)
   {
-    String[] field = getValues(fieldNumber);
+    readAddress(getValues(fieldNumber), address);
+  }
+
+  private void readAddress(String[] field, Address address)
+  {
     address.setStreet(field.length >= 1 ? field[0] : "");
     address.setStreet2(field.length >= 2 ? field[1] : "");
     address.setCity(field.length >= 3 ? field[2] : "");
@@ -502,22 +636,38 @@ public class VaccinationParserHL7 extends VaccinationParser
     if (values.size() > 0)
     {
       String[] fields = values.get(0);
-      readId(fields, patient.getIdSubmitter());
+      PatientIdNumber id = patient.getIdSubmitter();
+      id.setPatient(patient);
+      id.setPositionId(1);
+      patient.getPatientIdNumberList().add(id);
+      readId(fields, id);
     }
     for (int i = 1; i < values.size(); i++)
     {
       String[] fields = values.get(i);
+      PatientIdNumber id = null;
       if (fields.length >= 5)
       {
         String typeCode = fields[4];
         if ("SS".equals(typeCode))
         {
-          readId(fields, patient.getIdSsn());
+          id = patient.getIdSsn();
         } else if ("MA".equals(typeCode))
         {
-          readId(fields, patient.getIdMedicaid());
+          id = patient.getIdMedicaid();
+        } else if ("SR".equals(typeCode))
+        {
+          id = patient.getIdRegistry();
         }
       }
+      if (id == null)
+      {
+        id = patient.getIdSubmitter();
+      }
+      id.setPatient(patient);
+      id.setPositionId((i + 1));
+      patient.getPatientIdNumberList().add(id);
+      readId(fields, id);
     }
   }
 
@@ -608,55 +758,27 @@ public class VaccinationParserHL7 extends VaccinationParser
     }
   }
 
-  private Date getValueDate(int fieldNumber, PotentialIssue pi)
+  private Date getValueDate(int fieldNumber, PotentialIssue piInvalid, PotentialIssue piNoTimeZone)
   {
     String fieldValue = getValue(fieldNumber);
-    return createDate(pi, fieldValue);
+    return createDate(piInvalid, piNoTimeZone, fieldValue);
   }
 
-  private Date createDate(PotentialIssue pi, String fieldValue)
+  private Date createDate(PotentialIssue piInvalid, PotentialIssue piNoTimeZone, String fieldValue)
   {
-    if (fieldValue.equals(""))
+    HL7DateAnalyzer dateAnalyzer = new HL7DateAnalyzer(fieldValue);
+    
+    if(dateAnalyzer.hasErrors())
     {
-      return null;
+      registerIssue(piInvalid);
     }
-    if (fieldValue.length() < 8)
+    if (piNoTimeZone != null && !dateAnalyzer.isHasTimezone())
     {
-      if (pi != null)
-      {
-        registerIssue(pi);
-      }
-      return null;
+      registerIssue(piNoTimeZone);
     }
-    if (fieldValue.length() < 14)
-    {
-      SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
-      sdf.setLenient(false);
-      try
-      {
-        return sdf.parse(fieldValue.substring(0, 8));
-      } catch (java.text.ParseException e)
-      {
-        if (pi != null)
-        {
-          registerIssue(pi);
-        }
-        return null;
-      }
-    }
-    SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
-    sdf.setLenient(false);
-    try
-    {
-      return sdf.parse(fieldValue.substring(0, 14));
-    } catch (java.text.ParseException e)
-    {
-      if (pi != null)
-      {
-        registerIssue(pi);
-      }
-      return null;
-    }
+    return dateAnalyzer.getDate();
+    
+    
   }
 
   private void registerIssueIfEmpty(int fieldNumber, PotentialIssue pi)
@@ -750,25 +872,21 @@ public class VaccinationParserHL7 extends VaccinationParser
     return values;
   }
 
-  private void readSeparators(String messageText)
+  private boolean readSeparators(String messageText)
   {
     if (HL7Util.setupSeparators(messageText, separators))
     {
-      separators[BAR] = messageText.charAt(BAR + 3);
-      separators[CAR] = messageText.charAt(CAR + 3);
-      separators[TIL] = messageText.charAt(TIL + 3);
-      separators[SLA] = messageText.charAt(SLA + 3);
-      separators[AMP] = messageText.charAt(AMP + 3);
-      // Make sure separators are unique for each other
-      for (int i = 0; i < separators.length; i++)
+      if (separators[BAR] == separators[CAR])
       {
-        for (int j = i + 1; j < separators.length; j++)
-        {
-          if (separators[i] == separators[j])
-          {
-            registerError(pi.Hl7MshEncodingCharacterIsInvalid);
-          }
-        }
+        registerError(pi.Hl7MshEncodingCharacterIsMissing);
+        HL7Util.setDefault(separators);
+      }
+
+      boolean unique = HL7Util.checkSeparatorsAreValid(separators);
+      if (!unique)
+      {
+        registerError(pi.Hl7MshEncodingCharacterIsInvalid);
+        HL7Util.setDefault(separators);
       }
       if (separators[BAR] != '|' || separators[CAR] != '^' || separators[TIL] != '~' || separators[SLA] != '\\' || separators[AMP] != '&')
       {
@@ -784,14 +902,18 @@ public class VaccinationParserHL7 extends VaccinationParser
       if (!messageText.startsWith("MSH"))
       {
         registerError(pi.Hl7MshSegmentIsMissing);
+        return false;
       } else if (messageText.length() < 10)
       {
         registerError(pi.Hl7MshEncodingCharacterIsMissing);
+        return false;
       } else
       {
         registerError(pi.GeneralParseException);
+        return false;
       }
     }
+    return true;
   }
 
   public String makeAckMessage(QueryReceived queryReceived, QueryResult queryResult, Session session)
@@ -806,6 +928,7 @@ public class VaccinationParserHL7 extends VaccinationParser
       makeQPD(queryReceived, ack);
     } else
     {
+      Date today = new Date();
       makeHeader(ack, queryReceived, HL7Util.QUERY_RESULT_IMMUNIZATION_HISTORY, HL7Util.QUERY_RESPONSE_TYPE);
       makeMSA(queryReceived, ack);
       makeQAK(queryReceived, ack, "OK");
@@ -817,6 +940,24 @@ public class VaccinationParserHL7 extends VaccinationParser
         position++;
         makeNK1(ack, nextOfKin, position);
       }
+      if (queryResult.getPatient().getPatientImmunityList().size() > 0)
+      {
+        int count = 0;
+        makeRXA998(ack);
+        for (PatientImmunity patientImmunity : queryResult.getPatient().getPatientImmunityList())
+        {
+          count++;
+          CodedEntity obsId = new CodedEntity(CodeTable.Type.OBSERVATION_IDENTIFIER);
+          CodedEntity obsValue = new CodedEntity(CodeTable.Type.EVIDENCE_OF_IMMUNITY);
+          CodedEntity obsMethod = null;
+          obsId.setCode("59784-9");
+          obsId.setText("Disease with presumed immunity");
+          obsId.setTable("LN");
+          obsValue.setCode(patientImmunity.getImmunityCode());
+          obsValue.setTable("SCT");
+          makeOBX(ack, count, obsId, obsValue, null, obsMethod, 0);
+        }
+      }
       for (Vaccination vaccination : queryResult.getVaccinationList())
       {
         makeORC(ack, vaccination);
@@ -825,32 +966,187 @@ public class VaccinationParserHL7 extends VaccinationParser
         {
           makeRXR(ack, vaccination);
         }
+        int count = 1;
+        int subId = 0;
         if (!vaccination.getFinancialEligibilityCode().equals(""))
         {
+          subId++;
           CodedEntity obsId = new CodedEntity(CodeTable.Type.OBSERVATION_IDENTIFIER);
           CodedEntity obsValue = new CodedEntity(CodeTable.Type.FINANCIAL_STATUS_CODE);
           CodedEntity obsMethod = null;
           obsId.setCode("64994-7");
+          obsId.setText("Vaccine funding program eligibility category");
           obsId.setTable("LN");
           obsValue.setCode(vaccination.getFinancialEligibilityCode());
           obsValue.setTable("HL70064");
-          makeOBX(ack, 1, obsId, obsValue, null, obsMethod);
+          makeOBX(ack, count++, obsId, obsValue, null, obsMethod, subId);
+        }
+        for (VaccinationVIS vaccinationVIS : vaccination.getVaccinationVisList())
+        {
+          subId++;
+          if (!vaccinationVIS.getCvxCode().equals(""))
+          {
+            CodedEntity obsId = new CodedEntity(CodeTable.Type.OBSERVATION_IDENTIFIER);
+            CodedEntity obsValue = new CodedEntity(CodeTable.Type.VACCINATION_CVX_CODE);
+            obsId.setCode("30956-7");
+            obsId.setText("Vaccine Type");
+            obsId.setTable("LN");
+            obsValue.setCode(vaccinationVIS.getCvxCode());
+            obsValue.setTable("CVX");
+            makeOBX(ack, count++, obsId, obsValue, subId);
+          }
+          if (vaccinationVIS.getPublishedDate() != null)
+          {
+            CodedEntity obsId = new CodedEntity(CodeTable.Type.OBSERVATION_IDENTIFIER);
+            obsId.setCode("29768-9");
+            obsId.setText("Date vaccine information statement published");
+            obsId.setTable("LN");
+            makeOBX(ack, 1, obsId, vaccinationVIS.getPublishedDate(), subId);
+          }
+          if (vaccinationVIS.getPresentedDate() != null)
+          {
+            CodedEntity obsId = new CodedEntity(CodeTable.Type.OBSERVATION_IDENTIFIER);
+            obsId.setCode("29769-7");
+            obsId.setText("Date vaccine information statement presented");
+            obsId.setTable("LN");
+            makeOBX(ack, 1, obsId, vaccinationVIS.getPresentedDate(), subId);
+          }
+        }
+        if (vaccination.getTestEvent() != null)
+        {
+          List<EvaluationActual> evaluationActualList = vaccination.getTestEvent().getEvaluationActualList();
+          if (evaluationActualList != null)
+          {
+            int groupCount = 1;
+            for (EvaluationActual evaluationActual : evaluationActualList)
+            {
+              CodedEntity obsId = new CodedEntity(CodeTable.Type.OBSERVATION_IDENTIFIER);
+              CodedEntity obsValue = new CodedEntity(CodeTable.Type.VACCINATION_CVX_CODE);
+              obsId.setCode("30956-7");
+              obsId.setText("Vaccine Type");
+              obsId.setTable("LN");
+              obsValue.setCode(evaluationActual.getVaccineCvx());
+              obsValue.setTable("CVX");
+              makeOBX(ack, count++, obsId, obsValue, today);
+
+              obsId = new CodedEntity(CodeTable.Type.OBSERVATION_IDENTIFIER);
+              obsValue = new CodedEntity(CodeTable.Type.CDC_PHIN_VADS);
+              obsId.setCode("59779-9");
+              obsId.setText("Immunization Schedule used");
+              obsId.setTable("LN");
+              obsValue.setCode("VXC16");
+              obsValue.setText("ACIP Schedule");
+              obsValue.setTable("CDCPHINVS");
+              makeOBX(ack, count++, obsId, obsValue, today);
+
+              obsId = new CodedEntity(CodeTable.Type.OBSERVATION_IDENTIFIER);
+              obsId.setCode("30982-3");
+              obsId.setText("Evaluation reason");
+              obsId.setTable("LN");
+              makeOBX(ack, count++, obsId, "U^" + evaluationActual.getReasonText() + "^MCIR", today);
+
+              obsId = new CodedEntity(CodeTable.Type.OBSERVATION_IDENTIFIER);
+              obsId.setCode("59781-5");
+              obsId.setText("Dose Validity");
+              obsId.setTable("LN");
+              makeOBX(ack, count++, obsId, evaluationActual.getDoseValid(), today);
+              groupCount++;
+            }
+          }
         }
       }
+      int count = 0;
+      for (ForecastActual forecastActual : queryResult.getForecastActualList())
+      {
+        count++;
+        makeORC(ack, System.currentTimeMillis() + "." + count);
+        makeRXA998(ack);
 
+        CodedEntity obsId;
+        CodedEntity obsValue;
+
+        obsId = new CodedEntity(CodeTable.Type.OBSERVATION_IDENTIFIER);
+        obsValue = new CodedEntity(CodeTable.Type.VACCINATION_CVX_CODE);
+        obsId.setCode("30979-9");
+        obsId.setText("Vaccine due next");
+        obsId.setTable("LN");
+        String vaccineCvx = forecastActual.getVaccineCvx();
+        if (vaccineCvx.equals(""))
+        {
+          vaccineCvx = forecastActual.getForecastItem().getVaccineCvx();
+        }
+        obsValue.setCode(vaccineCvx);
+        obsValue.setText(forecastActual.getForecastItem().getLabel());
+        obsValue.setTable("CVX");
+        makeOBX(ack, 1, obsId, obsValue, today);
+
+        obsId = new CodedEntity(CodeTable.Type.OBSERVATION_IDENTIFIER);
+        obsValue = new CodedEntity(CodeTable.Type.CDC_PHIN_VADS);
+        obsId.setCode("59779-9");
+        obsId.setText("Immunization Schedule used");
+        obsId.setTable("LN");
+        obsValue.setCode("VXC16");
+        obsValue.setText("ACIP Schedule");
+        obsValue.setTable("CDCPHINVS");
+        makeOBX(ack, 2, obsId, obsValue, today);
+
+        obsId = new CodedEntity(CodeTable.Type.OBSERVATION_IDENTIFIER);
+        obsId.setCode("59783-1");
+        obsId.setText("Status in immunization series");
+        obsId.setTable("LN");
+        if (forecastActual.isComplete())
+        {
+          makeOBX(ack, 3, obsId, "1^Complete^MCIR", today);
+        } else if (forecastActual.getDueDate().after(today))
+        {
+          makeOBX(ack, 3, obsId, "2^Up-to-date^MCIR", today);
+        } else if (forecastActual.getOverdueDate().before(today))
+        {
+          makeOBX(ack, 3, obsId, "3^Due^MCIR", today);
+        } else
+        {
+          makeOBX(ack, 3, obsId, "4^Overdue^MCIR", today);
+        }
+
+        if (!forecastActual.isComplete())
+        {
+          obsId = new CodedEntity(CodeTable.Type.OBSERVATION_IDENTIFIER);
+          obsId.setCode("30980-7");
+          obsId.setText("Date vaccine due");
+          obsId.setTable("LN");
+          makeOBX(ack, 1, obsId, forecastActual.getDueDate(), today);
+          if (forecastActual.getValidDate() != null)
+          {
+            obsId = new CodedEntity(CodeTable.Type.OBSERVATION_IDENTIFIER);
+            obsId.setTable("LN");
+            obsId.setCode("30981-5");
+            obsId.setText("Earliest date to give");
+            makeOBX(ack, 1, obsId, forecastActual.getValidDate(), today);
+          }
+        }
+        if (!forecastActual.getDoseNumber().equals("*") && !forecastActual.getDoseNumber().equals(""))
+        {
+          obsId = new CodedEntity(CodeTable.Type.OBSERVATION_IDENTIFIER);
+          obsId.setCode("30973-2");
+          obsId.setText("Vaccine due next dose number");
+          obsId.setTable("LN");
+          makeOBX(ack, 2, obsId, forecastActual.getDoseNumber(), today);
+        }
+      }
     }
     return ack.toString();
   }
 
-  public void makeOBX(StringBuilder ack, int position, CodedEntity obsId, CodedEntity obsValue, Date date, CodedEntity obsMethod)
+  public void makeOBX(StringBuilder ack, int position, CodedEntity obsId, CodedEntity obsValue, Date date, CodedEntity obsMethod, int subId)
   {
     SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
     ack.append("OBX|");
     ack.append(position + "|");
     ack.append("CE|");
     ack.append(makeCodedValue(obsId) + "|");
-    ack.append("|");
+    ack.append(subId + "|");
     ack.append(makeCodedValue(obsValue) + "|");
+    ack.append("|");
     ack.append("|");
     ack.append("|");
     ack.append("|");
@@ -873,6 +1169,130 @@ public class VaccinationParserHL7 extends VaccinationParser
     ack.append("\r");
   }
 
+  public void makeOBX(StringBuilder ack, int position, CodedEntity obsId, CodedEntity obsValue, int subId)
+  {
+    SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
+    ack.append("OBX|");
+    ack.append(position + "|");
+    ack.append("CE|");
+    ack.append(makeCodedValue(obsId) + "|");
+    ack.append(subId + "|");
+    ack.append(makeCodedValue(obsValue) + "|");
+    ack.append("|");
+    ack.append("|");
+    ack.append("|");
+    ack.append("|");
+    ack.append("|");
+    ack.append("F|");
+    ack.append("\r");
+  }
+
+  public void makeOBX(StringBuilder ack, int position, CodedEntity obsId, CodedEntity obsValue)
+  {
+    SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
+    ack.append("OBX|");
+    ack.append(position + "|");
+    ack.append("CE|");
+    ack.append(makeCodedValue(obsId) + "|");
+    ack.append("0|");
+    ack.append(makeCodedValue(obsValue) + "|");
+    ack.append("|");
+    ack.append("|");
+    ack.append("|");
+    ack.append("|");
+    ack.append("|");
+    ack.append("F|");
+
+    ack.append("\r");
+  }
+
+  public void makeOBX(StringBuilder ack, int position, CodedEntity obsId, CodedEntity obsValue, Date date)
+  {
+    SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
+    ack.append("OBX|");
+    ack.append(position + "|");
+    ack.append("CE|");
+    ack.append(makeCodedValue(obsId) + "|");
+    ack.append("0|");
+    ack.append(makeCodedValue(obsValue) + "|");
+    ack.append("|");
+    ack.append("|");
+    ack.append("|");
+    ack.append("|");
+    ack.append("|");
+    ack.append("F|");
+    if (date != null)
+    {
+      ack.append("|");
+      ack.append("|");
+      ack.append(sdf.format(date));
+      ack.append("|");
+    }
+
+    ack.append("\r");
+  }
+
+  public void makeOBX(StringBuilder ack, int position, CodedEntity obsId, String obsValue, Date date)
+  {
+    SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
+    ack.append("OBX|");
+    ack.append(position + "|");
+    ack.append("CE|");
+    ack.append(makeCodedValue(obsId) + "|");
+    ack.append("0|");
+    ack.append(obsValue + "|");
+    ack.append("|");
+    ack.append("|");
+    ack.append("|");
+    ack.append("|");
+    ack.append("|");
+    ack.append("F|");
+    if (date != null)
+    {
+      ack.append("|");
+      ack.append("|");
+      ack.append(sdf.format(date));
+      ack.append("|");
+    }
+    ack.append("\r");
+  }
+
+  public void makeOBX(StringBuilder ack, int position, CodedEntity obsId, Date obsValue, Date date)
+  {
+    makeOBX(ack, position, obsId, obsValue, date, 0);
+  }
+
+  public void makeOBX(StringBuilder ack, int position, CodedEntity obsId, Date obsValue, int subId)
+  {
+    makeOBX(ack, position, obsId, obsValue, null, subId);
+  }
+
+  public void makeOBX(StringBuilder ack, int position, CodedEntity obsId, Date obsValue, Date date, int subId)
+  {
+    SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
+    ack.append("OBX|");
+    ack.append(position + "|");
+    ack.append("CE|");
+    ack.append(makeCodedValue(obsId) + "|");
+    ack.append(subId + "|");
+    ack.append(sdf.format(obsValue) + "|");
+    ack.append("|");
+    ack.append("|");
+    ack.append("|");
+    ack.append("|");
+    ack.append("|");
+    ack.append("F|");
+    if (date != null)
+    {
+      ack.append("|");
+      ack.append("|");
+      ack.append(sdf.format(date));
+      ack.append("|");
+    }
+
+    ack.append("\r");
+  }
+
   public void makeRXR(StringBuilder ack, Vaccination vaccination)
   {
     ack.append("RXR|");
@@ -891,8 +1311,15 @@ public class VaccinationParserHL7 extends VaccinationParser
     ack.append(sdf.format(vaccination.getAdminDate()) + "|");
     ack.append("|");
     ack.append(makeCodedValue(vaccination.getAdminCvx(), "CVX") + "|");
-    ack.append(vaccination.getAmount() + "|");
-    ack.append(makeCodedValue(vaccination.getAmountUnit(), "UCUM") + "|");
+    if (vaccination.getAmount().equals(""))
+    {
+      ack.append("999|");
+      ack.append("|");
+    } else
+    {
+      ack.append(vaccination.getAmount() + "|");
+      ack.append(makeCodedValue(vaccination.getAmountUnit(), "UCUM") + "|");
+    }
     ack.append("|");
     ack.append(makeCodedValue(vaccination.getInformationSource(), "NIP001") + "|");
     ack.append("|");
@@ -907,6 +1334,24 @@ public class VaccinationParserHL7 extends VaccinationParser
     }
     ack.append("|");
     ack.append(makeCodedValue(vaccination.getManufacturer(), "MVX") + "|");
+    ack.append(makeCodedValue(vaccination.getRefusal(), "NIP002") + "|");
+    ack.append("|");
+    ack.append(vaccination.getCompletionCode() + "|");
+    ack.append(vaccination.getActionCode() + "|");
+    ack.append("\r");
+  }
+
+  public void makeRXA998(StringBuilder ack)
+  {
+    Date today = new Date();
+    SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
+    ack.append("RXA|");
+    ack.append("0|");
+    ack.append("1|");
+    ack.append(sdf.format(today) + "|");
+    ack.append("|");
+    ack.append("998^No vaccine administered^CVX|");
+    ack.append("999|");
     ack.append("\r");
   }
 
@@ -945,7 +1390,16 @@ public class VaccinationParserHL7 extends VaccinationParser
     ack.append("ORC|");
     ack.append("RE|");
     ack.append(vaccination.getIdSubmitter() + "|");
-    ack.append(vaccination.getIdPlacer() + "|");
+    ack.append(vaccination.getVaccinationId() + "^DQA|");
+    ack.append("\r");
+  }
+
+  public void makeORC(StringBuilder ack, String id)
+  {
+    ack.append("ORC|");
+    ack.append("RE|");
+    ack.append("|");
+    ack.append(id + "^DQA|");
     ack.append("\r");
   }
 
@@ -1010,10 +1464,10 @@ public class VaccinationParserHL7 extends VaccinationParser
       ack.append(patient.getSexCode() + "|");
       ack.append("|");
       ack.append(makeCodedValue(patient.getRace(), "HL70005") + "|");
-      printAddress(ack, patient.getAddress());
+      printAddress(ack, patient);
       ack.append("|");
       ack.append("|");
-      printPhone(ack, patient.getPhone());
+      printPhone(ack, patient);
       ack.append("|");
       ack.append("|");
       ack.append("|");
@@ -1031,10 +1485,46 @@ public class VaccinationParserHL7 extends VaccinationParser
     ack.append("\r");
   }
 
+  public void printAddress(StringBuilder ack, Patient patient)
+  {
+    boolean first = true;
+    for (PatientAddress patientAddress : patient.getPatientAddressList())
+    {
+      if (!first)
+      {
+        ack.append("~");
+      }
+      printAddress(ack, patientAddress);
+      first = false;
+    }
+  }
+
+  public void printPhone(StringBuilder ack, Patient patient)
+  {
+    boolean first = true;
+    for (PatientPhone patientPhone : patient.getPatientPhoneList())
+    {
+      if (!first)
+      {
+        ack.append("~");
+      }
+      printPhone(ack, patientPhone);
+      first = false;
+    }
+  }
+
   public void printPhone(StringBuilder ack, PhoneNumber phone)
   {
     if (phone != null && !phone.getNumber().equals(""))
     {
+      if (phone.getTelUseCode().equals(""))
+      {
+        phone.setTelUseCode("PRN");
+      }
+      if (phone.getTelEquipCode().equals(""))
+      {
+        phone.setTelEquipCode("PH");
+      }
       ack.append("^" + phone.getTelUseCode() + "^" + phone.getTelEquipCode() + "^" + phone.getEmail() + "^" + phone.getCountryCode() + "^"
           + phone.getAreaCode() + "^" + phone.getLocalNumber() + "^" + phone.getExtension());
     }
@@ -1051,7 +1541,7 @@ public class VaccinationParserHL7 extends VaccinationParser
 
   private void makeQAK(QueryReceived queryReceived, StringBuilder ack, String queryResponse)
   {
-    ack.append("QAK|" + queryReceived.getQueryTag() + "|" + queryResponse + "|" + queryReceived.getMessageQueryName() + "|");
+    ack.append("QAK|" + queryReceived.getQueryTag() + "|" + queryResponse + "|" + queryReceived.getMessageQueryName() + "|\r");
   }
 
   private void makeMSA(QueryReceived queryReceived, StringBuilder ack)
@@ -1064,8 +1554,8 @@ public class VaccinationParserHL7 extends VaccinationParser
     String controlId = messageReceived.getMessageHeader().getMessageControl();
     String processingId = message.getMessageHeader().getProcessingStatusCode();
     String ackCode = ACK_ACCEPT;
-    String severity = "I";
     String hl7ErrorCode = "0";
+    String severity = "I";
     int countVaccNotSkipped = 0;
     for (Vaccination vaccination : messageReceived.getVaccinations())
     {
@@ -1085,30 +1575,33 @@ public class VaccinationParserHL7 extends VaccinationParser
     {
       text = "Message accepted with " + countVaccNotSkipped + " vaccinations";
     }
+    PotentialIssue potentialIssue = null;
     if (messageReceived.getPatient().isSkipped())
     {
-      text = "Message skipped: ";
+      text = "Message skipped: Message did not have any errors but because of business rules listed above, none of the information submitted will be accepted";
       ackCode = ACK_ACCEPT;
       severity = "I";
       for (IssueFound issueFound : messageReceived.getIssuesFound())
       {
         if (issueFound.isSkip())
         {
-          text += issueFound.getDisplayText();
-          hl7ErrorCode = issueFound.getIssue().getHl7ErrorCode();
+          // text += issueFound.getDisplayText();
+          potentialIssue = issueFound.getIssue();
           break;
         }
       }
     } else if (hasErrors(messageReceived))
     {
-      text = "Message rejected: ";
+      text = "Message rejected: Because of serious problems encountered none of the information in this message will be accepted (see error details above)";
       ackCode = ACK_ERROR;
       severity = "E";
       for (IssueFound issueFound : messageReceived.getIssuesFound())
       {
         if (issueFound.isError())
         {
-          text += issueFound.getDisplayText();
+          // text += issueFound.getDisplayText();
+
+          potentialIssue = issueFound.getIssue();
           hl7ErrorCode = issueFound.getIssue().getHl7ErrorCode();
           if (hl7ErrorCode != null && hl7ErrorCode.startsWith("2"))
           {
@@ -1123,23 +1616,22 @@ public class VaccinationParserHL7 extends VaccinationParser
     ack.append("SFT|" + SoftwareVersion.VENDOR + "|" + SoftwareVersion.VERSION + "|" + SoftwareVersion.PRODUCT + "|" + SoftwareVersion.BINARY_ID
         + "|\r");
     ack.append("MSA|" + ackCode + "|" + controlId + "|\r");
-    makeERRSegment(ack, severity, hl7ErrorCode, text);
     for (IssueFound issueFound : messageReceived.getIssuesFound())
     {
       if (issueFound.isError())
       {
-        makeERRSegment(ack, issueFound);
+        HL7Util.makeERRSegment(ack, issueFound);
       }
     }
     for (IssueFound issueFound : messageReceived.getIssuesFound())
     {
       if (issueFound.isWarn())
       {
-        makeERRSegment(ack, issueFound);
+        HL7Util.makeERRSegment(ack, issueFound);
       }
       if (issueFound.isSkip())
       {
-        makeERRSegment(ack, issueFound);
+        HL7Util.makeERRSegment(ack, issueFound);
       }
     }
     if (processingId.equals(PROCESSING_ID_DEBUG))
@@ -1148,10 +1640,11 @@ public class VaccinationParserHL7 extends VaccinationParser
       {
         if (issueFound.isAccept())
         {
-          makeERRSegment(ack, issueFound);
+          HL7Util.makeERRSegment(ack, issueFound);
         }
       }
     }
+    HL7Util.makeERRSegment(ack, severity, hl7ErrorCode, text, null);
     return ack.toString();
 
   }
@@ -1190,7 +1683,7 @@ public class VaccinationParserHL7 extends VaccinationParser
     ack.append("|"); // MSH-8 Security
     if (responseType == null)
     {
-      responseType = "ACK^" + message.getMessageHeader().getMessageTrigger();
+      responseType = "ACK^" + message.getMessageHeader().getMessageTrigger() + "^" + message.getMessageHeader().getMessageStructure();
     }
     ack.append("|" + responseType); // MSH-9
     // Message
@@ -1220,130 +1713,6 @@ public class VaccinationParserHL7 extends VaccinationParser
     return false;
   }
 
-  private void makeERRSegment(StringBuilder ack, String severity, String hl7ErrorCode, String textMessage)
-  {
-
-    ack.append("ERR||");
-    // 2 Error Location
-    ack.append("|");
-    // 3 HL7 Error Code
-    if (hl7ErrorCode != null)
-    {
-      ack.append(hl7ErrorCode);
-    }
-    ack.append("|");
-    // 4 Severity
-    ack.append(severity);
-    ack.append("|");
-    // 5 Application Error Code
-    ack.append("|");
-    // 6 Application Error Parameter
-    ack.append("|");
-    // 7 Diagnostic Information
-    ack.append("|");
-    // 8 User Message
-    ack.append("|");
-    ack.append(escapeHL7Chars(textMessage));
-    ack.append("|\r");
-
-  }
-
-  private void makeERRSegment(StringBuilder ack, IssueFound issueFound)
-  {
-    PotentialIssue issue = issueFound.getIssue();
-    String hl7ReferenceOrig = issue.getHl7Reference();
-    String[] hl7ReferenceParts;
-    if (hl7ReferenceOrig == null || hl7ReferenceOrig.equals(""))
-    {
-      hl7ReferenceParts = new String[] { "" };
-    } else
-    {
-      hl7ReferenceParts = hl7ReferenceOrig.split("\\/");
-    }
-    for (String hl7Reference : hl7ReferenceParts)
-    {
-      String hl7ErrorCode = issue.getHl7ErrorCode();
-      String severity = "I";
-
-      if (issueFound.isError())
-      {
-        severity = "E";
-      } else if (issueFound.isWarn())
-      {
-        severity = "W";
-      } else if (issueFound.isSkip())
-      {
-        severity = "I";
-      }
-      ack.append("ERR||");
-      // 2 Error Location
-      printErr3(ack, issueFound, hl7Reference);
-      ack.append("|");
-      // 3 HL7 Error Code
-      if (issueFound.isError())
-      {
-        if (hl7ErrorCode != null)
-        {
-          ack.append(hl7ErrorCode);
-        }
-      } else
-      {
-        ack.append("0");
-      }
-      ack.append("|");
-      // 4 Severity
-      ack.append(severity);
-      ack.append("|");
-      // 5 Application Error Code
-      ack.append(issue.getIssueId());
-      ack.append("|");
-      // 6 Application Error Parameter
-      ack.append("|");
-      // 7 Diagnostic Information
-      ack.append(escapeHL7Chars(issue.getIssueDescription()));
-      if (issueFound.isSkip())
-      {
-        ack.append(" (This information was skipped, and not accepted)");
-      }
-      // 8 User Message
-      ack.append("|");
-      ack.append(escapeHL7Chars(issueFound.getDisplayText()));
-      ack.append("|\r");
-    }
-
-  }
-
-  private void printErr3(StringBuilder ack, IssueFound issueFound, String hl7Reference)
-  {
-    int pos = hl7Reference.indexOf("-");
-    if (pos == -1)
-    {
-      pos = hl7Reference.length();
-    }
-    if (pos > 0 && (pos + 1) <= hl7Reference.length())
-    {
-      ack.append(hl7Reference.substring(0, pos));
-      hl7Reference = hl7Reference.substring(pos + 1);
-      ack.append("^");
-      ack.append(issueFound.getPositionId());
-      if (hl7Reference.length() > 0)
-      {
-        ack.append("^");
-        pos = hl7Reference.indexOf("\\.");
-        if (pos == -1)
-        {
-          ack.append(hl7Reference);
-          ack.append("^1");
-        } else
-        {
-          ack.append(hl7Reference.substring(0, pos));
-          ack.append("^1^");
-          ack.append(hl7Reference.substring(pos + 1));
-        }
-      }
-    }
-  }
-
   @Override
   public void createQueryMessage(QueryReceived queryReceived)
   {
@@ -1351,7 +1720,11 @@ public class VaccinationParserHL7 extends VaccinationParser
 
     issuesFound = queryReceived.getIssuesFound();
     setup();
-    readSeparators(messageText);
+    boolean okayToParse = readSeparators(messageText);
+    if (!okayToParse)
+    {
+      return;
+    }
     readFields(messageText);
 
     patient = new Patient();
@@ -1385,7 +1758,7 @@ public class VaccinationParserHL7 extends VaccinationParser
     // 5 PatientMotherMaiden
     patient.setMotherMaidenName(getValue(5));
     // 6 Patient Date of Birth
-    patient.setBirthDate(getValueDate(6, pi.PatientBirthDateIsInvalid));
+    patient.setBirthDate(getValueDate(6, pi.PatientBirthDateIsInvalid, null));
     // 7 Patient Sex
     patient.setSexCode(getValue(7));
     // 8 Patient Address

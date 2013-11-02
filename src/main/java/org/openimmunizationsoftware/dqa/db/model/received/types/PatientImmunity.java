@@ -1,0 +1,56 @@
+package org.openimmunizationsoftware.dqa.db.model.received.types;
+
+import java.io.Serializable;
+
+import org.openimmunizationsoftware.dqa.db.model.CodeTable.Type;
+import org.openimmunizationsoftware.dqa.db.model.received.Patient;
+import org.openimmunizationsoftware.dqa.db.model.received.Skippable;
+
+public class PatientImmunity  implements Skippable, Serializable
+{
+  private int immunityId = 0;
+  private Patient patient = null;
+  private boolean skipped = false;
+  private CodedEntity immunity = new CodedEntity(Type.EVIDENCE_OF_IMMUNITY);
+  
+  public String getImmunityCode()
+  {
+    return immunity.getCode();
+  }
+  
+  public void setImmunityCode(String immunityCode)
+  {
+    immunity.setCode(immunityCode);
+  }
+  
+  public CodedEntity getImmunity()
+  {
+    return immunity;
+  }
+  public int getImmunityId()
+  {
+    return immunityId;
+  }
+  public void setImmunityId(int immunityId)
+  {
+    this.immunityId = immunityId;
+  }
+  public Patient getPatient()
+  {
+    return patient;
+  }
+  public void setPatient(Patient patient)
+  {
+    this.patient = patient;
+  }
+  public boolean isSkipped()
+  {
+    return skipped;
+  }
+  public void setSkipped(boolean skipped)
+  {
+    this.skipped = skipped;
+  }
+
+
+}

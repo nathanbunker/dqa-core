@@ -4,13 +4,17 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import org.hamcrest.core.IsAnything;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.openimmunizationsoftware.dqa.db.model.CodeReceived;
 import org.openimmunizationsoftware.dqa.db.model.CodeStatus;
 import org.openimmunizationsoftware.dqa.db.model.CodeTable;
+import org.openimmunizationsoftware.dqa.db.model.KnownName;
 import org.openimmunizationsoftware.dqa.db.model.MessageHeader;
 import org.openimmunizationsoftware.dqa.db.model.MessageReceived;
 import org.openimmunizationsoftware.dqa.db.model.PotentialIssue;
@@ -23,13 +27,16 @@ import org.openimmunizationsoftware.dqa.db.model.VaccineProduct;
 import org.openimmunizationsoftware.dqa.db.model.received.NextOfKin;
 import org.openimmunizationsoftware.dqa.db.model.received.Observation;
 import org.openimmunizationsoftware.dqa.db.model.received.Vaccination;
+import org.openimmunizationsoftware.dqa.db.model.received.VaccinationVIS;
 import org.openimmunizationsoftware.dqa.db.model.received.types.Address;
 import org.openimmunizationsoftware.dqa.db.model.received.types.CodedEntity;
 import org.openimmunizationsoftware.dqa.db.model.received.types.Id;
 import org.openimmunizationsoftware.dqa.db.model.received.types.Name;
+import org.openimmunizationsoftware.dqa.db.model.received.types.PatientImmunity;
 import org.openimmunizationsoftware.dqa.db.model.received.types.PhoneNumber;
 import org.openimmunizationsoftware.dqa.manager.CodesReceived;
 import org.openimmunizationsoftware.dqa.manager.KeyedSettingManager;
+import org.openimmunizationsoftware.dqa.manager.KnownNames;
 import org.openimmunizationsoftware.dqa.manager.PotentialIssues;
 import org.openimmunizationsoftware.dqa.manager.VaccineGroupManager;
 import org.openimmunizationsoftware.dqa.manager.VaccineProductManager;
@@ -37,10 +44,15 @@ import org.openimmunizationsoftware.dqa.quality.QualityCollector;
 
 public class Validator extends ValidateMessage
 {
+  private static final String OBX_VACCINE_FUNDING = "64994-7";
+  private static final String OBX_VACCINE_TYPE = "30956-7";
+  private static final String OBX_VIS_PUBLISHED = "29768-9";
+  private static final String OBX_VIS_PRESENTED = "29769-7";
+  private static final String OBX_DISEASE_WITH_PRESUMED_IMMUNITY = "59784-9";
+
   private static final long ABOUT_ONE_YEAR = (long) (1000.0 * 60.0 * 60.0 * 24.0 * 365.25);
   private static final long ABOUT_ONE_MONTH = (long) (1000.0 * 60.0 * 60.0 * 24.0 * 31);
 
-  private static String[] INVALID_NAMES = { "X", "U", "UN", "UK", "UNK", "UKN", "UNKN", "NONE" };
   private static String[] VALID_SUFFIX = { "SR", "JR", "II", "III", "IV" };
 
   private Session session = null;
@@ -59,6 +71,8 @@ public class Validator extends ValidateMessage
   private static List<SectionValidator> headerValidators = new ArrayList<SectionValidator>();
   private static List<SectionValidator> patientValidators = new ArrayList<SectionValidator>();
   private static List<SectionValidator> vaccinationValidators = new ArrayList<SectionValidator>();
+
+  private static KnownNames knownNames = null;
 
   private static boolean initialized = false;
 
@@ -94,6 +108,8 @@ public class Validator extends ValidateMessage
       vaccinationValidators.add(new FacilityValidator());
       vaccinationValidators.add(new GivenBy());
       initialized = true;
+
+      knownNames = KnownNames.getKnownsNames();
     }
   }
 
@@ -455,10 +471,12 @@ public class Validator extends ValidateMessage
       {
         if (vaccineCvx.getValidStartDate().after(vaccination.getAdminDate()) || trunc(vaccination.getAdminDate()).after(vaccineCvx.getValidEndDate()))
         {
+          registerIssue(pi.VaccinationAdminDateIsBeforeOrAfterLicensedVaccineRange, vaccineCr);
           registerIssue(pi.VaccinationAdminCodeIsInvalidForDateAdministered, vaccineCr);
         } else if (vaccineCvx.getUseStartDate().after(vaccination.getAdminDate())
             || trunc(vaccination.getAdminDate()).after(vaccineCvx.getUseEndDate()))
         {
+          registerIssue(pi.VaccinationAdminDateIsBeforeOrAfterExpectedVaccineUsageRange, vaccineCr);
           registerIssue(pi.VaccinationAdminCodeIsUnexpectedForDateAdministered, vaccineCr);
         }
         if (patient.getBirthDate() != null)
@@ -708,21 +726,124 @@ public class Validator extends ValidateMessage
       }
     }
     String financialEligibilityCode = null;
+    Map<String, VaccinationVIS> vaccinationVISMap = new HashMap<String, VaccinationVIS>();
     for (Observation observation : vaccination.getObservations())
     {
       handleCodeReceived(observation.getValueType(), PotentialIssues.Field.OBSERVATION_VALUE_TYPE);
       handleCodeReceived(observation.getObservationIdentifier(), PotentialIssues.Field.OBSERVATION_OBSERVATION_IDENTIFIER_CODE);
-      if (financialEligibilityCode == null && !observation.isSkipped())
+      if (!observation.isSkipped())
       {
-        if (observation.getObservationIdentifierCode().equals("64994-7"))
+        if (financialEligibilityCode == null && observation.getObservationIdentifierCode().equals(OBX_VACCINE_FUNDING))
         {
           if (notEmpty(observation.getObservationValue(), pi.ObservationObservationValueIsMissing))
           {
             financialEligibilityCode = observation.getObservationValue();
           }
+        } else if (observation.getObservationIdentifierCode().equals(OBX_VACCINE_TYPE)
+            || observation.getObservationIdentifierCode().equals(OBX_VIS_PRESENTED)
+            || observation.getObservationIdentifierCode().equals(OBX_VIS_PUBLISHED))
+        {
+          String key = observation.getObservationSubId();
+          VaccinationVIS vaccinationVIS = vaccinationVISMap.get(key);
+          if (vaccinationVIS == null)
+          {
+            vaccinationVIS = new VaccinationVIS();
+            vaccinationVIS.setVaccination(vaccination);
+            vaccinationVISMap.put(key, vaccinationVIS);
+            vaccination.getVaccinationVisList().add(vaccinationVIS);
+          }
+          if (observation.getObservationIdentifierCode().equals(OBX_VACCINE_TYPE))
+          {
+            vaccinationVIS.setCvxCode(observation.getObservationValue());
+          } else if (observation.getObservationIdentifierCode().equals(OBX_VIS_PRESENTED))
+          {
+            if (!observation.getObservationValue().equals(""))
+            {
+              vaccinationVIS.setPresentedDate(createDate(pi.VaccinationVisPresentedDateIsInvalid, observation.getObservationValue()));
+            }
+          } else if (observation.getObservationIdentifierCode().equals(OBX_VIS_PUBLISHED))
+          {
+            if (!observation.getObservationValue().equals(""))
+            {
+              vaccinationVIS.setPublishedDate(createDate(pi.VaccinationVisPublishedDateIsInvalid, observation.getObservationValue()));
+            }
+          }
+        } else if (observation.getObservationIdentifierCode().equals(OBX_DISEASE_WITH_PRESUMED_IMMUNITY))
+        {
+          PatientImmunity patientImmunity = new PatientImmunity();
+          patientImmunity.setPatient(patient);
+          patientImmunity.setImmunityCode(observation.getObservationValue());
+          patient.getPatientImmunityList().add(patientImmunity);
+          handleCodeReceived(patientImmunity.getImmunity(), PotentialIssues.Field.VACCINATION_VIS_DOCUMENT_TYPE);
         }
       }
     }
+    if (vaccinationVISMap.size() == 0)
+    {
+      if (vaccination.isAdministered())
+      {
+        registerIssue(pi.VaccinationVisIsMissing);
+      }
+    } else
+    {
+      boolean firstOne = true;
+      int positionId = 0;
+      for (VaccinationVIS vaccinationVIS : vaccination.getVaccinationVisList())
+      {
+        positionId++;
+        vaccinationVIS.setPositionId(positionId);
+        handleCodeReceived(vaccinationVIS.getDocument(), PotentialIssues.Field.VACCINATION_VIS_DOCUMENT_TYPE, vaccination.isAdministered());
+        handleCodeReceived(vaccinationVIS.getCvx(), PotentialIssues.Field.VACCINATION_VIS_CVX_CODE, vaccination.isAdministered());
+        if (vaccinationVIS.getPublishedDate() == null)
+        {
+          if (vaccination.isAdministered())
+          {
+            registerIssue(pi.VaccinationVisPublishedDateIsMissing);
+          }
+        }
+        if (vaccinationVIS.getPresentedDate() == null)
+        {
+          if (vaccination.isAdministered())
+          {
+            registerIssue(pi.VaccinationVisPresentedDateIsMissing);
+          }
+        } else
+        {
+          if (vaccination.getAdminDate() != null)
+          {
+            if (vaccination.getAdminDate().after(vaccinationVIS.getPresentedDate()))
+            {
+              registerIssue(pi.VaccinationVisPresentedDateIsAfterAdminDate);
+            } else if (vaccination.getAdminDate().before(vaccinationVIS.getPresentedDate()))
+            {
+              registerIssue(pi.VaccinationVisPresentedDateIsNotAdminDate);
+            }
+          }
+          if (vaccinationVIS.getPublishedDate() != null)
+          {
+            if (vaccinationVIS.getPresentedDate().before(vaccinationVIS.getPublishedDate()))
+            {
+              registerIssue(pi.VaccinationVisPresentedDateIsBeforePublishedDate);
+            }
+          }
+        }
+        if (vaccinationVIS.getDocumentCode().equals(""))
+        {
+          if (vaccinationVIS.getCvxCode().equals("") || vaccinationVIS.getPublishedDate() == null)
+          {
+            // TODO verify that code and date are recognized, this logic will
+            // work for now
+            registerIssue(pi.VaccinationVisIsUnrecognized);
+            if (firstOne && vaccination.isAdministered())
+            {
+              registerIssue(pi.VaccinationVisIsMissing);
+            }
+          }
+        }
+        firstOne = false;
+      }
+    }
+
     if (financialEligibilityCode == null)
     {
       if (vaccination.isAdministered())
@@ -800,6 +921,51 @@ public class Validator extends ValidateMessage
 
     }
 
+  }
+
+  private Date createDate(PotentialIssue pi, String fieldValue)
+  {
+    if (fieldValue.equals(""))
+    {
+      return null;
+    }
+    if (fieldValue.length() < 8)
+    {
+      if (pi != null)
+      {
+        registerIssue(pi);
+      }
+      return null;
+    }
+    if (fieldValue.length() < 14)
+    {
+      SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
+      sdf.setLenient(false);
+      try
+      {
+        return sdf.parse(fieldValue.substring(0, 8));
+      } catch (java.text.ParseException e)
+      {
+        if (pi != null)
+        {
+          registerIssue(pi);
+        }
+        return null;
+      }
+    }
+    SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
+    sdf.setLenient(false);
+    try
+    {
+      return sdf.parse(fieldValue.substring(0, 14));
+    } catch (java.text.ParseException e)
+    {
+      if (pi != null)
+      {
+        registerIssue(pi);
+      }
+      return null;
+    }
   }
 
   private boolean checkGroupMatch(VaccineCvx vaccineCvx, VaccineCpt vaccineCpt)
@@ -985,6 +1151,16 @@ public class Validator extends ValidateMessage
     }
     notEmpty(patient.getBirthPlace(), pi.PatientBirthPlaceIsMissing);
     handleCodeReceived(patient.getEthnicity(), PotentialIssues.Field.PATIENT_ETHNICITY);
+
+    if (patient.getNameFirst().length() > 3 && patient.getNameMiddle().length() == 0)
+    {
+      int pos = patient.getNameFirst().lastIndexOf(' ');
+      if (pos > -1 && pos == patient.getNameFirst().length() - 2)
+      {
+        registerIssue(pi.PatientNameFirstMayIncludeMiddleInitial);
+      }
+    }
+
     specialNameHandling1(patient.getName());
     specialNameHandling2(patient.getName());
     specialNameHandling3(patient.getName());
@@ -993,9 +1169,9 @@ public class Validator extends ValidateMessage
     specialNameHandling7(patient.getName());
     if (notEmpty(patient.getNameFirst(), pi.PatientNameFirstIsMissing))
     {
-      for (String invalidName : INVALID_NAMES)
+      for (KnownName invalidName : knownNames.getKnownNameList(KnownName.INVALID_NAME))
       {
-        if (patient.getNameFirst().equalsIgnoreCase(invalidName))
+        if (invalidName.onlyNameFirst() && patient.getNameFirst().equalsIgnoreCase(invalidName.getNameFirst()))
         {
           registerIssue(pi.PatientNameFirstIsInvalid);
         }
@@ -1010,9 +1186,9 @@ public class Validator extends ValidateMessage
 
     if (notEmpty(patient.getNameLast(), pi.PatientNameLastIsMissing))
     {
-      for (String invalidName : INVALID_NAMES)
+      for (KnownName invalidName : knownNames.getKnownNameList(KnownName.INVALID_NAME))
       {
-        if (patient.getNameLast().equalsIgnoreCase(invalidName))
+        if (invalidName.onlyNameLast() && patient.getNameLast().equalsIgnoreCase(invalidName.getNameLast()))
         {
           registerIssue(pi.PatientNameLastIsInvalid);
         }
@@ -1030,21 +1206,11 @@ public class Validator extends ValidateMessage
     }
 
     String middleName = patient.getNameMiddle();
-    if (patient.getNameMiddle().endsWith("."))
-    {
-      middleName = patient.getNameMiddle();
-      middleName = middleName.substring(0, middleName.length() - 1);
-      patient.setNameMiddle(middleName);
-      if (!validNameChars(patient.getNameMiddle()))
-      {
-        // TODO registerIssue(pi.PatientNameFirstIsMiddle);
-      }
-    }
     if (notEmpty(middleName, pi.PatientMiddleNameIsMissing))
     {
-      for (String invalidName : INVALID_NAMES)
+      for (KnownName invalidName : knownNames.getKnownNameList(KnownName.INVALID_NAME))
       {
-        if (patient.getNameMiddle().equalsIgnoreCase(invalidName))
+        if (invalidName.onlyNameMiddle() && patient.getNameMiddle().equalsIgnoreCase(invalidName.getNameMiddle()))
         {
           // TODO middle name is invalid
           patient.setNameMiddle("");
@@ -1058,6 +1224,18 @@ public class Validator extends ValidateMessage
         registerIssue(pi.PatientMiddleNameMayBeInitial);
       }
     }
+
+    if (patient.getNameMiddle().endsWith("."))
+    {
+      middleName = patient.getNameMiddle();
+      middleName = middleName.substring(0, middleName.length() - 1);
+      patient.setNameMiddle(middleName);
+      if (!validNameChars(patient.getNameMiddle()))
+      {
+        // TODO registerIssue(pi.PatientNameFirstIsMiddle);
+      }
+    }
+
     if (!isEmpty(patient.getNameSuffix()))
     {
       if (patient.getNameSuffix().equalsIgnoreCase("11") || patient.getNameSuffix().equalsIgnoreCase("2nd"))
@@ -1084,12 +1262,24 @@ public class Validator extends ValidateMessage
         patient.setNameSuffix("");
       }
     }
+
     handleCodeReceived(patient.getName().getType(), PotentialIssues.Field.PATIENT_NAME_TYPE_CODE);
+
+    if (knownNames.match(patient, KnownName.UNNAMED_NEWBORN))
+    {
+      registerIssue(pi.PatientNameMayBeTemporaryNewbornName);
+    }
+
+    if (knownNames.match(patient, KnownName.TEST_PATIENT))
+    {
+      registerIssue(pi.PatientNameMayBeTestName);
+    }
+
     if (notEmpty(patient.getMotherMaidenName(), pi.PatientMotherSMaidenNameIsMissing))
     {
-      for (String invalidName : INVALID_NAMES)
+      for (KnownName invalidName : knownNames.getKnownNameList(KnownName.INVALID_NAME))
       {
-        if (patient.getMotherMaidenName().equalsIgnoreCase(invalidName))
+        if (invalidName.onlyNameLast() && patient.getMotherMaidenName().equalsIgnoreCase(invalidName.getNameLast()))
         {
           registerIssue(pi.PatientNameFirstIsInvalid);
           patient.setMotherMaidenName("");
@@ -1626,7 +1816,7 @@ public class Validator extends ValidateMessage
       profile.registerCodeReceived(cr, context, session);
       session.saveOrUpdate(cr);
       // first time code was received
-    } 
+    }
 
     if (qualityCollector != null)
     {

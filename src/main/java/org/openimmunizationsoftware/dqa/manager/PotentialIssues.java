@@ -20,6 +20,7 @@ import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.openimmunizationsoftware.dqa.InitializationException;
 import org.openimmunizationsoftware.dqa.db.model.IssueAction;
+import org.openimmunizationsoftware.dqa.db.model.MessageReceived;
 import org.openimmunizationsoftware.dqa.db.model.PotentialIssue;
 import org.openimmunizationsoftware.dqa.db.model.PotentialIssueStatus;
 
@@ -70,6 +71,8 @@ public class PotentialIssues implements Reload
   public PotentialIssue Hl7MshMessageDateIsInFuture = null;
   public PotentialIssue Hl7MshMessageDateIsInvalid = null;
   public PotentialIssue Hl7MshMessageDateIsMissing = null;
+  public PotentialIssue Hl7MshMessageDateIsNotPrecise = null;
+  public PotentialIssue Hl7MshMessageDateIsMissingTimezone = null;
   public PotentialIssue Hl7MshMessageProfileIdIsDeprecated = null;
   public PotentialIssue Hl7MshMessageProfileIdIsIgnored = null;
   public PotentialIssue Hl7MshMessageProfileIdIsInvalid = null;
@@ -79,6 +82,7 @@ public class PotentialIssues implements Reload
   public PotentialIssue Hl7MshMessageStructureIsUnrecognized = null;
   public PotentialIssue Hl7MshMessageTriggerIsMissing = null;
   public PotentialIssue Hl7MshMessageTriggerIsUnrecognized = null;
+  public PotentialIssue Hl7MshMessageTriggerIsUnsupported = null;
   public PotentialIssue Hl7MshMessageTypeIsMissing = null;
   public PotentialIssue Hl7MshMessageTypeIsUnrecognized = null;
   public PotentialIssue Hl7MshMessageTypeIsUnsupported = null;
@@ -87,6 +91,7 @@ public class PotentialIssues implements Reload
   public PotentialIssue Hl7MshProcessingIdIsInvalid = null;
   public PotentialIssue Hl7MshProcessingIdIsMissing = null;
   public PotentialIssue Hl7MshProcessingIdIsUnrecognized = null;
+  public PotentialIssue Hl7MshProcessingIdIsUnsupported = null;
   public PotentialIssue Hl7MshProcessingIdIsValuedAsDebug = null;
   public PotentialIssue Hl7MshProcessingIdIsValuedAsProduction = null;
   public PotentialIssue Hl7MshProcessingIdIsValuedAsTraining = null;
@@ -101,6 +106,7 @@ public class PotentialIssues implements Reload
   public PotentialIssue Hl7MshSendingFacilityIsMissing = null;
   public PotentialIssue Hl7MshVersionIsMissing = null;
   public PotentialIssue Hl7MshVersionIsUnrecognized = null;
+  public PotentialIssue Hl7MshVersionIsInvalid = null;
   public PotentialIssue Hl7MshVersionIsValuedAs2_3_1 = null;
   public PotentialIssue Hl7MshVersionIsValuedAs2_4 = null;
   public PotentialIssue Hl7MshVersionIsValuedAs2_5 = null;
@@ -125,6 +131,10 @@ public class PotentialIssues implements Reload
   public PotentialIssue NextOfKinAddressIsMissing = null;
   public PotentialIssue NextOfKinAddressCityIsInvalid = null;
   public PotentialIssue NextOfKinAddressCityIsMissing = null;
+  public PotentialIssue NextOfKinAddressCityIsTooShort = null;
+  public PotentialIssue NextOfKinAddressCityIsUnexpectedlyShort = null;
+  public PotentialIssue NextOfKinAddressCityIsUnexpectedlyLong = null;
+  public PotentialIssue NextOfKinAddressCityIsTooLong = null;
   public PotentialIssue NextOfKinAddressCountryIsDeprecated = null;
   public PotentialIssue NextOfKinAddressCountryIsIgnored = null;
   public PotentialIssue NextOfKinAddressCountryIsInvalid = null;
@@ -147,11 +157,20 @@ public class PotentialIssues implements Reload
   public PotentialIssue NextOfKinAddressTypeIsInvalid = null;
   public PotentialIssue NextOfKinAddressTypeIsMissing = null;
   public PotentialIssue NextOfKinAddressTypeIsUnrecognized = null;
+  public PotentialIssue NextOfKinAddressTypeIsValuedBadAddress = null;
   public PotentialIssue NextOfKinAddressZipIsInvalid = null;
   public PotentialIssue NextOfKinAddressZipIsMissing = null;
   public PotentialIssue NextOfKinNameIsMissing = null;
   public PotentialIssue NextOfKinNameFirstIsMissing = null;
+  public PotentialIssue NextOfKinNameFirstIsTooShort = null;
+  public PotentialIssue NextOfKinNameFirstIsUnexpectedlyShort = null;
+  public PotentialIssue NextOfKinNameFirstIsUnexpectedlyLong = null;
+  public PotentialIssue NextOfKinNameFirstIsTooLong = null;
   public PotentialIssue NextOfKinNameLastIsMissing = null;
+  public PotentialIssue NextOfKinNameLastIsTooShort = null;
+  public PotentialIssue NextOfKinNameLastIsUnexpectedlyShort = null;
+  public PotentialIssue NextOfKinNameLastIsUnexpectedlyLong = null;
+  public PotentialIssue NextOfKinNameLastIsTooLong = null;
   public PotentialIssue NextOfKinPhoneNumberIsIncomplete = null;
   public PotentialIssue NextOfKinPhoneNumberIsInvalid = null;
   public PotentialIssue NextOfKinPhoneNumberIsMissing = null;
@@ -179,6 +198,10 @@ public class PotentialIssues implements Reload
   public PotentialIssue PatientAddressIsMissing = null;
   public PotentialIssue PatientAddressCityIsInvalid = null;
   public PotentialIssue PatientAddressCityIsMissing = null;
+  public PotentialIssue PatientAddressCityIsTooShort = null;
+  public PotentialIssue PatientAddressCityIsUnexpectedlyShort = null;
+  public PotentialIssue PatientAddressCityIsUnexpectedlyLong = null;
+  public PotentialIssue PatientAddressCityIsTooLong = null;
   public PotentialIssue PatientAddressCountryIsDeprecated = null;
   public PotentialIssue PatientAddressCountryIsIgnored = null;
   public PotentialIssue PatientAddressCountryIsInvalid = null;
@@ -197,6 +220,11 @@ public class PotentialIssues implements Reload
   public PotentialIssue PatientAddressStreetIsMissing = null;
   public PotentialIssue PatientAddressStreet2IsMissing = null;
   public PotentialIssue PatientAddressTypeIsMissing = null;
+  public PotentialIssue PatientAddressTypeIsDeprecated = null;
+  public PotentialIssue PatientAddressTypeIsIgnored = null;
+  public PotentialIssue PatientAddressTypeIsInvalid = null;
+  public PotentialIssue PatientAddressTypeIsUnrecognized = null;
+  public PotentialIssue PatientAddressTypeIsValuedBadAddress = null;
   public PotentialIssue PatientAddressZipIsInvalid = null;
   public PotentialIssue PatientAddressZipIsMissing = null;
   public PotentialIssue PatientAliasIsMissing = null;
@@ -212,6 +240,10 @@ public class PotentialIssues implements Reload
   public PotentialIssue PatientBirthOrderIsMissing = null;
   public PotentialIssue PatientBirthOrderIsMissingAndMultipleBirthIndicated = null;
   public PotentialIssue PatientBirthPlaceIsMissing = null;
+  public PotentialIssue PatientBirthPlaceIsTooShort = null;
+  public PotentialIssue PatientBirthPlaceIsUnexpectedlyShort = null;
+  public PotentialIssue PatientBirthPlaceIsUnexpectedlyLong = null;
+  public PotentialIssue PatientBirthPlaceIsTooLong = null;
   public PotentialIssue PatientBirthRegistryIdIsInvalid = null;
   public PotentialIssue PatientBirthRegistryIdIsMissing = null;
   public PotentialIssue PatientClassIsDeprecated = null;
@@ -256,19 +288,37 @@ public class PotentialIssues implements Reload
   public PotentialIssue PatientMedicaidNumberIsMissing = null;
   public PotentialIssue PatientMiddleNameIsMissing = null;
   public PotentialIssue PatientMiddleNameMayBeInitial = null;
+  public PotentialIssue PatientMiddleNameIsTooShort = null;
+  public PotentialIssue PatientMiddleNameIsUnexpectedlyShort = null;
+  public PotentialIssue PatientMiddleNameIsUnexpectedlyLong = null;
+  public PotentialIssue PatientMiddleNameIsTooLong = null;
   public PotentialIssue PatientMotherSMaidenNameIsMissing = null;
+  public PotentialIssue PatientMotherSMaidenNameIsTooShort = null;
+  public PotentialIssue PatientMotherSMaidenNameIsUnexpectedlyShort = null;
+  public PotentialIssue PatientMotherSMaidenNameIsUnexpectedlyLong = null;
+  public PotentialIssue PatientMotherSMaidenNameIsTooLong = null;
   public PotentialIssue PatientNameMayBeTemporaryNewbornName = null;
   public PotentialIssue PatientNameMayBeTestName = null;
+  public PotentialIssue PatientNameIsAKnownTestName = null;
   public PotentialIssue PatientNameFirstIsInvalid = null;
   public PotentialIssue PatientNameFirstIsMissing = null;
+  public PotentialIssue PatientNameFirstIsTooShort = null;
+  public PotentialIssue PatientNameFirstIsUnexpectedlyShort = null;
+  public PotentialIssue PatientNameFirstIsUnexpectedlyLong = null;
+  public PotentialIssue PatientNameFirstIsTooLong = null;
   public PotentialIssue PatientNameFirstMayIncludeMiddleInitial = null;
   public PotentialIssue PatientNameLastIsInvalid = null;
   public PotentialIssue PatientNameLastIsMissing = null;
+  public PotentialIssue PatientNameLastIsTooShort = null;
+  public PotentialIssue PatientNameLastIsUnexpectedlyShort = null;
+  public PotentialIssue PatientNameLastIsUnexpectedlyLong = null;
+  public PotentialIssue PatientNameLastIsTooLong = null;
   public PotentialIssue PatientNameTypeCodeIsDeprecated = null;
   public PotentialIssue PatientNameTypeCodeIsIgnored = null;
   public PotentialIssue PatientNameTypeCodeIsInvalid = null;
   public PotentialIssue PatientNameTypeCodeIsMissing = null;
   public PotentialIssue PatientNameTypeCodeIsUnrecognized = null;
+  public PotentialIssue PatientNameTypeCodeIsNotValuedLegal = null;
   public PotentialIssue PatientPhoneIsIncomplete = null;
   public PotentialIssue PatientPhoneIsInvalid = null;
   public PotentialIssue PatientPhoneIsMissing = null;
@@ -328,6 +378,10 @@ public class PotentialIssues implements Reload
   public PotentialIssue PatientSubmitterIdIsMissing = null;
   public PotentialIssue PatientSubmitterIdAuthorityIsMissing = null;
   public PotentialIssue PatientSubmitterIdTypeCodeIsMissing = null;
+  public PotentialIssue PatientSubmitterIdTypeCodeIsDeprecated = null;
+  public PotentialIssue PatientSubmitterIdTypeCodeIsInvalid = null;
+  public PotentialIssue PatientSubmitterIdTypeCodeIsUnrecognized = null;
+  public PotentialIssue PatientSubmitterIdTypeCodeIsIgnored = null;
   public PotentialIssue PatientVfcEffectiveDateIsBeforeBirth = null;
   public PotentialIssue PatientVfcEffectiveDateIsInFuture = null;
   public PotentialIssue PatientVfcEffectiveDateIsInvalid = null;
@@ -359,9 +413,9 @@ public class PotentialIssues implements Reload
   public PotentialIssue VaccinationAdminCodeIsUnrecognized = null;
   public PotentialIssue VaccinationAdminCodeIsValuedAsNotAdministered = null;
   public PotentialIssue VaccinationAdminCodeIsValuedAsUnknown = null;
+  public PotentialIssue VaccinationAdminCodeMayBeVariationOfPreviouslyReportedCodes = null;
   public PotentialIssue VaccinationAdminCodeTableIsMissing = null;
   public PotentialIssue VaccinationAdminCodeTableIsInvalid = null;
-  public PotentialIssue VaccinationAdminCodeMayBeVariationOfPreviouslyReportedCodes = null;
   public PotentialIssue VaccinationAdminDateIsAfterLotExpirationDate = null;
   public PotentialIssue VaccinationAdminDateIsAfterMessageSubmitted = null;
   public PotentialIssue VaccinationAdminDateIsAfterPatientDeathDate = null;
@@ -465,6 +519,30 @@ public class PotentialIssues implements Reload
   public PotentialIssue VaccinationInformationSourceIsUnrecognized = null;
   public PotentialIssue VaccinationInformationSourceIsValuedAsAdministered = null;
   public PotentialIssue VaccinationInformationSourceIsValuedAsHistorical = null;
+  public PotentialIssue VaccinationVisIsMissing = null;
+  public PotentialIssue VaccinationVisIsUnrecognized = null;
+  public PotentialIssue VaccinationVisIsDeprecated = null;
+  public PotentialIssue VaccinationVisCvxCodeIsDeprecated = null;
+  public PotentialIssue VaccinationVisCvxCodeIsIgnored = null;
+  public PotentialIssue VaccinationVisCvxCodeIsInvalid = null;
+  public PotentialIssue VaccinationVisCvxCodeIsMissing = null;
+  public PotentialIssue VaccinationVisCvxCodeIsUnrecognized = null;
+  public PotentialIssue VaccinationVisDocumentTypeIsDeprecated = null;
+  public PotentialIssue VaccinationVisDocumentTypeIsIgnored = null;
+  public PotentialIssue VaccinationVisDocumentTypeIsIncorrect = null;
+  public PotentialIssue VaccinationVisDocumentTypeIsInvalid = null;
+  public PotentialIssue VaccinationVisDocumentTypeIsMissing = null;
+  public PotentialIssue VaccinationVisDocumentTypeIsUnrecognized = null;
+  public PotentialIssue VaccinationVisDocumentTypeIsOutOfDate = null;
+  public PotentialIssue VaccinationVisPublishedDateIsInvalid = null;
+  public PotentialIssue VaccinationVisPublishedDateIsMissing = null;
+  public PotentialIssue VaccinationVisPublishedDateIsUnrecognized = null;
+  public PotentialIssue VaccinationVisPublishedDateIsInFuture = null;
+  public PotentialIssue VaccinationVisPresentedDateIsInvalid = null;
+  public PotentialIssue VaccinationVisPresentedDateIsMissing = null;
+  public PotentialIssue VaccinationVisPresentedDateIsNotAdminDate = null;
+  public PotentialIssue VaccinationVisPresentedDateIsBeforePublishedDate = null;
+  public PotentialIssue VaccinationVisPresentedDateIsAfterAdminDate = null;
   public PotentialIssue VaccinationLotExpirationDateIsInvalid = null;
   public PotentialIssue VaccinationLotExpirationDateIsMissing = null;
   public PotentialIssue VaccinationLotNumberIsInvalid = null;
@@ -519,496 +597,7 @@ public class PotentialIssues implements Reload
   public PotentialIssue VaccinationSystemEntryTimeIsMissing = null;
 
   public static enum Field {
-    GENERAL_AUTHORIZATION,
-    GENERAL_CONFIGURATION,
-    GENERAL_PARSE,
-    GENERAL_PROCESSING,
-    HL7_SEGMENT,
-
-    HL7_SEGMENTS,
-    HL7_MSH_ACCEPT_ACK_TYPE,
-
-
-
-
-
-
-
-    HL7_MSH_ALT_CHARACTER_SET,
-
-
-
-
-    HL7_MSH_APP_ACK_TYPE,
-
-
-
-
-
-
-
-    HL7_MSH_CHARACTER_SET,
-
-
-
-
-    HL7_MSH_COUNTRY_CODE,
-
-
-
-
-    HL7_MSH_ENCODING_CHARACTER,
-
-
-    HL7_MSH_MESSAGE_CONTROL_ID,
-    HL7_MSH_MESSAGE_DATE,
-
-
-    HL7_MSH_MESSAGE_PROFILE_ID,
-
-
-
-
-    HL7_MSH_MESSAGE_STRUCTURE,
-
-    HL7_MSH_MESSAGE_TRIGGER,
-
-    HL7_MSH_MESSAGE_TYPE,
-
-
-    HL7_MSH_PROCESSING_ID,
-
-
-
-
-
-
-
-    HL7_MSH_RECEIVING_APPLICATION,
-
-    HL7_MSH_RECEIVING_FACILITY,
-
-    HL7_MSH_SEGMENT,
-    HL7_MSH_SENDING_APPLICATION,
-
-    HL7_MSH_SENDING_FACILITY,
-
-    HL7_MSH_VERSION,
-
-
-
-
-    HL7_NK1_SEGMENT,
-
-    HL7_NK1_SET_ID,
-    HL7_OBX_SEGMENT,
-    HL7_ORC_SEGMENT,
-
-    HL7_PD1_SEGMENT,
-    HL7_PID_SEGMENT,
-
-    HL7_PV1_SEGMENT,
-
-    HL7_RXA_ADMIN_SUB_ID_COUNTER,
-    HL7_RXA_GIVE_SUB_ID,
-    HL7_RXA_SEGMENT,
-
-    HL7_RXR_SEGMENT,
-
-    NEXT_OF_KIN_ADDRESS,
-
-    NEXT_OF_KIN_ADDRESS_CITY,
-
-    NEXT_OF_KIN_ADDRESS_COUNTRY,
-
-
-
-
-    NEXT_OF_KIN_ADDRESS_COUNTY,
-
-
-
-
-    NEXT_OF_KIN_ADDRESS_STATE,
-
-
-
-
-    NEXT_OF_KIN_ADDRESS_STREET,
-    NEXT_OF_KIN_ADDRESS_STREET2,
-    NEXT_OF_KIN_ADDRESS_TYPE,
-
-
-
-
-    NEXT_OF_KIN_ADDRESS_ZIP,
-
-    NEXT_OF_KIN_NAME,
-    NEXT_OF_KIN_NAME_FIRST,
-    NEXT_OF_KIN_NAME_LAST,
-    NEXT_OF_KIN_PHONE_NUMBER,
-
-
-    NEXT_OF_KIN_RELATIONSHIP,
-
-
-
-
-
-
-    NEXT_OF_KIN_SSN,
-    OBSERVATION_VALUE_TYPE,
-
-
-
-
-    OBSERVATION_OBSERVATION_IDENTIFIER_CODE,
-
-
-
-
-    OBSERVATION_OBSERVATION_VALUE,
-    OBSERVATION_DATE_TIME_OF_OBSERVATION,
-
-    PATIENT_ADDRESS,
-    PATIENT_ADDRESS_CITY,
-
-    PATIENT_ADDRESS_COUNTRY,
-
-
-
-
-    PATIENT_ADDRESS_COUNTY,
-
-
-
-
-    PATIENT_ADDRESS_STATE,
-
-
-
-
-    PATIENT_ADDRESS_STREET,
-    PATIENT_ADDRESS_STREET2,
-    PATIENT_ADDRESS_TYPE,
-    PATIENT_ADDRESS_ZIP,
-
-    PATIENT_ALIAS,
-    PATIENT_BIRTH_DATE,
-
-
-
-
-
-    PATIENT_BIRTH_INDICATOR,
-
-    PATIENT_BIRTH_ORDER,
-
-
-    PATIENT_BIRTH_PLACE,
-    PATIENT_BIRTH_REGISTRY_ID,
-
-    PATIENT_CLASS,
-
-
-
-
-    PATIENT_DEATH_DATE,
-
-
-
-    PATIENT_DEATH_INDICATOR,
-
-    PATIENT_ETHNICITY,
-
-
-
-
-    PATIENT_GENDER,
-
-
-
-
-    PATIENT_GUARDIAN_ADDRESS,
-    PATIENT_GUARDIAN_ADDRESS_CITY,
-    PATIENT_GUARDIAN_ADDRESS_STATE,
-    PATIENT_GUARDIAN_ADDRESS_STREET,
-    PATIENT_GUARDIAN_ADDRESS_ZIP,
-    PATIENT_GUARDIAN_NAME,
-
-    PATIENT_GUARDIAN_NAME_FIRST,
-    PATIENT_GUARDIAN_NAME_LAST,
-    PATIENT_GUARDIAN_RESPONSIBLE_PARTY,
-    PATIENT_GUARDIAN_PHONE,
-    PATIENT_GUARDIAN_RELATIONSHIP,
-    PATIENT_IMMUNIZATION_REGISTRY_STATUS,
-
-
-
-
-    PATIENT_MEDICAID_NUMBER,
-
-    PATIENT_MIDDLE_NAME,
-
-    PATIENT_MOTHERS_MAIDEN_NAME,
-    PATIENT_NAME,
-
-    PATIENT_NAME_FIRST,
-
-
-    PATIENT_NAME_LAST,
-
-    PATIENT_NAME_TYPE_CODE,
-
-
-
-
-    PATIENT_PHONE,
-
-
-    PATIENT_PHONE_TEL_USE_CODE,
-
-
-
-
-    PATIENT_PHONE_TEL_EQUIP_CODE,
-
-
-
-
-    PATIENT_PRIMARY_FACILITY_ID,
-
-
-
-
-    PATIENT_PRIMARY_FACILITY_NAME,
-    PATIENT_PRIMARY_LANGUAGE,
-
-
-
-
-    PATIENT_PRIMARY_PHYSICIAN_ID,
-
-
-
-
-    PATIENT_PRIMARY_PHYSICIAN_NAME,
-    PATIENT_PROTECTION_INDICATOR,
-
-
-
-
-
-
-    PATIENT_PUBLICITY_CODE,
-
-
-
-
-    PATIENT_RACE,
-
-
-
-
-    PATIENT_REGISTRY_ID,
-
-    PATIENT_REGISTRY_STATUS,
-
-
-
-
-    PATIENT_SSN,
-
-    PATIENT_SUBMITTER_ID,
-    PATIENT_SUBMITTER_ID_AUTHORITY,
-    PATIENT_SUBMITTER_ID_TYPE_CODE,
-    PATIENT_VFC_EFFECTIVE_DATE,
-
-
-
-    PATIENT_VFC_STATUS,
-
-
-
-
-    PATIENT_WIC_ID,
-
-    VACCINATION_ACTION_CODE,
-
-
-
-
-
-
-
-
-    VACCINATION_ADMIN_CODE,
-
-
-
-
-
-
-
-
-
-
-    VACCINATION_ADMIN_CODE_TABLE,
-
-
-    VACCINATION_ADMIN_DATE,
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    VACCINATION_ADMIN_DATE_END,
-
-    VACCINATION_ADMINISTERED_AMOUNT,
-
-
-
-    VACCINATION_ADMINISTERED_UNIT,
-
-
-
-
-    VACCINATION_BODY_ROUTE,
-
-
-
-
-
-    VACCINATION_BODY_SITE,
-
-
-
-
-
-    VACCINATION_COMPLETION_STATUS,
-
-
-
-
-
-
-
-
-    VACCINATION_CONFIDENTIALITY_CODE,
-
-
-
-
-
-    VACCINATION_CPT_CODE,
-
-
-
-
-
-
-    VACCINATION_CVX_CODE,
-
-
-
-
-
-
-    VACCINATION_CVX_CODE_AND_CPT_CODE,
-    VACCINATION_FACILITY_ID,
-
-
-
-
-    VACCINATION_FACILITY_NAME,
-    VACCINATION_FILLER_ORDER_NUMBER,
-
-
-
-
-    VACCINATION_FINANCIAL_ELIGIBILITY_CODE,
-
-
-
-
-    VACCINATION_GIVEN_BY,
-
-
-
-
-    VACCINATION_ID,
-    VACCINATION_ID_OF_RECEIVER,
-
-    VACCINATION_ID_OF_SENDER,
-
-    VACCINATION_INFORMATION_SOURCE,
-
-
-
-
-
-
-
-
-    VACCINATION_LOT_EXPIRATION_DATE,
-
-    VACCINATION_LOT_NUMBER,
-
-    VACCINATION_MANUFACTURER_CODE,
-
-
-
-
-
-
-    VACCINATION_ORDER_CONTROL_CODE,
-
-
-
-
-    VACCINATION_ORDER_FACILITY_ID,
-
-
-
-
-    VACCINATION_ORDER_FACILITY_NAME,
-    VACCINATION_ORDERED_BY,
-
-
-
-
-    VACCINATION_PLACER_ORDER_NUMBER,
-
-
-
-
-    VACCINATION_PRODUCT,
-
-
-
-
-
-    VACCINATION_RECORDED_BY,
-
-
-
-
-    VACCINATION_REFUSAL_REASON,
-
-
-
-
-
-    VACCINATION_SYSTEM_ENTRY_TIME;
+    GENERAL_AUTHORIZATION, GENERAL_CONFIGURATION, GENERAL_PARSE, GENERAL_PROCESSING, HL7_SEGMENT, HL7_SEGMENTS, HL7_MSH_ACCEPT_ACK_TYPE, HL7_MSH_ALT_CHARACTER_SET, HL7_MSH_APP_ACK_TYPE, HL7_MSH_CHARACTER_SET, HL7_MSH_COUNTRY_CODE, HL7_MSH_ENCODING_CHARACTER, HL7_MSH_MESSAGE_CONTROL_ID, HL7_MSH_MESSAGE_DATE, HL7_MSH_MESSAGE_PROFILE_ID, HL7_MSH_MESSAGE_STRUCTURE, HL7_MSH_MESSAGE_TRIGGER, HL7_MSH_MESSAGE_TYPE, HL7_MSH_PROCESSING_ID, HL7_MSH_RECEIVING_APPLICATION, HL7_MSH_RECEIVING_FACILITY, HL7_MSH_SEGMENT, HL7_MSH_SENDING_APPLICATION, HL7_MSH_SENDING_FACILITY, HL7_MSH_VERSION, HL7_NK1_SEGMENT, HL7_NK1_SET_ID, HL7_OBX_SEGMENT, HL7_ORC_SEGMENT, HL7_PD1_SEGMENT, HL7_PID_SEGMENT, HL7_PV1_SEGMENT, HL7_RXA_ADMIN_SUB_ID_COUNTER, HL7_RXA_GIVE_SUB_ID, HL7_RXA_SEGMENT, HL7_RXR_SEGMENT, NEXT_OF_KIN_ADDRESS, NEXT_OF_KIN_ADDRESS_CITY, NEXT_OF_KIN_ADDRESS_COUNTRY, NEXT_OF_KIN_ADDRESS_COUNTY, NEXT_OF_KIN_ADDRESS_STATE, NEXT_OF_KIN_ADDRESS_STREET, NEXT_OF_KIN_ADDRESS_STREET2, NEXT_OF_KIN_ADDRESS_TYPE, NEXT_OF_KIN_ADDRESS_ZIP, NEXT_OF_KIN_NAME, NEXT_OF_KIN_NAME_FIRST, NEXT_OF_KIN_NAME_LAST, NEXT_OF_KIN_PHONE_NUMBER, NEXT_OF_KIN_RELATIONSHIP, NEXT_OF_KIN_SSN, OBSERVATION_VALUE_TYPE, OBSERVATION_OBSERVATION_IDENTIFIER_CODE, OBSERVATION_OBSERVATION_VALUE, OBSERVATION_DATE_TIME_OF_OBSERVATION, PATIENT_ADDRESS, PATIENT_ADDRESS_CITY, PATIENT_ADDRESS_COUNTRY, PATIENT_ADDRESS_COUNTY, PATIENT_ADDRESS_STATE, PATIENT_ADDRESS_STREET, PATIENT_ADDRESS_STREET2, PATIENT_ADDRESS_TYPE, PATIENT_ADDRESS_ZIP, PATIENT_ALIAS, PATIENT_BIRTH_DATE, PATIENT_BIRTH_INDICATOR, PATIENT_BIRTH_ORDER, PATIENT_BIRTH_PLACE, PATIENT_BIRTH_REGISTRY_ID, PATIENT_CLASS, PATIENT_DEATH_DATE, PATIENT_DEATH_INDICATOR, PATIENT_ETHNICITY, PATIENT_GENDER, PATIENT_GUARDIAN_ADDRESS, PATIENT_GUARDIAN_ADDRESS_CITY, PATIENT_GUARDIAN_ADDRESS_STATE, PATIENT_GUARDIAN_ADDRESS_STREET, PATIENT_GUARDIAN_ADDRESS_ZIP, PATIENT_GUARDIAN_NAME, PATIENT_GUARDIAN_NAME_FIRST, PATIENT_GUARDIAN_NAME_LAST, PATIENT_GUARDIAN_RESPONSIBLE_PARTY, PATIENT_GUARDIAN_PHONE, PATIENT_GUARDIAN_RELATIONSHIP, PATIENT_IMMUNIZATION_REGISTRY_STATUS, PATIENT_MEDICAID_NUMBER, PATIENT_MIDDLE_NAME, PATIENT_MOTHERS_MAIDEN_NAME, PATIENT_NAME, PATIENT_NAME_FIRST, PATIENT_NAME_LAST, PATIENT_NAME_TYPE_CODE, PATIENT_PHONE, PATIENT_PHONE_TEL_USE_CODE, PATIENT_PHONE_TEL_EQUIP_CODE, PATIENT_PRIMARY_FACILITY_ID, PATIENT_PRIMARY_FACILITY_NAME, PATIENT_PRIMARY_LANGUAGE, PATIENT_PRIMARY_PHYSICIAN_ID, PATIENT_PRIMARY_PHYSICIAN_NAME, PATIENT_PROTECTION_INDICATOR, PATIENT_PUBLICITY_CODE, PATIENT_RACE, PATIENT_REGISTRY_ID, PATIENT_REGISTRY_STATUS, PATIENT_SSN, PATIENT_SUBMITTER_ID, PATIENT_SUBMITTER_ID_AUTHORITY, PATIENT_SUBMITTER_ID_TYPE_CODE, PATIENT_VFC_EFFECTIVE_DATE, PATIENT_VFC_STATUS, PATIENT_WIC_ID, VACCINATION_ACTION_CODE, VACCINATION_ADMIN_CODE, VACCINATION_ADMIN_CODE_TABLE, VACCINATION_ADMIN_DATE, VACCINATION_ADMIN_DATE_END, VACCINATION_ADMINISTERED_AMOUNT, VACCINATION_ADMINISTERED_UNIT, VACCINATION_BODY_ROUTE, VACCINATION_BODY_SITE, VACCINATION_COMPLETION_STATUS, VACCINATION_CONFIDENTIALITY_CODE, VACCINATION_CPT_CODE, VACCINATION_CVX_CODE, VACCINATION_CVX_CODE_AND_CPT_CODE, VACCINATION_FACILITY_ID, VACCINATION_FACILITY_NAME, VACCINATION_FILLER_ORDER_NUMBER, VACCINATION_FINANCIAL_ELIGIBILITY_CODE, VACCINATION_GIVEN_BY, VACCINATION_ID, VACCINATION_ID_OF_RECEIVER, VACCINATION_ID_OF_SENDER, VACCINATION_INFORMATION_SOURCE, VACCINATION_VIS, VACCINATION_VIS_CVX_CODE, VACCINATION_VIS_DOCUMENT_TYPE, VACCINATION_VIS_PUBLISHED_DATE, VACCINATION_VIS_PRESENTED_DATE, VACCINATION_LOT_EXPIRATION_DATE, VACCINATION_LOT_NUMBER, VACCINATION_MANUFACTURER_CODE, VACCINATION_ORDER_CONTROL_CODE, VACCINATION_ORDER_FACILITY_ID, VACCINATION_ORDER_FACILITY_NAME, VACCINATION_ORDERED_BY, VACCINATION_PLACER_ORDER_NUMBER, VACCINATION_PRODUCT, VACCINATION_RECORDED_BY, VACCINATION_REFUSAL_REASON, VACCINATION_SYSTEM_ENTRY_TIME
   }
 
   private HashMap<Field, HashMap<String, PotentialIssue>> fieldIssueMaps = new HashMap<PotentialIssues.Field, HashMap<String, PotentialIssue>>();
@@ -1196,6 +785,8 @@ public class PotentialIssues implements Reload
     Hl7MshMessageDateIsInFuture = getPotentialIssue(session, "HL7 MSH", "message date", "is in future", "");
     Hl7MshMessageDateIsInvalid = getPotentialIssue(session, "HL7 MSH", "message date", "is invalid", "");
     Hl7MshMessageDateIsMissing = getPotentialIssue(session, "HL7 MSH", "message date", "is missing", "");
+    Hl7MshMessageDateIsNotPrecise = getPotentialIssue(session, "HL7 MSH", "message date", "is not precise", "");
+    Hl7MshMessageDateIsMissingTimezone = getPotentialIssue(session, "HL7 MSH", "message date", "is missing timezone", "");
     Hl7MshMessageProfileIdIsDeprecated = getPotentialIssue(session, "HL7 MSH", "message profile id", "is deprecated", "");
     Hl7MshMessageProfileIdIsIgnored = getPotentialIssue(session, "HL7 MSH", "message profile id", "is ignored", "");
     Hl7MshMessageProfileIdIsInvalid = getPotentialIssue(session, "HL7 MSH", "message profile id", "is invalid", "");
@@ -1205,6 +796,7 @@ public class PotentialIssues implements Reload
     Hl7MshMessageStructureIsUnrecognized = getPotentialIssue(session, "HL7 MSH", "message structure", "is unrecognized", "");
     Hl7MshMessageTriggerIsMissing = getPotentialIssue(session, "HL7 MSH", "message trigger", "is missing", "");
     Hl7MshMessageTriggerIsUnrecognized = getPotentialIssue(session, "HL7 MSH", "message trigger", "is unrecognized", "");
+    Hl7MshMessageTriggerIsUnsupported = getPotentialIssue(session, "HL7 MSH", "message trigger", "is unsupported", "");
     Hl7MshMessageTypeIsMissing = getPotentialIssue(session, "HL7 MSH", "message type", "is missing", "");
     Hl7MshMessageTypeIsUnrecognized = getPotentialIssue(session, "HL7 MSH", "message type", "is unrecognized", "");
     Hl7MshMessageTypeIsUnsupported = getPotentialIssue(session, "HL7 MSH", "message type", "is unsupported", "");
@@ -1213,6 +805,7 @@ public class PotentialIssues implements Reload
     Hl7MshProcessingIdIsInvalid = getPotentialIssue(session, "HL7 MSH", "processing id", "is invalid", "");
     Hl7MshProcessingIdIsMissing = getPotentialIssue(session, "HL7 MSH", "processing id", "is missing", "");
     Hl7MshProcessingIdIsUnrecognized = getPotentialIssue(session, "HL7 MSH", "processing id", "is unrecognized", "");
+    Hl7MshProcessingIdIsUnsupported = getPotentialIssue(session, "HL7 MSH", "processing id", "is unsupported", "");
     Hl7MshProcessingIdIsValuedAsDebug = getPotentialIssue(session, "HL7 MSH", "processing id", "is valued as", "debug");
     Hl7MshProcessingIdIsValuedAsProduction = getPotentialIssue(session, "HL7 MSH", "processing id", "is valued as", "production");
     Hl7MshProcessingIdIsValuedAsTraining = getPotentialIssue(session, "HL7 MSH", "processing id", "is valued as", "training");
@@ -1227,6 +820,7 @@ public class PotentialIssues implements Reload
     Hl7MshSendingFacilityIsMissing = getPotentialIssue(session, "HL7 MSH", "sending facility", "is missing", "");
     Hl7MshVersionIsMissing = getPotentialIssue(session, "HL7 MSH", "version", "is missing", "");
     Hl7MshVersionIsUnrecognized = getPotentialIssue(session, "HL7 MSH", "version", "is unrecognized", "");
+    Hl7MshVersionIsInvalid = getPotentialIssue(session, "HL7 MSH", "version", "is invalid", "");
     Hl7MshVersionIsValuedAs2_3_1 = getPotentialIssue(session, "HL7 MSH", "version", "is valued as", "2.3.1");
     Hl7MshVersionIsValuedAs2_4 = getPotentialIssue(session, "HL7 MSH", "version", "is valued as", "2.4");
     Hl7MshVersionIsValuedAs2_5 = getPotentialIssue(session, "HL7 MSH", "version", "is valued as", "2.5");
@@ -1251,6 +845,10 @@ public class PotentialIssues implements Reload
     NextOfKinAddressIsMissing = getPotentialIssue(session, "Next-of-kin", "address", "is missing", "");
     NextOfKinAddressCityIsInvalid = getPotentialIssue(session, "Next-of-kin", "address city", "is invalid", "");
     NextOfKinAddressCityIsMissing = getPotentialIssue(session, "Next-of-kin", "address city", "is missing", "");
+    NextOfKinAddressCityIsTooShort = getPotentialIssue(session, "Next-of-kin", "address city", "is too short", "");
+    NextOfKinAddressCityIsUnexpectedlyShort = getPotentialIssue(session, "Next-of-kin", "address city", "is unexpectedly short", "");
+    NextOfKinAddressCityIsUnexpectedlyLong = getPotentialIssue(session, "Next-of-kin", "address city", "is unexpectedly long", "");
+    NextOfKinAddressCityIsTooLong = getPotentialIssue(session, "Next-of-kin", "address city", "is too long", "");
     NextOfKinAddressCountryIsDeprecated = getPotentialIssue(session, "Next-of-kin", "address country", "is deprecated", "");
     NextOfKinAddressCountryIsIgnored = getPotentialIssue(session, "Next-of-kin", "address country", "is ignored", "");
     NextOfKinAddressCountryIsInvalid = getPotentialIssue(session, "Next-of-kin", "address country", "is invalid", "");
@@ -1273,11 +871,20 @@ public class PotentialIssues implements Reload
     NextOfKinAddressTypeIsInvalid = getPotentialIssue(session, "Next-of-kin", "address type", "is invalid", "");
     NextOfKinAddressTypeIsMissing = getPotentialIssue(session, "Next-of-kin", "address type", "is missing", "");
     NextOfKinAddressTypeIsUnrecognized = getPotentialIssue(session, "Next-of-kin", "address type", "is unrecognized", "");
+    NextOfKinAddressTypeIsValuedBadAddress = getPotentialIssue(session, "Next-of-kin", "address type", "is valued bad address", "");
     NextOfKinAddressZipIsInvalid = getPotentialIssue(session, "Next-of-kin", "address zip", "is invalid", "");
     NextOfKinAddressZipIsMissing = getPotentialIssue(session, "Next-of-kin", "address zip", "is missing", "");
     NextOfKinNameIsMissing = getPotentialIssue(session, "Next-of-kin", "name", "is missing", "");
     NextOfKinNameFirstIsMissing = getPotentialIssue(session, "Next-of-kin", "name first", "is missing", "");
+    NextOfKinNameFirstIsTooShort = getPotentialIssue(session, "Next-of-kin", "name first", "is too short", "");
+    NextOfKinNameFirstIsUnexpectedlyShort = getPotentialIssue(session, "Next-of-kin", "name first", "is unexpectedly short", "");
+    NextOfKinNameFirstIsUnexpectedlyLong = getPotentialIssue(session, "Next-of-kin", "name first", "is unexpectedly long", "");
+    NextOfKinNameFirstIsTooLong = getPotentialIssue(session, "Next-of-kin", "name first", "is too long", "");
     NextOfKinNameLastIsMissing = getPotentialIssue(session, "Next-of-kin", "name last", "is missing", "");
+    NextOfKinNameLastIsTooShort = getPotentialIssue(session, "Next-of-kin", "name last", "is too short", "");
+    NextOfKinNameLastIsUnexpectedlyShort = getPotentialIssue(session, "Next-of-kin", "name last", "is unexpectedly short", "");
+    NextOfKinNameLastIsUnexpectedlyLong = getPotentialIssue(session, "Next-of-kin", "name last", "is unexpectedly long", "");
+    NextOfKinNameLastIsTooLong = getPotentialIssue(session, "Next-of-kin", "name last", "is too long", "");
     NextOfKinPhoneNumberIsIncomplete = getPotentialIssue(session, "Next-of-kin", "phone number", "is incomplete", "");
     NextOfKinPhoneNumberIsInvalid = getPotentialIssue(session, "Next-of-kin", "phone number", "is invalid", "");
     NextOfKinPhoneNumberIsMissing = getPotentialIssue(session, "Next-of-kin", "phone number", "is missing", "");
@@ -1298,13 +905,18 @@ public class PotentialIssues implements Reload
     ObservationObservationIdentifierCodeIsIgnored = getPotentialIssue(session, "Observation", "observation identifier code", "is ignored", "");
     ObservationObservationIdentifierCodeIsInvalid = getPotentialIssue(session, "Observation", "observation identifier code", "is invalid", "");
     ObservationObservationIdentifierCodeIsMissing = getPotentialIssue(session, "Observation", "observation identifier code", "is missing", "");
-    ObservationObservationIdentifierCodeIsUnrecognized = getPotentialIssue(session, "Observation", "observation identifier code", "is unrecognized", "");
+    ObservationObservationIdentifierCodeIsUnrecognized = getPotentialIssue(session, "Observation", "observation identifier code", "is unrecognized",
+        "");
     ObservationObservationValueIsMissing = getPotentialIssue(session, "Observation", "observation value", "is missing", "");
     ObservationDateTimeOfObservationIsMissing = getPotentialIssue(session, "Observation", "date time of observation", "is missing", "");
     ObservationDateTimeOfObservationIsInvalid = getPotentialIssue(session, "Observation", "date time of observation", "is invalid", "");
     PatientAddressIsMissing = getPotentialIssue(session, "Patient", "address", "is missing", "");
     PatientAddressCityIsInvalid = getPotentialIssue(session, "Patient", "address city", "is invalid", "");
     PatientAddressCityIsMissing = getPotentialIssue(session, "Patient", "address city", "is missing", "");
+    PatientAddressCityIsTooShort = getPotentialIssue(session, "Patient", "address city", "is too short", "");
+    PatientAddressCityIsUnexpectedlyShort = getPotentialIssue(session, "Patient", "address city", "is unexpectedly short", "");
+    PatientAddressCityIsUnexpectedlyLong = getPotentialIssue(session, "Patient", "address city", "is unexpectedly long", "");
+    PatientAddressCityIsTooLong = getPotentialIssue(session, "Patient", "address city", "is too long", "");
     PatientAddressCountryIsDeprecated = getPotentialIssue(session, "Patient", "address country", "is deprecated", "");
     PatientAddressCountryIsIgnored = getPotentialIssue(session, "Patient", "address country", "is ignored", "");
     PatientAddressCountryIsInvalid = getPotentialIssue(session, "Patient", "address country", "is invalid", "");
@@ -1323,6 +935,11 @@ public class PotentialIssues implements Reload
     PatientAddressStreetIsMissing = getPotentialIssue(session, "Patient", "address street", "is missing", "");
     PatientAddressStreet2IsMissing = getPotentialIssue(session, "Patient", "address street2", "is missing", "");
     PatientAddressTypeIsMissing = getPotentialIssue(session, "Patient", "address type", "is missing", "");
+    PatientAddressTypeIsDeprecated = getPotentialIssue(session, "Patient", "address type", "is deprecated", "");
+    PatientAddressTypeIsIgnored = getPotentialIssue(session, "Patient", "address type", "is ignored", "");
+    PatientAddressTypeIsInvalid = getPotentialIssue(session, "Patient", "address type", "is invalid", "");
+    PatientAddressTypeIsUnrecognized = getPotentialIssue(session, "Patient", "address type", "is unrecognized", "");
+    PatientAddressTypeIsValuedBadAddress = getPotentialIssue(session, "Patient", "address type", "is valued bad address", "");
     PatientAddressZipIsInvalid = getPotentialIssue(session, "Patient", "address zip", "is invalid", "");
     PatientAddressZipIsMissing = getPotentialIssue(session, "Patient", "address zip", "is missing", "");
     PatientAliasIsMissing = getPotentialIssue(session, "Patient", "alias", "is missing", "");
@@ -1336,8 +953,13 @@ public class PotentialIssues implements Reload
     PatientBirthIndicatorIsMissing = getPotentialIssue(session, "Patient", "birth indicator", "is missing", "");
     PatientBirthOrderIsInvalid = getPotentialIssue(session, "Patient", "birth order", "is invalid", "");
     PatientBirthOrderIsMissing = getPotentialIssue(session, "Patient", "birth order", "is missing", "");
-    PatientBirthOrderIsMissingAndMultipleBirthIndicated = getPotentialIssue(session, "Patient", "birth order", "is missing and multiple birth indicated", "");
+    PatientBirthOrderIsMissingAndMultipleBirthIndicated = getPotentialIssue(session, "Patient", "birth order",
+        "is missing and multiple birth indicated", "");
     PatientBirthPlaceIsMissing = getPotentialIssue(session, "Patient", "birth place", "is missing", "");
+    PatientBirthPlaceIsTooShort = getPotentialIssue(session, "Patient", "birth place", "is too short", "");
+    PatientBirthPlaceIsUnexpectedlyShort = getPotentialIssue(session, "Patient", "birth place", "is unexpectedly short", "");
+    PatientBirthPlaceIsUnexpectedlyLong = getPotentialIssue(session, "Patient", "birth place", "is unexpectedly long", "");
+    PatientBirthPlaceIsTooLong = getPotentialIssue(session, "Patient", "birth place", "is too long", "");
     PatientBirthRegistryIdIsInvalid = getPotentialIssue(session, "Patient", "birth registry id", "is invalid", "");
     PatientBirthRegistryIdIsMissing = getPotentialIssue(session, "Patient", "birth registry id", "is missing", "");
     PatientClassIsDeprecated = getPotentialIssue(session, "Patient", "class", "is deprecated", "");
@@ -1382,19 +1004,37 @@ public class PotentialIssues implements Reload
     PatientMedicaidNumberIsMissing = getPotentialIssue(session, "Patient", "Medicaid number", "is missing", "");
     PatientMiddleNameIsMissing = getPotentialIssue(session, "Patient", "middle name", "is missing", "");
     PatientMiddleNameMayBeInitial = getPotentialIssue(session, "Patient", "middle name", "may be initial", "");
+    PatientMiddleNameIsTooShort = getPotentialIssue(session, "Patient", "middle name", "is too short", "");
+    PatientMiddleNameIsUnexpectedlyShort = getPotentialIssue(session, "Patient", "middle name", "is unexpectedly short", "");
+    PatientMiddleNameIsUnexpectedlyLong = getPotentialIssue(session, "Patient", "middle name", "is unexpectedly long", "");
+    PatientMiddleNameIsTooLong = getPotentialIssue(session, "Patient", "middle name", "is too long", "");
     PatientMotherSMaidenNameIsMissing = getPotentialIssue(session, "Patient", "mother's maiden name", "is missing", "");
+    PatientMotherSMaidenNameIsTooShort = getPotentialIssue(session, "Patient", "mother's maiden name", "is too short", "");
+    PatientMotherSMaidenNameIsUnexpectedlyShort = getPotentialIssue(session, "Patient", "mother's maiden name", "is unexpectedly short", "");
+    PatientMotherSMaidenNameIsUnexpectedlyLong = getPotentialIssue(session, "Patient", "mother's maiden name", "is unexpectedly long", "");
+    PatientMotherSMaidenNameIsTooLong = getPotentialIssue(session, "Patient", "mother's maiden name", "is too long", "");
     PatientNameMayBeTemporaryNewbornName = getPotentialIssue(session, "Patient", "name", "may be temporary newborn name", "");
     PatientNameMayBeTestName = getPotentialIssue(session, "Patient", "name", "may be test name", "");
+    PatientNameIsAKnownTestName = getPotentialIssue(session, "Patient", "name", "is a known test name", "");
     PatientNameFirstIsInvalid = getPotentialIssue(session, "Patient", "name first", "is invalid", "");
     PatientNameFirstIsMissing = getPotentialIssue(session, "Patient", "name first", "is missing", "");
+    PatientNameFirstIsTooShort = getPotentialIssue(session, "Patient", "name first", "is too short", "");
+    PatientNameFirstIsUnexpectedlyShort = getPotentialIssue(session, "Patient", "name first", "is unexpectedly short", "");
+    PatientNameFirstIsUnexpectedlyLong = getPotentialIssue(session, "Patient", "name first", "is unexpectedly long", "");
+    PatientNameFirstIsTooLong = getPotentialIssue(session, "Patient", "name first", "is too long", "");
     PatientNameFirstMayIncludeMiddleInitial = getPotentialIssue(session, "Patient", "name first", "may include middle initial", "");
     PatientNameLastIsInvalid = getPotentialIssue(session, "Patient", "name last", "is invalid", "");
     PatientNameLastIsMissing = getPotentialIssue(session, "Patient", "name last", "is missing", "");
+    PatientNameLastIsTooShort = getPotentialIssue(session, "Patient", "name last", "is too short", "");
+    PatientNameLastIsUnexpectedlyShort = getPotentialIssue(session, "Patient", "name last", "is unexpectedly short", "");
+    PatientNameLastIsUnexpectedlyLong = getPotentialIssue(session, "Patient", "name last", "is unexpectedly long", "");
+    PatientNameLastIsTooLong = getPotentialIssue(session, "Patient", "name last", "is too long", "");
     PatientNameTypeCodeIsDeprecated = getPotentialIssue(session, "Patient", "name type code", "is deprecated", "");
     PatientNameTypeCodeIsIgnored = getPotentialIssue(session, "Patient", "name type code", "is ignored", "");
     PatientNameTypeCodeIsInvalid = getPotentialIssue(session, "Patient", "name type code", "is invalid", "");
     PatientNameTypeCodeIsMissing = getPotentialIssue(session, "Patient", "name type code", "is missing", "");
     PatientNameTypeCodeIsUnrecognized = getPotentialIssue(session, "Patient", "name type code", "is unrecognized", "");
+    PatientNameTypeCodeIsNotValuedLegal = getPotentialIssue(session, "Patient", "name type code", "is not valued legal", "");
     PatientPhoneIsIncomplete = getPotentialIssue(session, "Patient", "phone", "is incomplete", "");
     PatientPhoneIsInvalid = getPotentialIssue(session, "Patient", "phone", "is invalid", "");
     PatientPhoneIsMissing = getPotentialIssue(session, "Patient", "phone", "is missing", "");
@@ -1454,6 +1094,10 @@ public class PotentialIssues implements Reload
     PatientSubmitterIdIsMissing = getPotentialIssue(session, "Patient", "submitter id", "is missing", "");
     PatientSubmitterIdAuthorityIsMissing = getPotentialIssue(session, "Patient", "submitter id authority", "is missing", "");
     PatientSubmitterIdTypeCodeIsMissing = getPotentialIssue(session, "Patient", "submitter id type code", "is missing", "");
+    PatientSubmitterIdTypeCodeIsDeprecated = getPotentialIssue(session, "Patient", "submitter id type code", "is deprecated", "");
+    PatientSubmitterIdTypeCodeIsInvalid = getPotentialIssue(session, "Patient", "submitter id type code", "is invalid", "");
+    PatientSubmitterIdTypeCodeIsUnrecognized = getPotentialIssue(session, "Patient", "submitter id type code", "is unrecognized", "");
+    PatientSubmitterIdTypeCodeIsIgnored = getPotentialIssue(session, "Patient", "submitter id type code", "is ignored", "");
     PatientVfcEffectiveDateIsBeforeBirth = getPotentialIssue(session, "Patient", "VFC effective date", "is before birth", "");
     PatientVfcEffectiveDateIsInFuture = getPotentialIssue(session, "Patient", "VFC effective date", "is in future", "");
     PatientVfcEffectiveDateIsInvalid = getPotentialIssue(session, "Patient", "VFC effective date", "is invalid", "");
@@ -1481,22 +1125,28 @@ public class PotentialIssues implements Reload
     VaccinationAdminCodeIsMissing = getPotentialIssue(session, "Vaccination", "admin code", "is missing", "");
     VaccinationAdminCodeIsNotSpecific = getPotentialIssue(session, "Vaccination", "admin code", "is not specific", "");
     VaccinationAdminCodeIsNotVaccine = getPotentialIssue(session, "Vaccination", "admin code", "is not vaccine", "");
-    VaccinationAdminCodeIsUnexpectedForDateAdministered = getPotentialIssue(session, "Vaccination", "admin code", "is unexpected for date administered", "");
+    VaccinationAdminCodeIsUnexpectedForDateAdministered = getPotentialIssue(session, "Vaccination", "admin code",
+        "is unexpected for date administered", "");
     VaccinationAdminCodeIsUnrecognized = getPotentialIssue(session, "Vaccination", "admin code", "is unrecognized", "");
     VaccinationAdminCodeIsValuedAsNotAdministered = getPotentialIssue(session, "Vaccination", "admin code", "is valued as", "not administered");
     VaccinationAdminCodeIsValuedAsUnknown = getPotentialIssue(session, "Vaccination", "admin code", "is valued as", "unknown");
+    VaccinationAdminCodeMayBeVariationOfPreviouslyReportedCodes = getPotentialIssue(session, "Vaccination", "admin code",
+        "may be variation of previously reported codes", "");
     VaccinationAdminCodeTableIsMissing = getPotentialIssue(session, "Vaccination", "admin code table", "is missing", "");
     VaccinationAdminCodeTableIsInvalid = getPotentialIssue(session, "Vaccination", "admin code table", "is invalid", "");
-    VaccinationAdminCodeMayBeVariationOfPreviouslyReportedCodes = getPotentialIssue(session, "Vaccination", "admin code", "may be variation of previously reported codes", "");
     VaccinationAdminDateIsAfterLotExpirationDate = getPotentialIssue(session, "Vaccination", "admin date", "is after lot expiration date", "");
     VaccinationAdminDateIsAfterMessageSubmitted = getPotentialIssue(session, "Vaccination", "admin date", "is after message submitted", "");
     VaccinationAdminDateIsAfterPatientDeathDate = getPotentialIssue(session, "Vaccination", "admin date", "is after patient death date", "");
     VaccinationAdminDateIsAfterSystemEntryDate = getPotentialIssue(session, "Vaccination", "admin date", "is after system entry date", "");
     VaccinationAdminDateIsBeforeBirth = getPotentialIssue(session, "Vaccination", "admin date", "is before birth", "");
-    VaccinationAdminDateIsBeforeOrAfterExpectedVaccineUsageRange = getPotentialIssue(session, "Vaccination", "admin date", "is before or after expected vaccine usage range", "");
-    VaccinationAdminDateIsBeforeOrAfterLicensedVaccineRange = getPotentialIssue(session, "Vaccination", "admin date", "is before or after licensed vaccine range", "");
-    VaccinationAdminDateIsBeforeOrAfterWhenExpectedForPatientAge = getPotentialIssue(session, "Vaccination", "admin date", "is before or after when expected for patient age", "");
-    VaccinationAdminDateIsBeforeOrAfterWhenValidForPatientAge = getPotentialIssue(session, "Vaccination", "admin date", "is before or after when valid for patient age", "");
+    VaccinationAdminDateIsBeforeOrAfterExpectedVaccineUsageRange = getPotentialIssue(session, "Vaccination", "admin date",
+        "is before or after expected vaccine usage range", "");
+    VaccinationAdminDateIsBeforeOrAfterLicensedVaccineRange = getPotentialIssue(session, "Vaccination", "admin date",
+        "is before or after licensed vaccine range", "");
+    VaccinationAdminDateIsBeforeOrAfterWhenExpectedForPatientAge = getPotentialIssue(session, "Vaccination", "admin date",
+        "is before or after when expected for patient age", "");
+    VaccinationAdminDateIsBeforeOrAfterWhenValidForPatientAge = getPotentialIssue(session, "Vaccination", "admin date",
+        "is before or after when valid for patient age", "");
     VaccinationAdminDateIsInvalid = getPotentialIssue(session, "Vaccination", "admin date", "is invalid", "");
     VaccinationAdminDateIsMissing = getPotentialIssue(session, "Vaccination", "admin date", "is missing", "");
     VaccinationAdminDateIsOn15ThDayOfMonth = getPotentialIssue(session, "Vaccination", "admin date", "is on 15th day of month", "");
@@ -1532,28 +1182,33 @@ public class PotentialIssues implements Reload
     VaccinationCompletionStatusIsMissing = getPotentialIssue(session, "Vaccination", "completion status", "is missing", "");
     VaccinationCompletionStatusIsUnrecognized = getPotentialIssue(session, "Vaccination", "completion status", "is unrecognized", "");
     VaccinationCompletionStatusIsValuedAsCompleted = getPotentialIssue(session, "Vaccination", "completion status", "is valued as", "completed");
-    VaccinationCompletionStatusIsValuedAsNotAdministered = getPotentialIssue(session, "Vaccination", "completion status", "is valued as", "not administered");
-    VaccinationCompletionStatusIsValuedAsPartiallyAdministered = getPotentialIssue(session, "Vaccination", "completion status", "is valued as", "partially administered");
+    VaccinationCompletionStatusIsValuedAsNotAdministered = getPotentialIssue(session, "Vaccination", "completion status", "is valued as",
+        "not administered");
+    VaccinationCompletionStatusIsValuedAsPartiallyAdministered = getPotentialIssue(session, "Vaccination", "completion status", "is valued as",
+        "partially administered");
     VaccinationCompletionStatusIsValuedAsRefused = getPotentialIssue(session, "Vaccination", "completion status", "is valued as", "refused");
     VaccinationConfidentialityCodeIsDeprecated = getPotentialIssue(session, "Vaccination", "confidentiality code", "is deprecated", "");
     VaccinationConfidentialityCodeIsIgnored = getPotentialIssue(session, "Vaccination", "confidentiality code", "is ignored", "");
     VaccinationConfidentialityCodeIsInvalid = getPotentialIssue(session, "Vaccination", "confidentiality code", "is invalid", "");
     VaccinationConfidentialityCodeIsMissing = getPotentialIssue(session, "Vaccination", "confidentiality code", "is missing", "");
     VaccinationConfidentialityCodeIsUnrecognized = getPotentialIssue(session, "Vaccination", "confidentiality code", "is unrecognized", "");
-    VaccinationConfidentialityCodeIsValuedAsRestricted = getPotentialIssue(session, "Vaccination", "confidentiality code", "is valued as", "restricted");
+    VaccinationConfidentialityCodeIsValuedAsRestricted = getPotentialIssue(session, "Vaccination", "confidentiality code", "is valued as",
+        "restricted");
     VaccinationCptCodeIsDeprecated = getPotentialIssue(session, "Vaccination", "CPT code", "is deprecated", "");
     VaccinationCptCodeIsIgnored = getPotentialIssue(session, "Vaccination", "CPT code", "is ignored", "");
     VaccinationCptCodeIsInvalid = getPotentialIssue(session, "Vaccination", "CPT code", "is invalid", "");
     VaccinationCptCodeIsInvalidForDateAdministered = getPotentialIssue(session, "Vaccination", "CPT code", "is invalid for date administered", "");
     VaccinationCptCodeIsMissing = getPotentialIssue(session, "Vaccination", "CPT code", "is missing", "");
-    VaccinationCptCodeIsUnexpectedForDateAdministered = getPotentialIssue(session, "Vaccination", "CPT code", "is unexpected for date administered", "");
+    VaccinationCptCodeIsUnexpectedForDateAdministered = getPotentialIssue(session, "Vaccination", "CPT code", "is unexpected for date administered",
+        "");
     VaccinationCptCodeIsUnrecognized = getPotentialIssue(session, "Vaccination", "CPT code", "is unrecognized", "");
     VaccinationCvxCodeIsDeprecated = getPotentialIssue(session, "Vaccination", "CVX code", "is deprecated", "");
     VaccinationCvxCodeIsIgnored = getPotentialIssue(session, "Vaccination", "CVX code", "is ignored", "");
     VaccinationCvxCodeIsInvalid = getPotentialIssue(session, "Vaccination", "CVX code", "is invalid", "");
     VaccinationCvxCodeIsInvalidForDateAdministered = getPotentialIssue(session, "Vaccination", "CVX code", "is invalid for date administered", "");
     VaccinationCvxCodeIsMissing = getPotentialIssue(session, "Vaccination", "CVX code", "is missing", "");
-    VaccinationCvxCodeIsUnexpectedForDateAdministered = getPotentialIssue(session, "Vaccination", "CVX code", "is unexpected for date administered", "");
+    VaccinationCvxCodeIsUnexpectedForDateAdministered = getPotentialIssue(session, "Vaccination", "CVX code", "is unexpected for date administered",
+        "");
     VaccinationCvxCodeIsUnrecognized = getPotentialIssue(session, "Vaccination", "CVX code", "is unrecognized", "");
     VaccinationCvxCodeAndCptCodeAreInconsistent = getPotentialIssue(session, "Vaccination", "CVX code and CPT code", "are inconsistent", "");
     VaccinationFacilityIdIsDeprecated = getPotentialIssue(session, "Vaccination", "facility id", "is deprecated", "");
@@ -1582,15 +1237,42 @@ public class PotentialIssues implements Reload
     VaccinationIdOfReceiverIsUnrecognized = getPotentialIssue(session, "Vaccination", "id of receiver", "is unrecognized", "");
     VaccinationIdOfSenderIsMissing = getPotentialIssue(session, "Vaccination", "id of sender", "is missing", "");
     VaccinationIdOfSenderIsUnrecognized = getPotentialIssue(session, "Vaccination", "id of sender", "is unrecognized", "");
-    VaccinationInformationSourceIsAdministeredButAppearsToHistorical = getPotentialIssue(session, "Vaccination", "information source", "is administered but appears to historical", "");
+    VaccinationInformationSourceIsAdministeredButAppearsToHistorical = getPotentialIssue(session, "Vaccination", "information source",
+        "is administered but appears to historical", "");
     VaccinationInformationSourceIsDeprecated = getPotentialIssue(session, "Vaccination", "information source", "is deprecated", "");
-    VaccinationInformationSourceIsHistoricalButAppearsToBeAdministered = getPotentialIssue(session, "Vaccination", "information source", "is historical but appears to be administered", "");
+    VaccinationInformationSourceIsHistoricalButAppearsToBeAdministered = getPotentialIssue(session, "Vaccination", "information source",
+        "is historical but appears to be administered", "");
     VaccinationInformationSourceIsIgnored = getPotentialIssue(session, "Vaccination", "information source", "is ignored", "");
     VaccinationInformationSourceIsInvalid = getPotentialIssue(session, "Vaccination", "information source", "is invalid", "");
     VaccinationInformationSourceIsMissing = getPotentialIssue(session, "Vaccination", "information source", "is missing", "");
     VaccinationInformationSourceIsUnrecognized = getPotentialIssue(session, "Vaccination", "information source", "is unrecognized", "");
-    VaccinationInformationSourceIsValuedAsAdministered = getPotentialIssue(session, "Vaccination", "information source", "is valued as", "administered");
+    VaccinationInformationSourceIsValuedAsAdministered = getPotentialIssue(session, "Vaccination", "information source", "is valued as",
+        "administered");
     VaccinationInformationSourceIsValuedAsHistorical = getPotentialIssue(session, "Vaccination", "information source", "is valued as", "historical");
+    VaccinationVisIsMissing = getPotentialIssue(session, "Vaccination", "VIS", "is missing", "");
+    VaccinationVisIsUnrecognized = getPotentialIssue(session, "Vaccination", "VIS", "is unrecognized", "");
+    VaccinationVisIsDeprecated = getPotentialIssue(session, "Vaccination", "VIS", "is deprecated", "");
+    VaccinationVisCvxCodeIsDeprecated = getPotentialIssue(session, "Vaccination", "VIS CVX Code", "is deprecated", "");
+    VaccinationVisCvxCodeIsIgnored = getPotentialIssue(session, "Vaccination", "VIS CVX Code", "is ignored", "");
+    VaccinationVisCvxCodeIsInvalid = getPotentialIssue(session, "Vaccination", "VIS CVX Code", "is invalid", "");
+    VaccinationVisCvxCodeIsMissing = getPotentialIssue(session, "Vaccination", "VIS CVX Code", "is missing", "");
+    VaccinationVisCvxCodeIsUnrecognized = getPotentialIssue(session, "Vaccination", "VIS CVX Code", "is unrecognized", "");
+    VaccinationVisDocumentTypeIsDeprecated = getPotentialIssue(session, "Vaccination", "VIS document type", "is deprecated", "");
+    VaccinationVisDocumentTypeIsIgnored = getPotentialIssue(session, "Vaccination", "VIS document type", "is ignored", "");
+    VaccinationVisDocumentTypeIsIncorrect = getPotentialIssue(session, "Vaccination", "VIS document type", "is incorrect", "");
+    VaccinationVisDocumentTypeIsInvalid = getPotentialIssue(session, "Vaccination", "VIS document type", "is invalid", "");
+    VaccinationVisDocumentTypeIsMissing = getPotentialIssue(session, "Vaccination", "VIS document type", "is missing", "");
+    VaccinationVisDocumentTypeIsUnrecognized = getPotentialIssue(session, "Vaccination", "VIS document type", "is unrecognized", "");
+    VaccinationVisDocumentTypeIsOutOfDate = getPotentialIssue(session, "Vaccination", "VIS document type", "is out-of-date", "");
+    VaccinationVisPublishedDateIsInvalid = getPotentialIssue(session, "Vaccination", "VIS published date", "is invalid", "");
+    VaccinationVisPublishedDateIsMissing = getPotentialIssue(session, "Vaccination", "VIS published date", "is missing", "");
+    VaccinationVisPublishedDateIsUnrecognized = getPotentialIssue(session, "Vaccination", "VIS published date", "is unrecognized", "");
+    VaccinationVisPublishedDateIsInFuture = getPotentialIssue(session, "Vaccination", "VIS published date", "is in future", "");
+    VaccinationVisPresentedDateIsInvalid = getPotentialIssue(session, "Vaccination", "VIS presented date", "is invalid", "");
+    VaccinationVisPresentedDateIsMissing = getPotentialIssue(session, "Vaccination", "VIS presented date", "is missing", "");
+    VaccinationVisPresentedDateIsNotAdminDate = getPotentialIssue(session, "Vaccination", "VIS presented date", "is not admin date", "");
+    VaccinationVisPresentedDateIsBeforePublishedDate = getPotentialIssue(session, "Vaccination", "VIS presented date", "is before published date", "");
+    VaccinationVisPresentedDateIsAfterAdminDate = getPotentialIssue(session, "Vaccination", "VIS presented date", "is after admin date", "");
     VaccinationLotExpirationDateIsInvalid = getPotentialIssue(session, "Vaccination", "lot expiration date", "is invalid", "");
     VaccinationLotExpirationDateIsMissing = getPotentialIssue(session, "Vaccination", "lot expiration date", "is missing", "");
     VaccinationLotNumberIsInvalid = getPotentialIssue(session, "Vaccination", "lot number", "is invalid", "");
@@ -1598,9 +1280,11 @@ public class PotentialIssues implements Reload
     VaccinationManufacturerCodeIsDeprecated = getPotentialIssue(session, "Vaccination", "manufacturer code", "is deprecated", "");
     VaccinationManufacturerCodeIsIgnored = getPotentialIssue(session, "Vaccination", "manufacturer code", "is ignored", "");
     VaccinationManufacturerCodeIsInvalid = getPotentialIssue(session, "Vaccination", "manufacturer code", "is invalid", "");
-    VaccinationManufacturerCodeIsInvalidForDateAdministered = getPotentialIssue(session, "Vaccination", "manufacturer code", "is invalid for date administered", "");
+    VaccinationManufacturerCodeIsInvalidForDateAdministered = getPotentialIssue(session, "Vaccination", "manufacturer code",
+        "is invalid for date administered", "");
     VaccinationManufacturerCodeIsMissing = getPotentialIssue(session, "Vaccination", "manufacturer code", "is missing", "");
-    VaccinationManufacturerCodeIsUnexpectedForDateAdministered = getPotentialIssue(session, "Vaccination", "manufacturer code", "is unexpected for date administered", "");
+    VaccinationManufacturerCodeIsUnexpectedForDateAdministered = getPotentialIssue(session, "Vaccination", "manufacturer code",
+        "is unexpected for date administered", "");
     VaccinationManufacturerCodeIsUnrecognized = getPotentialIssue(session, "Vaccination", "manufacturer code", "is unrecognized", "");
     VaccinationOrderControlCodeIsDeprecated = getPotentialIssue(session, "Vaccination", "order control code", "is deprecated", "");
     VaccinationOrderControlCodeIsIgnored = getPotentialIssue(session, "Vaccination", "order control code", "is ignored", "");
@@ -1627,7 +1311,8 @@ public class PotentialIssues implements Reload
     VaccinationProductIsInvalid = getPotentialIssue(session, "Vaccination", "product", "is invalid", "");
     VaccinationProductIsInvalidForDateAdministered = getPotentialIssue(session, "Vaccination", "product", "is invalid for date administered", "");
     VaccinationProductIsMissing = getPotentialIssue(session, "Vaccination", "product", "is missing", "");
-    VaccinationProductIsUnexpectedForDateAdministered = getPotentialIssue(session, "Vaccination", "product", "is unexpected for date administered", "");
+    VaccinationProductIsUnexpectedForDateAdministered = getPotentialIssue(session, "Vaccination", "product", "is unexpected for date administered",
+        "");
     VaccinationProductIsUnrecognized = getPotentialIssue(session, "Vaccination", "product", "is unrecognized", "");
     VaccinationRecordedByIsDeprecated = getPotentialIssue(session, "Vaccination", "recorded by", "is deprecated", "");
     VaccinationRecordedByIsIgnored = getPotentialIssue(session, "Vaccination", "recorded by", "is ignored", "");
@@ -1643,7 +1328,6 @@ public class PotentialIssues implements Reload
     VaccinationSystemEntryTimeIsInFuture = getPotentialIssue(session, "Vaccination", "system entry time", "is in future", "");
     VaccinationSystemEntryTimeIsInvalid = getPotentialIssue(session, "Vaccination", "system entry time", "is invalid", "");
     VaccinationSystemEntryTimeIsMissing = getPotentialIssue(session, "Vaccination", "system entry time", "is missing", "");
-
 
     addToFieldIssueMap(Field.GENERAL_AUTHORIZATION, GeneralAuthorizationException);
     addToFieldIssueMap(Field.GENERAL_CONFIGURATION, GeneralConfigurationException);
@@ -1690,6 +1374,8 @@ public class PotentialIssues implements Reload
     addToFieldIssueMap(Field.HL7_MSH_MESSAGE_DATE, Hl7MshMessageDateIsInFuture);
     addToFieldIssueMap(Field.HL7_MSH_MESSAGE_DATE, Hl7MshMessageDateIsInvalid);
     addToFieldIssueMap(Field.HL7_MSH_MESSAGE_DATE, Hl7MshMessageDateIsMissing);
+    addToFieldIssueMap(Field.HL7_MSH_MESSAGE_DATE, Hl7MshMessageDateIsNotPrecise);
+    addToFieldIssueMap(Field.HL7_MSH_MESSAGE_DATE, Hl7MshMessageDateIsMissingTimezone);
     addToFieldIssueMap(Field.HL7_MSH_MESSAGE_PROFILE_ID, Hl7MshMessageProfileIdIsDeprecated);
     addToFieldIssueMap(Field.HL7_MSH_MESSAGE_PROFILE_ID, Hl7MshMessageProfileIdIsIgnored);
     addToFieldIssueMap(Field.HL7_MSH_MESSAGE_PROFILE_ID, Hl7MshMessageProfileIdIsInvalid);
@@ -1699,6 +1385,7 @@ public class PotentialIssues implements Reload
     addToFieldIssueMap(Field.HL7_MSH_MESSAGE_STRUCTURE, Hl7MshMessageStructureIsUnrecognized);
     addToFieldIssueMap(Field.HL7_MSH_MESSAGE_TRIGGER, Hl7MshMessageTriggerIsMissing);
     addToFieldIssueMap(Field.HL7_MSH_MESSAGE_TRIGGER, Hl7MshMessageTriggerIsUnrecognized);
+    addToFieldIssueMap(Field.HL7_MSH_MESSAGE_TRIGGER, Hl7MshMessageTriggerIsUnsupported);
     addToFieldIssueMap(Field.HL7_MSH_MESSAGE_TYPE, Hl7MshMessageTypeIsMissing);
     addToFieldIssueMap(Field.HL7_MSH_MESSAGE_TYPE, Hl7MshMessageTypeIsUnrecognized);
     addToFieldIssueMap(Field.HL7_MSH_MESSAGE_TYPE, Hl7MshMessageTypeIsUnsupported);
@@ -1707,6 +1394,7 @@ public class PotentialIssues implements Reload
     addToFieldIssueMap(Field.HL7_MSH_PROCESSING_ID, Hl7MshProcessingIdIsInvalid);
     addToFieldIssueMap(Field.HL7_MSH_PROCESSING_ID, Hl7MshProcessingIdIsMissing);
     addToFieldIssueMap(Field.HL7_MSH_PROCESSING_ID, Hl7MshProcessingIdIsUnrecognized);
+    addToFieldIssueMap(Field.HL7_MSH_PROCESSING_ID, Hl7MshProcessingIdIsUnsupported);
     addToFieldIssueMap(Field.HL7_MSH_PROCESSING_ID, Hl7MshProcessingIdIsValuedAsDebug);
     addToFieldIssueMap(Field.HL7_MSH_PROCESSING_ID, Hl7MshProcessingIdIsValuedAsProduction);
     addToFieldIssueMap(Field.HL7_MSH_PROCESSING_ID, Hl7MshProcessingIdIsValuedAsTraining);
@@ -1721,6 +1409,7 @@ public class PotentialIssues implements Reload
     addToFieldIssueMap(Field.HL7_MSH_SENDING_FACILITY, Hl7MshSendingFacilityIsMissing);
     addToFieldIssueMap(Field.HL7_MSH_VERSION, Hl7MshVersionIsMissing);
     addToFieldIssueMap(Field.HL7_MSH_VERSION, Hl7MshVersionIsUnrecognized);
+    addToFieldIssueMap(Field.HL7_MSH_VERSION, Hl7MshVersionIsInvalid);
     addToFieldIssueMap(Field.HL7_MSH_VERSION, Hl7MshVersionIsValuedAs2_3_1);
     addToFieldIssueMap(Field.HL7_MSH_VERSION, Hl7MshVersionIsValuedAs2_4);
     addToFieldIssueMap(Field.HL7_MSH_VERSION, Hl7MshVersionIsValuedAs2_5);
@@ -1745,6 +1434,10 @@ public class PotentialIssues implements Reload
     addToFieldIssueMap(Field.NEXT_OF_KIN_ADDRESS, NextOfKinAddressIsMissing);
     addToFieldIssueMap(Field.NEXT_OF_KIN_ADDRESS_CITY, NextOfKinAddressCityIsInvalid);
     addToFieldIssueMap(Field.NEXT_OF_KIN_ADDRESS_CITY, NextOfKinAddressCityIsMissing);
+    addToFieldIssueMap(Field.NEXT_OF_KIN_ADDRESS_CITY, NextOfKinAddressCityIsTooShort);
+    addToFieldIssueMap(Field.NEXT_OF_KIN_ADDRESS_CITY, NextOfKinAddressCityIsUnexpectedlyShort);
+    addToFieldIssueMap(Field.NEXT_OF_KIN_ADDRESS_CITY, NextOfKinAddressCityIsUnexpectedlyLong);
+    addToFieldIssueMap(Field.NEXT_OF_KIN_ADDRESS_CITY, NextOfKinAddressCityIsTooLong);
     addToFieldIssueMap(Field.NEXT_OF_KIN_ADDRESS_COUNTRY, NextOfKinAddressCountryIsDeprecated);
     addToFieldIssueMap(Field.NEXT_OF_KIN_ADDRESS_COUNTRY, NextOfKinAddressCountryIsIgnored);
     addToFieldIssueMap(Field.NEXT_OF_KIN_ADDRESS_COUNTRY, NextOfKinAddressCountryIsInvalid);
@@ -1767,11 +1460,20 @@ public class PotentialIssues implements Reload
     addToFieldIssueMap(Field.NEXT_OF_KIN_ADDRESS_TYPE, NextOfKinAddressTypeIsInvalid);
     addToFieldIssueMap(Field.NEXT_OF_KIN_ADDRESS_TYPE, NextOfKinAddressTypeIsMissing);
     addToFieldIssueMap(Field.NEXT_OF_KIN_ADDRESS_TYPE, NextOfKinAddressTypeIsUnrecognized);
+    addToFieldIssueMap(Field.NEXT_OF_KIN_ADDRESS_TYPE, NextOfKinAddressTypeIsValuedBadAddress);
     addToFieldIssueMap(Field.NEXT_OF_KIN_ADDRESS_ZIP, NextOfKinAddressZipIsInvalid);
     addToFieldIssueMap(Field.NEXT_OF_KIN_ADDRESS_ZIP, NextOfKinAddressZipIsMissing);
     addToFieldIssueMap(Field.NEXT_OF_KIN_NAME, NextOfKinNameIsMissing);
     addToFieldIssueMap(Field.NEXT_OF_KIN_NAME_FIRST, NextOfKinNameFirstIsMissing);
+    addToFieldIssueMap(Field.NEXT_OF_KIN_NAME_FIRST, NextOfKinNameFirstIsTooShort);
+    addToFieldIssueMap(Field.NEXT_OF_KIN_NAME_FIRST, NextOfKinNameFirstIsUnexpectedlyShort);
+    addToFieldIssueMap(Field.NEXT_OF_KIN_NAME_FIRST, NextOfKinNameFirstIsUnexpectedlyLong);
+    addToFieldIssueMap(Field.NEXT_OF_KIN_NAME_FIRST, NextOfKinNameFirstIsTooLong);
     addToFieldIssueMap(Field.NEXT_OF_KIN_NAME_LAST, NextOfKinNameLastIsMissing);
+    addToFieldIssueMap(Field.NEXT_OF_KIN_NAME_LAST, NextOfKinNameLastIsTooShort);
+    addToFieldIssueMap(Field.NEXT_OF_KIN_NAME_LAST, NextOfKinNameLastIsUnexpectedlyShort);
+    addToFieldIssueMap(Field.NEXT_OF_KIN_NAME_LAST, NextOfKinNameLastIsUnexpectedlyLong);
+    addToFieldIssueMap(Field.NEXT_OF_KIN_NAME_LAST, NextOfKinNameLastIsTooLong);
     addToFieldIssueMap(Field.NEXT_OF_KIN_PHONE_NUMBER, NextOfKinPhoneNumberIsIncomplete);
     addToFieldIssueMap(Field.NEXT_OF_KIN_PHONE_NUMBER, NextOfKinPhoneNumberIsInvalid);
     addToFieldIssueMap(Field.NEXT_OF_KIN_PHONE_NUMBER, NextOfKinPhoneNumberIsMissing);
@@ -1799,6 +1501,10 @@ public class PotentialIssues implements Reload
     addToFieldIssueMap(Field.PATIENT_ADDRESS, PatientAddressIsMissing);
     addToFieldIssueMap(Field.PATIENT_ADDRESS_CITY, PatientAddressCityIsInvalid);
     addToFieldIssueMap(Field.PATIENT_ADDRESS_CITY, PatientAddressCityIsMissing);
+    addToFieldIssueMap(Field.PATIENT_ADDRESS_CITY, PatientAddressCityIsTooShort);
+    addToFieldIssueMap(Field.PATIENT_ADDRESS_CITY, PatientAddressCityIsUnexpectedlyShort);
+    addToFieldIssueMap(Field.PATIENT_ADDRESS_CITY, PatientAddressCityIsUnexpectedlyLong);
+    addToFieldIssueMap(Field.PATIENT_ADDRESS_CITY, PatientAddressCityIsTooLong);
     addToFieldIssueMap(Field.PATIENT_ADDRESS_COUNTRY, PatientAddressCountryIsDeprecated);
     addToFieldIssueMap(Field.PATIENT_ADDRESS_COUNTRY, PatientAddressCountryIsIgnored);
     addToFieldIssueMap(Field.PATIENT_ADDRESS_COUNTRY, PatientAddressCountryIsInvalid);
@@ -1817,6 +1523,11 @@ public class PotentialIssues implements Reload
     addToFieldIssueMap(Field.PATIENT_ADDRESS_STREET, PatientAddressStreetIsMissing);
     addToFieldIssueMap(Field.PATIENT_ADDRESS_STREET2, PatientAddressStreet2IsMissing);
     addToFieldIssueMap(Field.PATIENT_ADDRESS_TYPE, PatientAddressTypeIsMissing);
+    addToFieldIssueMap(Field.PATIENT_ADDRESS_TYPE, PatientAddressTypeIsDeprecated);
+    addToFieldIssueMap(Field.PATIENT_ADDRESS_TYPE, PatientAddressTypeIsIgnored);
+    addToFieldIssueMap(Field.PATIENT_ADDRESS_TYPE, PatientAddressTypeIsInvalid);
+    addToFieldIssueMap(Field.PATIENT_ADDRESS_TYPE, PatientAddressTypeIsUnrecognized);
+    addToFieldIssueMap(Field.PATIENT_ADDRESS_TYPE, PatientAddressTypeIsValuedBadAddress);
     addToFieldIssueMap(Field.PATIENT_ADDRESS_ZIP, PatientAddressZipIsInvalid);
     addToFieldIssueMap(Field.PATIENT_ADDRESS_ZIP, PatientAddressZipIsMissing);
     addToFieldIssueMap(Field.PATIENT_ALIAS, PatientAliasIsMissing);
@@ -1832,6 +1543,10 @@ public class PotentialIssues implements Reload
     addToFieldIssueMap(Field.PATIENT_BIRTH_ORDER, PatientBirthOrderIsMissing);
     addToFieldIssueMap(Field.PATIENT_BIRTH_ORDER, PatientBirthOrderIsMissingAndMultipleBirthIndicated);
     addToFieldIssueMap(Field.PATIENT_BIRTH_PLACE, PatientBirthPlaceIsMissing);
+    addToFieldIssueMap(Field.PATIENT_BIRTH_PLACE, PatientBirthPlaceIsTooShort);
+    addToFieldIssueMap(Field.PATIENT_BIRTH_PLACE, PatientBirthPlaceIsUnexpectedlyShort);
+    addToFieldIssueMap(Field.PATIENT_BIRTH_PLACE, PatientBirthPlaceIsUnexpectedlyLong);
+    addToFieldIssueMap(Field.PATIENT_BIRTH_PLACE, PatientBirthPlaceIsTooLong);
     addToFieldIssueMap(Field.PATIENT_BIRTH_REGISTRY_ID, PatientBirthRegistryIdIsInvalid);
     addToFieldIssueMap(Field.PATIENT_BIRTH_REGISTRY_ID, PatientBirthRegistryIdIsMissing);
     addToFieldIssueMap(Field.PATIENT_CLASS, PatientClassIsDeprecated);
@@ -1876,19 +1591,37 @@ public class PotentialIssues implements Reload
     addToFieldIssueMap(Field.PATIENT_MEDICAID_NUMBER, PatientMedicaidNumberIsMissing);
     addToFieldIssueMap(Field.PATIENT_MIDDLE_NAME, PatientMiddleNameIsMissing);
     addToFieldIssueMap(Field.PATIENT_MIDDLE_NAME, PatientMiddleNameMayBeInitial);
+    addToFieldIssueMap(Field.PATIENT_MIDDLE_NAME, PatientMiddleNameIsTooShort);
+    addToFieldIssueMap(Field.PATIENT_MIDDLE_NAME, PatientMiddleNameIsUnexpectedlyShort);
+    addToFieldIssueMap(Field.PATIENT_MIDDLE_NAME, PatientMiddleNameIsUnexpectedlyLong);
+    addToFieldIssueMap(Field.PATIENT_MIDDLE_NAME, PatientMiddleNameIsTooLong);
     addToFieldIssueMap(Field.PATIENT_MOTHERS_MAIDEN_NAME, PatientMotherSMaidenNameIsMissing);
+    addToFieldIssueMap(Field.PATIENT_MOTHERS_MAIDEN_NAME, PatientMotherSMaidenNameIsTooShort);
+    addToFieldIssueMap(Field.PATIENT_MOTHERS_MAIDEN_NAME, PatientMotherSMaidenNameIsUnexpectedlyShort);
+    addToFieldIssueMap(Field.PATIENT_MOTHERS_MAIDEN_NAME, PatientMotherSMaidenNameIsUnexpectedlyLong);
+    addToFieldIssueMap(Field.PATIENT_MOTHERS_MAIDEN_NAME, PatientMotherSMaidenNameIsTooLong);
     addToFieldIssueMap(Field.PATIENT_NAME, PatientNameMayBeTemporaryNewbornName);
     addToFieldIssueMap(Field.PATIENT_NAME, PatientNameMayBeTestName);
+    addToFieldIssueMap(Field.PATIENT_NAME, PatientNameIsAKnownTestName);
     addToFieldIssueMap(Field.PATIENT_NAME_FIRST, PatientNameFirstIsInvalid);
     addToFieldIssueMap(Field.PATIENT_NAME_FIRST, PatientNameFirstIsMissing);
+    addToFieldIssueMap(Field.PATIENT_NAME_FIRST, PatientNameFirstIsTooShort);
+    addToFieldIssueMap(Field.PATIENT_NAME_FIRST, PatientNameFirstIsUnexpectedlyShort);
+    addToFieldIssueMap(Field.PATIENT_NAME_FIRST, PatientNameFirstIsUnexpectedlyLong);
+    addToFieldIssueMap(Field.PATIENT_NAME_FIRST, PatientNameFirstIsTooLong);
     addToFieldIssueMap(Field.PATIENT_NAME_FIRST, PatientNameFirstMayIncludeMiddleInitial);
     addToFieldIssueMap(Field.PATIENT_NAME_LAST, PatientNameLastIsInvalid);
     addToFieldIssueMap(Field.PATIENT_NAME_LAST, PatientNameLastIsMissing);
+    addToFieldIssueMap(Field.PATIENT_NAME_LAST, PatientNameLastIsTooShort);
+    addToFieldIssueMap(Field.PATIENT_NAME_LAST, PatientNameLastIsUnexpectedlyShort);
+    addToFieldIssueMap(Field.PATIENT_NAME_LAST, PatientNameLastIsUnexpectedlyLong);
+    addToFieldIssueMap(Field.PATIENT_NAME_LAST, PatientNameLastIsTooLong);
     addToFieldIssueMap(Field.PATIENT_NAME_TYPE_CODE, PatientNameTypeCodeIsDeprecated);
     addToFieldIssueMap(Field.PATIENT_NAME_TYPE_CODE, PatientNameTypeCodeIsIgnored);
     addToFieldIssueMap(Field.PATIENT_NAME_TYPE_CODE, PatientNameTypeCodeIsInvalid);
     addToFieldIssueMap(Field.PATIENT_NAME_TYPE_CODE, PatientNameTypeCodeIsMissing);
     addToFieldIssueMap(Field.PATIENT_NAME_TYPE_CODE, PatientNameTypeCodeIsUnrecognized);
+    addToFieldIssueMap(Field.PATIENT_NAME_TYPE_CODE, PatientNameTypeCodeIsNotValuedLegal);
     addToFieldIssueMap(Field.PATIENT_PHONE, PatientPhoneIsIncomplete);
     addToFieldIssueMap(Field.PATIENT_PHONE, PatientPhoneIsInvalid);
     addToFieldIssueMap(Field.PATIENT_PHONE, PatientPhoneIsMissing);
@@ -1948,6 +1681,10 @@ public class PotentialIssues implements Reload
     addToFieldIssueMap(Field.PATIENT_SUBMITTER_ID, PatientSubmitterIdIsMissing);
     addToFieldIssueMap(Field.PATIENT_SUBMITTER_ID_AUTHORITY, PatientSubmitterIdAuthorityIsMissing);
     addToFieldIssueMap(Field.PATIENT_SUBMITTER_ID_TYPE_CODE, PatientSubmitterIdTypeCodeIsMissing);
+    addToFieldIssueMap(Field.PATIENT_SUBMITTER_ID_TYPE_CODE, PatientSubmitterIdTypeCodeIsDeprecated);
+    addToFieldIssueMap(Field.PATIENT_SUBMITTER_ID_TYPE_CODE, PatientSubmitterIdTypeCodeIsInvalid);
+    addToFieldIssueMap(Field.PATIENT_SUBMITTER_ID_TYPE_CODE, PatientSubmitterIdTypeCodeIsUnrecognized);
+    addToFieldIssueMap(Field.PATIENT_SUBMITTER_ID_TYPE_CODE, PatientSubmitterIdTypeCodeIsIgnored);
     addToFieldIssueMap(Field.PATIENT_VFC_EFFECTIVE_DATE, PatientVfcEffectiveDateIsBeforeBirth);
     addToFieldIssueMap(Field.PATIENT_VFC_EFFECTIVE_DATE, PatientVfcEffectiveDateIsInFuture);
     addToFieldIssueMap(Field.PATIENT_VFC_EFFECTIVE_DATE, PatientVfcEffectiveDateIsInvalid);
@@ -1979,9 +1716,9 @@ public class PotentialIssues implements Reload
     addToFieldIssueMap(Field.VACCINATION_ADMIN_CODE, VaccinationAdminCodeIsUnrecognized);
     addToFieldIssueMap(Field.VACCINATION_ADMIN_CODE, VaccinationAdminCodeIsValuedAsNotAdministered);
     addToFieldIssueMap(Field.VACCINATION_ADMIN_CODE, VaccinationAdminCodeIsValuedAsUnknown);
+    addToFieldIssueMap(Field.VACCINATION_ADMIN_CODE, VaccinationAdminCodeMayBeVariationOfPreviouslyReportedCodes);
     addToFieldIssueMap(Field.VACCINATION_ADMIN_CODE_TABLE, VaccinationAdminCodeTableIsMissing);
     addToFieldIssueMap(Field.VACCINATION_ADMIN_CODE_TABLE, VaccinationAdminCodeTableIsInvalid);
-    addToFieldIssueMap(Field.VACCINATION_ADMIN_CODE, VaccinationAdminCodeMayBeVariationOfPreviouslyReportedCodes);
     addToFieldIssueMap(Field.VACCINATION_ADMIN_DATE, VaccinationAdminDateIsAfterLotExpirationDate);
     addToFieldIssueMap(Field.VACCINATION_ADMIN_DATE, VaccinationAdminDateIsAfterMessageSubmitted);
     addToFieldIssueMap(Field.VACCINATION_ADMIN_DATE, VaccinationAdminDateIsAfterPatientDeathDate);
@@ -2085,6 +1822,30 @@ public class PotentialIssues implements Reload
     addToFieldIssueMap(Field.VACCINATION_INFORMATION_SOURCE, VaccinationInformationSourceIsUnrecognized);
     addToFieldIssueMap(Field.VACCINATION_INFORMATION_SOURCE, VaccinationInformationSourceIsValuedAsAdministered);
     addToFieldIssueMap(Field.VACCINATION_INFORMATION_SOURCE, VaccinationInformationSourceIsValuedAsHistorical);
+    addToFieldIssueMap(Field.VACCINATION_VIS, VaccinationVisIsMissing);
+    addToFieldIssueMap(Field.VACCINATION_VIS, VaccinationVisIsUnrecognized);
+    addToFieldIssueMap(Field.VACCINATION_VIS, VaccinationVisIsDeprecated);
+    addToFieldIssueMap(Field.VACCINATION_VIS_CVX_CODE, VaccinationVisCvxCodeIsDeprecated);
+    addToFieldIssueMap(Field.VACCINATION_VIS_CVX_CODE, VaccinationVisCvxCodeIsIgnored);
+    addToFieldIssueMap(Field.VACCINATION_VIS_CVX_CODE, VaccinationVisCvxCodeIsInvalid);
+    addToFieldIssueMap(Field.VACCINATION_VIS_CVX_CODE, VaccinationVisCvxCodeIsMissing);
+    addToFieldIssueMap(Field.VACCINATION_VIS_CVX_CODE, VaccinationVisCvxCodeIsUnrecognized);
+    addToFieldIssueMap(Field.VACCINATION_VIS_DOCUMENT_TYPE, VaccinationVisDocumentTypeIsDeprecated);
+    addToFieldIssueMap(Field.VACCINATION_VIS_DOCUMENT_TYPE, VaccinationVisDocumentTypeIsIgnored);
+    addToFieldIssueMap(Field.VACCINATION_VIS_DOCUMENT_TYPE, VaccinationVisDocumentTypeIsIncorrect);
+    addToFieldIssueMap(Field.VACCINATION_VIS_DOCUMENT_TYPE, VaccinationVisDocumentTypeIsInvalid);
+    addToFieldIssueMap(Field.VACCINATION_VIS_DOCUMENT_TYPE, VaccinationVisDocumentTypeIsMissing);
+    addToFieldIssueMap(Field.VACCINATION_VIS_DOCUMENT_TYPE, VaccinationVisDocumentTypeIsUnrecognized);
+    addToFieldIssueMap(Field.VACCINATION_VIS_DOCUMENT_TYPE, VaccinationVisDocumentTypeIsOutOfDate);
+    addToFieldIssueMap(Field.VACCINATION_VIS_PUBLISHED_DATE, VaccinationVisPublishedDateIsInvalid);
+    addToFieldIssueMap(Field.VACCINATION_VIS_PUBLISHED_DATE, VaccinationVisPublishedDateIsMissing);
+    addToFieldIssueMap(Field.VACCINATION_VIS_PUBLISHED_DATE, VaccinationVisPublishedDateIsUnrecognized);
+    addToFieldIssueMap(Field.VACCINATION_VIS_PUBLISHED_DATE, VaccinationVisPublishedDateIsInFuture);
+    addToFieldIssueMap(Field.VACCINATION_VIS_PRESENTED_DATE, VaccinationVisPresentedDateIsInvalid);
+    addToFieldIssueMap(Field.VACCINATION_VIS_PRESENTED_DATE, VaccinationVisPresentedDateIsMissing);
+    addToFieldIssueMap(Field.VACCINATION_VIS_PRESENTED_DATE, VaccinationVisPresentedDateIsNotAdminDate);
+    addToFieldIssueMap(Field.VACCINATION_VIS_PRESENTED_DATE, VaccinationVisPresentedDateIsBeforePublishedDate);
+    addToFieldIssueMap(Field.VACCINATION_VIS_PRESENTED_DATE, VaccinationVisPresentedDateIsAfterAdminDate);
     addToFieldIssueMap(Field.VACCINATION_LOT_EXPIRATION_DATE, VaccinationLotExpirationDateIsInvalid);
     addToFieldIssueMap(Field.VACCINATION_LOT_EXPIRATION_DATE, VaccinationLotExpirationDateIsMissing);
     addToFieldIssueMap(Field.VACCINATION_LOT_NUMBER, VaccinationLotNumberIsInvalid);
@@ -2137,7 +1898,6 @@ public class PotentialIssues implements Reload
     addToFieldIssueMap(Field.VACCINATION_SYSTEM_ENTRY_TIME, VaccinationSystemEntryTimeIsInFuture);
     addToFieldIssueMap(Field.VACCINATION_SYSTEM_ENTRY_TIME, VaccinationSystemEntryTimeIsInvalid);
     addToFieldIssueMap(Field.VACCINATION_SYSTEM_ENTRY_TIME, VaccinationSystemEntryTimeIsMissing);
-
 
     tx.commit();
     session.close();
@@ -2240,6 +2000,112 @@ public class PotentialIssues implements Reload
         sb.append("</table>");
       }
       if (errorsOnly && !foundError)
+      {
+        return "";
+      }
+      return sb.toString();
+    }
+    return "";
+  }
+
+  public String getDocumentationForAnalysis(Field field, Map<PotentialIssue, PotentialIssueStatus> potentialIssueStatusMap,
+      Map<PotentialIssue, MessageReceived> potentialIssueFoundMessageReceivedExample)
+  {
+    if (fieldDocumentation.containsKey(field))
+    {
+      StringBuilder sb = null;
+      if (potentialIssueStatusMap != null)
+      {
+        List<MessageReceived> messageReceivedExampleList = new ArrayList<MessageReceived>();
+        HashMap<String, PotentialIssue> potentialIssueMap = fieldIssueMaps.get(field);
+        List<String> potentialIssueTypeList = new ArrayList<String>(potentialIssueMap.keySet());
+        Collections.sort(potentialIssueTypeList);
+        for (String potentialIssueType : potentialIssueTypeList)
+        {
+          PotentialIssue issue = potentialIssueMap.get(potentialIssueType);
+          PotentialIssueStatus potentialIssueStatus = potentialIssueStatusMap.get(issue);
+          if (potentialIssueStatus != null && !potentialIssueStatus.getAction().equals(IssueAction.ACCEPT))
+          {
+            if (sb == null)
+            {
+              sb = new StringBuilder(fieldDocumentation.get(field));
+              sb.append("<table width=\"720\">");
+              sb.append("  <tr><th>Issue</th><th>HL7 Ref</th><th>Status</th><th>Description</th></tr>");
+            }
+            MessageReceived messageReceived = potentialIssueFoundMessageReceivedExample == null ? null : potentialIssueFoundMessageReceivedExample
+                .get(issue);
+            if (messageReceived != null)
+            {
+              boolean alreadyAdded = false;
+              for (MessageReceived messageReceivedAlreadySelected : messageReceivedExampleList)
+              {
+                if (messageReceivedAlreadySelected == messageReceived)
+                {
+                  alreadyAdded = true;
+                  break;
+                }
+              }
+              if (!alreadyAdded)
+              {
+                messageReceivedExampleList.add(messageReceived);
+              }
+            }
+            sb.append("  <tr>");
+            sb.append("    <td>" + issue.getDisplayText() + "</td>");
+            String hl7Reference = issue.getHl7Reference();
+            if (hl7Reference == null || hl7Reference.equals(""))
+            {
+              sb.append("    <td>-</td>");
+            } else
+            {
+              sb.append("    <td>" + hl7Reference + "</td>");
+            }
+            if (potentialIssueStatus != null)
+            {
+              sb.append("    <td>" + potentialIssueStatus.getAction().getActionLabel() + "</td>");
+            }
+            String description = documentationTextProperties.getProperty(issue.getDisplayText());
+            if (description == null)
+            {
+
+              if (!issue.getFieldValue().equals(""))
+              {
+                description = documentationTextProperties.getProperty(issue.getIssueType() + " " + issue.getFieldValue());
+              } else
+              {
+                description = documentationTextProperties.getProperty(issue.getIssueType());
+              }
+              if (description == null)
+              {
+                description = "#### NOT FOUND #### USE " + issue.getIssueType() + "=";
+              }
+            }
+            sb.append("    <td>" + description + "</td>");
+            sb.append("  </tr>");
+          }
+        }
+        if (sb != null)
+        {
+          sb.append("</table>");
+          if (messageReceivedExampleList.size() > 0)
+          {
+            for (MessageReceived messageReceived : messageReceivedExampleList)
+            {
+              sb.append("<h3>Example Message</h3>");
+              sb.append("<pre>");
+              sb.append(messageReceived.getRequestText());
+              sb.append("</pre>");
+              if (messageReceived.getInternalTemporaryId() > 0)
+              {
+                String messageName = "Message " + messageReceived.getInternalTemporaryId() + " "
+                    + messageReceived.getIssueAction().getActionLabelForMessageReceivedPastTense() + "";
+                sb.append("<p><a class=\"tooltip\" href=\"" + messageName + ".html\">More Information</a></p>");
+              }
+            }
+          }
+        }
+      }
+      if (sb == null)
       {
         return "";
       }

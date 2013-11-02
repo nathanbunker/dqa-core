@@ -1,5 +1,6 @@
 package org.openimmunizationsoftware.dqa.quality;
 
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
@@ -13,23 +14,30 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.hibernate.Query;
+import org.hibernate.Session;
 import org.openimmunizationsoftware.dqa.SoftwareVersion;
 import org.openimmunizationsoftware.dqa.db.model.BatchCodeReceived;
 import org.openimmunizationsoftware.dqa.db.model.BatchIssues;
 import org.openimmunizationsoftware.dqa.db.model.BatchReport;
 import org.openimmunizationsoftware.dqa.db.model.CodeReceived;
 import org.openimmunizationsoftware.dqa.db.model.CodeTable;
+import org.openimmunizationsoftware.dqa.db.model.IssueFound;
 import org.openimmunizationsoftware.dqa.db.model.KeyedSetting;
 import org.openimmunizationsoftware.dqa.db.model.MessageHeader;
 import org.openimmunizationsoftware.dqa.db.model.IssueAction;
 import org.openimmunizationsoftware.dqa.db.model.MessageBatch;
+import org.openimmunizationsoftware.dqa.db.model.MessageReceived;
 import org.openimmunizationsoftware.dqa.db.model.PotentialIssue;
+import org.openimmunizationsoftware.dqa.db.model.PotentialIssueStatus;
 import org.openimmunizationsoftware.dqa.db.model.SubmitterProfile;
 import org.openimmunizationsoftware.dqa.db.model.VaccineCvx;
 import org.openimmunizationsoftware.dqa.db.model.VaccineGroup;
 import org.openimmunizationsoftware.dqa.manager.DatabaseLogManager;
 import org.openimmunizationsoftware.dqa.manager.KeyedSettingManager;
+import org.openimmunizationsoftware.dqa.manager.PotentialIssues;
 import org.openimmunizationsoftware.dqa.manager.VaccineGroupManager;
+import org.openimmunizationsoftware.dqa.manager.PotentialIssues.Field;
 import org.openimmunizationsoftware.dqa.quality.model.ModelForm;
 import org.openimmunizationsoftware.dqa.quality.model.ModelSection;
 
@@ -125,12 +133,15 @@ public class QualityReport
   private static final ToolTip VACCINATION_GROUP_OTHER = new ToolTip("Undefined",
       "Vaccination is not classified as part of a particular vaccine group");
 
-  private QualityCollector qualityCollector = null;
+  protected QualityCollector qualityCollector = null;
   private SubmitterProfile profile = null;
   private String filename = "";
-  private PrintWriter out = null;
+  protected PrintWriter out = null;
   private ModelForm modelForm = null;
   private KeyedSettingManager ksm = null;
+  protected Set<PotentialIssue> potentialIssueFoundSet = new HashSet<PotentialIssue>();
+  protected Map<PotentialIssue, MessageReceived> potentialIssueFoundMessageReceivedExample = new HashMap<PotentialIssue, MessageReceived>();
+  protected Session session = null;
 
   private int messageCount = 0;
   private int nextOfKinCount = 0;
@@ -139,12 +150,13 @@ public class QualityReport
   private int vaccinationCount = 0;
   private int vaccinationAdministeredCount = 0;
 
-  public QualityReport(QualityCollector qualityCollector, SubmitterProfile profile, PrintWriter out) {
+  public QualityReport(QualityCollector qualityCollector, SubmitterProfile profile, Session session, PrintWriter out) {
     this.qualityCollector = qualityCollector;
     this.profile = profile;
     this.out = out;
     this.modelForm = qualityCollector.getModelForm();
     this.ksm = KeyedSettingManager.getKeyedSettingManager();
+    this.session = session;
   }
 
   public void setFilename(String filename)
@@ -195,23 +207,25 @@ public class QualityReport
     return sb.toString();
   }
 
-  public void printReport()
+  public void printReport() throws IOException
   {
     MessageBatch messageBatch = qualityCollector.getMessageBatch();
     out.println("<html>");
     out.println("  <head>");
     out.println("    <title>Data Quality Report</title>");
-    printCss();
+    printCss(out);
     out.println("  </head>");
     out.println("  <body>");
     try
     {
-      printTitleBar(messageBatch);
+      printTitleBar(messageBatch, "Quality Report");
+      printScore(messageBatch.getBatchReport());
       printSummary(messageBatch);
       printCompleteness(messageBatch);
       printQuality(messageBatch);
-      printTimeliness(messageBatch);
+      printDocumentation(messageBatch);
       printCodesReceived(messageBatch);
+      printTimeliness(messageBatch);
       printFooter();
     } catch (Exception e)
     {
@@ -221,7 +235,7 @@ public class QualityReport
     out.println("<html>");
   }
 
-  private void printFooter()
+  protected void printFooter()
   {
     out.println("    <pre>Report generated: " + dateTime.format(new Date()));
     out.println("Report template:  " + profile.getReportTemplate().getTemplateLabel());
@@ -241,7 +255,7 @@ public class QualityReport
     ScoringSet vaccinationRecommended = scoring.getScoringSet(QualityScoring.VACCINATION_RECOMMENDED);
     ScoringSet vaccinationRequired = scoring.getScoringSet(QualityScoring.VACCINATION_REQUIRED);
     out.println("    <h2><a name=\"completeness\">Completeness</h2>");
-    out.println("    <p>");
+    out.println("    <p class=\"dottedbox\">");
     out.println("      Completeness measures how many required, expected and ");
     out.println("      recommended fields have been received and also indicates");
     out.println("      if expected vaccinations have been reported. ");
@@ -256,10 +270,10 @@ public class QualityReport
     out.println("        <th align=\"center\">Weight</th>");
     out.println("      </tr>");
     printScore(COMPLETENESS_SCORE_PATIENT, report.getCompletenessPatientScore(), per(modelForm.getAbsoluteWeight("completeness.patient")), REQUIRED);
-    printScore(COMPLETENESS_SCORE_VACCINATION, report.getCompletenessVaccinationScore(), per(modelForm.getAbsoluteWeight("completeness.vaccination")),
-        REQUIRED);
-    printScore(COMPLETENESS_SCORE_VACCINE_GROUP, report.getCompletenessVaccineGroupScore(), per(modelForm.getAbsoluteWeight("completeness.vaccineGroup")),
-        REQUIRED);
+    printScore(COMPLETENESS_SCORE_VACCINATION, report.getCompletenessVaccinationScore(),
+        per(modelForm.getAbsoluteWeight("completeness.vaccination")), REQUIRED);
+    printScore(COMPLETENESS_SCORE_VACCINE_GROUP, report.getCompletenessVaccineGroupScore(),
+        per(modelForm.getAbsoluteWeight("completeness.vaccineGroup")), REQUIRED);
     out.println("    </table>");
 
     out.println("    <h3><a name=\"completeness.patient\">Patient</h3>");
@@ -494,10 +508,10 @@ public class QualityReport
     out.println("    </table>");
   }
 
-  private void printTitleBar(MessageBatch messageBatch)
+  protected void printTitleBar(MessageBatch messageBatch, String reportName)
   {
     BatchReport report = messageBatch.getBatchReport();
-    out.println("    <h1>" + profile.getOrganization().getOrgLabel() + " Quality Report</h1>");
+    out.println("    <h1>" + profile.getOrganization().getOrgLabel() + " " + reportName + "</h1>");
     out.println("    <table width=\"720\">");
     out.println("      <tr>");
     out.println("        <th>Batch Title</th>");
@@ -520,7 +534,7 @@ public class QualityReport
 
     }
     out.println("    </table>");
-    // out.println("    <p>");
+    // out.println("    <p class=\"dottedbox\">");
     // out.println("      Immunization data quality is measured in three main areas: ");
     // out.println("      Timeliness, Quality and Completeness.  ");
     // out.println("      Timeliness measures how quickly administered vaccinations are ");
@@ -531,6 +545,10 @@ public class QualityReport
     // out.println("      been valued. ");
     // out.println("    </p>");
 
+  }
+
+  protected void printScore(BatchReport report)
+  {
     QualityScoring scoring = qualityCollector.getCompletenessScoring();
 
     if (ksm.getKeyedValueBoolean(KeyedSetting.DQA_REPORT_READY_FOR_PRODUCTION_ENABLED, true))
@@ -542,15 +560,15 @@ public class QualityReport
             && scoring.getScoringSet(QualityScoring.VACCINATION_REQUIRED).getScore() >= 0.99)
         {
           out.println("    <h3>Ready for Production</h3>");
-          out.println("    <p>All required fields are present, interface is ready for production.</p>");
+          out.println("    <p class=\"dottedbox\">All required fields are present, interface is ready for production.</p>");
         } else
         {
           out.println("    <h3>Not Ready for Production</h3>");
-          out.println("    <p>Required fields are not all present, interface is not ready for production.</p>");
+          out.println("    <p class=\"dottedbox\">Required fields are not all present, interface is not ready for production.</p>");
         }
       } else
       {
-        out.println("    <p>At least " + triggerLevel + " messages must be submitted to enable production readiness check.</p>");
+        out.println("    <p class=\"dottedbox\">At least " + triggerLevel + " messages must be submitted to enable production readiness check.</p>");
       }
 
     }
@@ -612,7 +630,7 @@ public class QualityReport
 
   }
 
-  private void printSummary(MessageBatch messageBatch)
+  protected void printSummary(MessageBatch messageBatch)
   {
     BatchReport report = messageBatch.getBatchReport();
     out.println("    <h3>Data Received</h3>");
@@ -667,7 +685,7 @@ public class QualityReport
       out.println("    </table>");
     } else
     {
-      out.println("    <p>No example header to show, none sent.</p>");
+      out.println("    <p class=\"dottedbox\">No example header to show, none sent.</p>");
     }
   }
 
@@ -675,7 +693,7 @@ public class QualityReport
   {
     BatchReport report = messageBatch.getBatchReport();
     out.println("    <h2><a name=\"quality\">Quality</h2>");
-    out.println("    <p>");
+    out.println("    <p class=\"dottedbox\">");
     out.println("      Quality  measures the number of errors and warnings that are encountered");
     out.println("      during processing. Total errors registry must account for less than ");
     out.println("      one percent of total number of ");
@@ -720,13 +738,13 @@ public class QualityReport
     }
     if (qualityCollector.getErrorIssues().size() > 0)
     {
-      out.println("      <p>Errors are expected to be encountered on less than one percent of messages.</p>");
+      out.println("      <p class=\"dottedbox\">Errors are expected to be encountered on less than one percent of messages.</p>");
       out.println("    <h3><a name=\"quality.errors\">Errors</h3>");
       printBatchIssues(qualityCollector.getErrorIssues());
     }
     if (qualityCollector.getWarnIssues().size() > 0)
     {
-      out.println("      <p>Warning to message size rate is expected to be less than ten percent.</p>");
+      out.println("      <p class=\"dottedbox\">Warning to message size rate is expected to be less than ten percent.</p>");
       out.println("    <h3><a name=\"quality.warnings\">Warnings</h3>");
       printBatchIssues(qualityCollector.getWarnIssues());
     }
@@ -787,7 +805,7 @@ public class QualityReport
   {
     BatchReport report = messageBatch.getBatchReport();
     out.println("    <h2><a name=\"timeliness\">Timeliness</h2>");
-    out.println("    <p>");
+    out.println("    <p class=\"dottedbox\">");
     out.println("      Timeliness measures the number of days between the");
     out.println("      date a message was received and the most recent administered vaccination");
     out.println("      indicated in that message. ");
@@ -953,6 +971,7 @@ public class QualityReport
     out.println("      </tr>");
     for (BatchIssues batchIssues : batchIssuesList)
     {
+      potentialIssueFoundSet.add(batchIssues.getIssue());
       PotentialIssue issue = batchIssues.getIssue();
       int denominator = 0;
       ReportDenominator reportDenominator = ReportDenominator.valueOf(issue.getReportDenominator().toUpperCase().trim().replace(' ', '_'));
@@ -1076,7 +1095,7 @@ public class QualityReport
     }
   }
 
-  private void printRow(String... fields)
+  protected void printRow(String... fields)
   {
     out.println("      <tr>");
     String align = "left";
@@ -1138,18 +1157,21 @@ public class QualityReport
   private static final String RED = "#CE3100";
   private static final String BLUE = "#0031CE";
 
-  private void printCss()
+  protected static void printCss(PrintWriter out)
   {
     out.println("    <style><!--");
     out.println("      body {font-family: Tahoma, Geneva, Sans-serif}");
-    out.println("      p {width:700px; color:" + DARK + "; background:" + VERY_LIGHT
+    out.println("      .dottedbox {width:700px; color:" + DARK + "; background:" + VERY_LIGHT
         + "; padding:6px; border-style:dashed; border-width:1px; border-color:" + LIGHT + "}");
     out.println("      h1 {color:" + BLACK + "; font-size:2.0em;}");
     out.println("      h2 {color:" + BLACK + "; font-size:2.0em; page-break-before:always;}");
     out.println("      h3 {color:" + BLACK + "; font-size:1.2em;}");
+    out.println("      h4 {color:" + DARK + "; font-size:1.0em; }");
     out.println("      table {background:" + LIGHT + "; border-style:solid; border-width:1; border-color:" + MEDIUM + "; border-collapse:collapse}");
     out.println("      th {background:" + MEDIUM + "; font-size:0.8em; color:" + BLACK + "; border-style:none; padding-left:5px; padding-right:5px;}");
     out.println("      td {border-style:solid; border-width:1; border-color:" + MEDIUM + ";margin:0px; padding-left:5px; padding-right:5px;}");
+    out.println("      pre {border-style:solid; border-width:1; border-color:" + MEDIUM + "; background:" + LIGHT + "; color: " + DARK
+        + "; font-size=-1}");
     out.println("      .score {font-size:1.5em;}");
     out.println("      .alert {}");
     out.println("      .highlight {background: " + MEDIUM_LIGHT + ";}");
@@ -1238,6 +1260,73 @@ public class QualityReport
   private String per(double d)
   {
     return ((int) (100.0 * d + 0.5)) + "%";
+  }
+
+  private List<Field> fieldList = null;
+  PotentialIssues potentialIssues = null;
+  List<PotentialIssueStatus> potentialIssueStatusList = null;
+
+  public void printDocumentation(MessageBatch messageBatch)
+  {
+    initDocumentation(messageBatch);
+
+    Map<PotentialIssue, PotentialIssueStatus> potentialIssueStatusMap = new HashMap<PotentialIssue, PotentialIssueStatus>();
+
+    for (PotentialIssueStatus potentialIssueStatus : potentialIssueStatusList)
+    {
+      if (potentialIssueFoundSet.contains(potentialIssueStatus.getIssue()))
+      {
+        potentialIssueStatusMap.put(potentialIssueStatus.getIssue(), potentialIssueStatus);
+      }
+    }
+
+    Map<PotentialIssue, MessageReceived> examples = potentialIssueFoundMessageReceivedExample;
+
+    out.println("<h2>Issues Found Documentation</h2>");
+
+    for (Field field : fieldList)
+    {
+      out.print(potentialIssues.getDocumentationForAnalysis(field, potentialIssueStatusMap, examples));
+    }
+  }
+
+  public void printDocumentation(MessageBatch messageBatch, Set<PotentialIssue> potentialIssueFoundSet, PrintWriter printWriter)
+  {
+    initDocumentation(messageBatch);
+
+    Map<PotentialIssue, PotentialIssueStatus> potentialIssueStatusMap = new HashMap<PotentialIssue, PotentialIssueStatus>();
+
+    for (PotentialIssueStatus potentialIssueStatus : potentialIssueStatusList)
+    {
+      if (potentialIssueFoundSet.contains(potentialIssueStatus.getIssue()))
+      {
+        potentialIssueStatusMap.put(potentialIssueStatus.getIssue(), potentialIssueStatus);
+      }
+    }
+
+    printWriter.println("<h2>Issues Found Documentation</h2>");
+
+    for (Field field : fieldList)
+    {
+      printWriter.print(potentialIssues.getDocumentationForAnalysis(field, potentialIssueStatusMap, null));
+    }
+  }
+
+  public void initDocumentation(MessageBatch messageBatch)
+  {
+    if (potentialIssueStatusList == null)
+    {
+      potentialIssues = PotentialIssues.getPotentialIssues();
+      fieldList = potentialIssues.getAllFields();
+      Collections.sort(fieldList);
+
+      Set<Field> fieldSet = new HashSet<Field>();
+
+      Query query;
+      query = session.createQuery("from PotentialIssueStatus where profile = ?");
+      query.setParameter(0, messageBatch.getProfile());
+      potentialIssueStatusList = query.list();
+    }
   }
 
 }

@@ -36,7 +36,10 @@
     <property name="refusalCode" column="refusal_code" type="string"/>
     <property name="systemEntryDate" column="system_entry_date" type="date"/>
     <property name="visPublicationDate" column="vis_publication_date" type="date"/>
+    <property name="visPresentedDate" column="vis_presented_date" type="date"/>
+    <property name="visDocumentCode" column="vis_document_code" type="string"/>
     <property name="orderControlCode" column="order_control_code" type="string"/>
     <property name="skipped" column="skipped" type="yes_no"/>
+    <property name="actionCode" column="action_code" type="string"/>
   </class>
 </hibernate-mapping>

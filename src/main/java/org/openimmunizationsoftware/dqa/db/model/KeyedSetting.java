@@ -45,9 +45,11 @@ public class KeyedSetting implements Serializable
   public static final String UPLOAD_DIR = "upload.dir";
   public static final String DQA_REPORT_READY_FOR_PRODUCTION_ENABLED = "dqa_report.ready_for_production.enabled";
   public static final String DQA_REPORT_READY_FOR_PRODUCTION_TRIGGER_LEVEL = "dqa_report.ready_for_production.trigger_level";
+  public static final String CDS_SOFTWARE_SERVICE_ENABLED = "cds_software.service.enabled";
+  public static final String CDS_SOFTWARE_SERVICE_URL = "cds_software.service_url";
+  public static final String CDS_SOFTWARE_SERVICE_TYPE = "cds_software.service_type";
+  public static final String CDS_SOFTWARE_SCHEDULE_NAME = "cds_software.schedule_name"; 
 
-  
-  
   private String keyedCode = "";
   private int keyedId = 0;
   private String keyedValue = "";

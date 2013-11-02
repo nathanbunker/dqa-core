@@ -6,12 +6,24 @@ import java.util.List;
 import org.openimmunizationsoftware.dqa.db.model.received.NextOfKin;
 import org.openimmunizationsoftware.dqa.db.model.received.Patient;
 import org.openimmunizationsoftware.dqa.db.model.received.Vaccination;
+import org.tch.fc.model.ForecastActual;
 
 public class QueryResult
 {
   private Patient patient = null;
   private List<NextOfKin> nextOfKinList = new ArrayList<NextOfKin>();
   private List<Vaccination> vaccinationList = new ArrayList<Vaccination>();
+  
+  private List<ForecastActual> forecastActualList = new ArrayList<ForecastActual>();
+  
+  public List<ForecastActual> getForecastActualList()
+  {
+    return forecastActualList;
+  }
+  public void setForecastActualList(List<ForecastActual> forecastActualList)
+  {
+    this.forecastActualList = forecastActualList;
+  }
   public Patient getPatient()
   {
     return patient;
