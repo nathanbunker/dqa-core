@@ -1,3 +1,10 @@
+/*
+ * Copyright 2013 by Dandelion Software & Research, Inc (DSR)
+ * 
+ * This application was written for immunization information system (IIS) community and has
+ * been released by DSR under an Apache 2 License with the hope that this software will be used
+ * to improve Public Health.  
+ */
 package org.openimmunizationsoftware.dqa.quality;
 
 import java.util.ArrayList;
@@ -190,6 +197,8 @@ public class QualityCollector
       {
         report.incVaccinationHistoricalCount();
       }
+      report.incObservationCount(vaccination.getObservations().size());
+      report.incVaccinationVisCount(vaccination.getVaccinationVisList().size());
     }
 
     if (hadAdmin)
@@ -408,7 +417,7 @@ public class QualityCollector
       denominator = report.getNextOfKinCount();
     } else if (completenessRow.getReportDenominator() == ReportDenominator.OBSERVATION_COUNT)
     {
-      denominator = 0;
+      denominator = report.getObservationCount();
     } else if (completenessRow.getReportDenominator() == ReportDenominator.PATIENT_COUNT)
     {
       denominator = report.getPatientCount();
@@ -421,6 +430,9 @@ public class QualityCollector
     } else if (completenessRow.getReportDenominator() == ReportDenominator.VACCINATION_ADMIN_COUNT)
     {
       denominator = report.getVaccinationAdministeredCount();
+    } else if (completenessRow.getReportDenominator() == ReportDenominator.VACCINATION_VIS_COUNT)
+    {
+      denominator = report.getVaccinationVisCount();
     }
     return denominator;
   }

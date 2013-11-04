@@ -1,3 +1,10 @@
+/*
+ * Copyright 2013 by Dandelion Software & Research, Inc (DSR)
+ * 
+ * This application was written for immunization information system (IIS) community and has
+ * been released by DSR under an Apache 2 License with the hope that this software will be used
+ * to improve Public Health.  
+ */
 package org.openimmunizationsoftware.dqa.validate;
 
 import java.text.SimpleDateFormat;
@@ -763,6 +770,7 @@ public class Validator extends ValidateMessage
             }
           } else if (observation.getObservationIdentifierCode().equals(OBX_VIS_PUBLISHED))
           {
+
             if (!observation.getObservationValue().equals(""))
             {
               vaccinationVIS.setPublishedDate(createDate(pi.VaccinationVisPublishedDateIsInvalid, observation.getObservationValue()));
@@ -770,11 +778,12 @@ public class Validator extends ValidateMessage
           }
         } else if (observation.getObservationIdentifierCode().equals(OBX_DISEASE_WITH_PRESUMED_IMMUNITY))
         {
+
           PatientImmunity patientImmunity = new PatientImmunity();
           patientImmunity.setPatient(patient);
           patientImmunity.setImmunityCode(observation.getObservationValue());
           patient.getPatientImmunityList().add(patientImmunity);
-          handleCodeReceived(patientImmunity.getImmunity(), PotentialIssues.Field.VACCINATION_VIS_DOCUMENT_TYPE);
+          handleCodeReceived(patientImmunity.getImmunity(), PotentialIssues.Field.PATIENT_IMMUNITY_CODE);
         }
       }
     }
@@ -792,7 +801,9 @@ public class Validator extends ValidateMessage
       {
         positionId++;
         vaccinationVIS.setPositionId(positionId);
-        handleCodeReceived(vaccinationVIS.getDocument(), PotentialIssues.Field.VACCINATION_VIS_DOCUMENT_TYPE, vaccination.isAdministered());
+        // handleCodeReceived(vaccinationVIS.getDocument(),
+        // PotentialIssues.Field.VACCINATION_VIS_DOCUMENT_TYPE,
+        // vaccination.isAdministered());
         handleCodeReceived(vaccinationVIS.getCvx(), PotentialIssues.Field.VACCINATION_VIS_CVX_CODE, vaccination.isAdministered());
         if (vaccinationVIS.getPublishedDate() == null)
         {
@@ -1015,7 +1026,7 @@ public class Validator extends ValidateMessage
 
     if (notEmpty(header.getMessageControl(), pi.Hl7MshMessageControlIdIsMissing))
     {
-      // TODO
+      message.setMessageKey(header.getMessageControl());
     }
     if (notEmpty(header.getMessageDate(), pi.Hl7MshMessageDateIsMissing))
     {

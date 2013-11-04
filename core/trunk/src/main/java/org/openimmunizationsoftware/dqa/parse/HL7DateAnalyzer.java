@@ -1,3 +1,10 @@
+/*
+ * Copyright 2013 by Dandelion Software & Research, Inc (DSR)
+ * 
+ * This application was written for immunization information system (IIS) community and has
+ * been released by DSR under an Apache 2 License with the hope that this software will be used
+ * to improve Public Health.  
+ */
 package org.openimmunizationsoftware.dqa.parse;
 
 import java.util.ArrayList;
@@ -41,7 +48,7 @@ public class HL7DateAnalyzer
         cal.set(Calendar.DAY_OF_MONTH, day);
         if (precisionHour)
         {
-          cal.set(Calendar.HOUR, hour);
+          cal.set(Calendar.HOUR_OF_DAY, hour);
           if (precisionMin)
           {
             cal.set(Calendar.MINUTE, min);
@@ -58,14 +65,20 @@ public class HL7DateAnalyzer
             } else
             {
               cal.set(Calendar.SECOND, 0);
+              cal.set(Calendar.MILLISECOND, 0);
             }
           } else
           {
             cal.set(Calendar.MINUTE, 0);
+            cal.set(Calendar.SECOND, 0);
+            cal.set(Calendar.MILLISECOND, 0);
           }
         } else
         {
           cal.set(Calendar.HOUR, 0);
+          cal.set(Calendar.MINUTE, 0);
+          cal.set(Calendar.SECOND, 0);
+          cal.set(Calendar.MILLISECOND, 0);
         }
       } else
       {

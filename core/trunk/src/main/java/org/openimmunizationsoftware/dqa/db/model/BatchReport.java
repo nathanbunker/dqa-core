@@ -1,3 +1,10 @@
+/*
+ * Copyright 2013 by Dandelion Software & Research, Inc (DSR)
+ * 
+ * This application was written for immunization information system (IIS) community and has
+ * been released by DSR under an Apache 2 License with the hope that this software will be used
+ * to improve Public Health.  
+ */
 package org.openimmunizationsoftware.dqa.db.model;
 
 import java.io.Serializable;
@@ -67,7 +74,8 @@ public class BatchReport implements Serializable
   private int vaccinationAdministeredCount = 0;
   private int vaccinationDeleteCount = 0;
   private int vaccinationHistoricalCount = 0;
-
+  private int vaccinationVisCount = 0;
+  private int observationCount = 0;
   private int vaccinationNotAdministeredCount = 0;
 
   public void addToCounts(BatchReport report)
@@ -104,6 +112,8 @@ public class BatchReport implements Serializable
     vaccinationDeleteCount += report.getVaccinationDeleteCount();
     vaccinationHistoricalCount += report.getVaccinationHistoricalCount();
     vaccinationNotAdministeredCount += report.getVaccinationNotAdministeredCount();
+    vaccinationVisCount += report.getVaccinationVisCount();
+    observationCount += report.getObservationCount();
   }
 
   public int getBatchReportId()
@@ -256,6 +266,8 @@ public class BatchReport implements Serializable
     return vaccinationAdministeredCount + vaccinationHistoricalCount + vaccinationDeleteCount
         + vaccinationNotAdministeredCount;
   }
+  
+  
 
   public int getVaccinationDeleteCount()
   {
@@ -330,6 +342,16 @@ public class BatchReport implements Serializable
   public void incVaccinationAdministeredCount()
   {
     this.vaccinationAdministeredCount++;
+  }
+  
+  public void incVaccinationVisCount(int amount)
+  {
+    this.vaccinationVisCount += amount;
+  }
+  
+  public void incObservationCount(int amount)
+  {
+    this.observationCount += amount;
   }
 
   public void incVaccinationDeleteCount()
@@ -502,6 +524,22 @@ public class BatchReport implements Serializable
   public void setVaccinationNotAdministeredCount(int vaccinationNotAdministeredCount)
   {
     this.vaccinationNotAdministeredCount = vaccinationNotAdministeredCount;
+  }
+  public int getVaccinationVisCount()
+  {
+    return vaccinationVisCount;
+  }
+  public void setVaccinationVisCount(int vaccinationVisCount)
+  {
+    this.vaccinationVisCount = vaccinationVisCount;
+  }
+  public int getObservationCount()
+  {
+    return observationCount;
+  }
+  public void setObservationCount(int observationCount)
+  {
+    this.observationCount = observationCount;
   }
 
 }
