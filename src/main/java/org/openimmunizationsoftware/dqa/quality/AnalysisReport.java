@@ -1,3 +1,10 @@
+/*
+ * Copyright 2013 by Dandelion Software & Research, Inc (DSR)
+ * 
+ * This application was written for immunization information system (IIS) community and has
+ * been released by DSR under an Apache 2 License with the hope that this software will be used
+ * to improve Public Health.  
+ */
 package org.openimmunizationsoftware.dqa.quality;
 
 import java.io.File;
@@ -514,8 +521,6 @@ public class AnalysisReport extends QualityReport
         {
           query = session.createQuery("from VaccineCpt where cptCode = ?");
           query.setString(0, vaccination.getAdminCptCode());
-          query.setDate(1, vaccination.getAdminDate());
-          query.setDate(2, vaccination.getAdminDate());
           List<VaccineCpt> vaccineCpts = query.list();
           for (VaccineCpt vaccineCpt : vaccineCpts)
           {

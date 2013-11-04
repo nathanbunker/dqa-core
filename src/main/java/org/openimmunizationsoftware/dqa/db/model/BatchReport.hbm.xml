@@ -35,6 +35,8 @@
     <property name="vaccinationDeleteCount" column="vacc_delete_count" type="integer"/>
     <property name="vaccinationHistoricalCount" column="vacc_historical_count" type="integer"/>
     <property name="vaccinationNotAdministeredCount" column="vacc_not_admin_count" type="integer"/>
+    <property name="vaccinationVisCount" column="vacc_vis_count" type="integer"/>
+    <property name="observationCount" column="obs_count" type="integer"/>
     <property name="timelinessAverage" column="time_average" type="double"/>
     <property name="timelinessDateFirst" column="time_date_first" type="date"/>
     <property name="timelinessDateLast" column="time_date_last" type="date"/>

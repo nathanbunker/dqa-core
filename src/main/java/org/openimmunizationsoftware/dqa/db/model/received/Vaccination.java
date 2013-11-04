@@ -1,3 +1,10 @@
+/*
+ * Copyright 2013 by Dandelion Software & Research, Inc (DSR)
+ * 
+ * This application was written for immunization information system (IIS) community and has
+ * been released by DSR under an Apache 2 License with the hope that this software will be used
+ * to improve Public Health.  
+ */
 package org.openimmunizationsoftware.dqa.db.model.received;
 
 import java.io.Serializable;
@@ -66,15 +73,14 @@ public class Vaccination implements Skippable, Serializable
   private VaccineCvx vaccineCvx = null;
   private CodedEntity fundingSource = new CodedEntity(CodeTable.Type.VACCINATION_FUNDING_SOURCE);
   private String refusalReason = "";
-  private List <VaccinationVIS> vaccinationVisList = new ArrayList<VaccinationVIS>();
+  private List<VaccinationVIS> vaccinationVisList = new ArrayList<VaccinationVIS>();
   private TestEvent testEvent = null;
-  
-  
+
   public List<VaccinationVIS> getVaccinationVisList()
   {
     return vaccinationVisList;
   }
-  
+
   public TestEvent getTestEvent()
   {
     return testEvent;
@@ -85,11 +91,6 @@ public class Vaccination implements Skippable, Serializable
     this.testEvent = testEvent;
   }
 
-  private VaccinationVIS vaccinationVIS = new VaccinationVIS();
-  {
-    vaccinationVisList.add(vaccinationVIS);
-  }
-  
   public String getRefusalReason()
   {
     return refusalReason;
@@ -112,30 +113,34 @@ public class Vaccination implements Skippable, Serializable
 
   public Date getVisPresentedDate()
   {
-    return vaccinationVIS.getPresentedDate();
+    return vaccinationVisList.size() > 0 ? vaccinationVisList.get(0).getPresentedDate() : null;
   }
 
   public void setVisPresentedDate(Date visPresentedDate)
   {
-    this.vaccinationVIS.setPresentedDate(visPresentedDate);
+    if (vaccinationVisList.size() > 0)
+    {
+      vaccinationVisList.get(0).setPresentedDate(visPresentedDate);
+    }
   }
 
   public String getVisDocumentCode()
   {
-    return vaccinationVIS.getDocumentCode();
+    return vaccinationVisList.size() > 0 ? vaccinationVisList.get(0).getDocumentCode() : "";
   }
 
   public void setVisDocumentCode(String visDocumentCode)
   {
-    this.vaccinationVIS.setDocumentCode(visDocumentCode);
+    if (vaccinationVisList.size() > 0)
+    {
+      vaccinationVisList.get(0).setDocumentCode(visDocumentCode);
+    }
   }
 
   public CodedEntity getFundingSource()
   {
     return fundingSource;
   }
-
-
 
   public CodedEntity getAction()
   {
@@ -431,7 +436,7 @@ public class Vaccination implements Skippable, Serializable
 
   public Date getVisPublicationDate()
   {
-    return vaccinationVIS.getPublishedDate();
+    return vaccinationVisList.size() > 0 ? vaccinationVisList.get(0).getPublishedDate() : null;
   }
 
   public boolean isActionAdd()
@@ -697,7 +702,10 @@ public class Vaccination implements Skippable, Serializable
 
   public void setVisPublicationDate(Date visPublicationDate)
   {
-    this.vaccinationVIS.setPublishedDate(visPublicationDate);
+    if (vaccinationVisList.size() > 0)
+    {
+      vaccinationVisList.get(0).setPublishedDate(visPublicationDate);
+    }
   }
 
 }
