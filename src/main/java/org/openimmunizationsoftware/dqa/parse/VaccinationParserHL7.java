@@ -163,7 +163,7 @@ public class VaccinationParserHL7 extends VaccinationParser
         populatePD1(message);
       } else if (segmentName.equals("NK1"))
       {
-        
+
         foundNK1 = true;
         if (foundPV1 || previouslyStartedAdminSegments)
         {
@@ -774,8 +774,8 @@ public class VaccinationParserHL7 extends VaccinationParser
   private Date createDate(PotentialIssue piInvalid, PotentialIssue piNoTimeZone, String fieldValue)
   {
     HL7DateAnalyzer dateAnalyzer = new HL7DateAnalyzer(fieldValue);
-    
-    if(dateAnalyzer.hasErrors())
+
+    if (dateAnalyzer.hasErrors())
     {
       registerIssue(piInvalid);
     }
@@ -784,8 +784,7 @@ public class VaccinationParserHL7 extends VaccinationParser
       registerIssue(piNoTimeZone);
     }
     return dateAnalyzer.getDate();
-    
-    
+
   }
 
   private void registerIssueIfEmpty(int fieldNumber, PotentialIssue pi)
@@ -1424,7 +1423,13 @@ public class VaccinationParserHL7 extends VaccinationParser
       ack.append(patient.getNameLast() + "^" + patient.getNameFirst() + "^" + patient.getNameMiddle() + "^" + patient.getNameSuffix() + "^"
           + patient.getNamePrefix() + "^^" + patient.getNameTypeCode() + "|");
       ack.append(patient.getMotherMaidenName() + "|");
-      ack.append(sdf.format(patient.getBirthDate()) + "|");
+      if (patient.getBirthDate() != null)
+      {
+        ack.append(sdf.format(patient.getBirthDate()) + "|");
+      } else
+      {
+        ack.append("|");
+      }
       ack.append(patient.getSexCode() + "|");
       Address add = patient.getAddress();
       printAddress(ack, add);

@@ -824,6 +824,8 @@ public class Validator extends ValidateMessage
           {
             if (vaccination.getAdminDate().after(vaccinationVIS.getPresentedDate()))
             {
+              System.out.println("--> vaccination.getAdminDate()        = " + vaccination.getAdminDate());
+              System.out.println("--> vaccinationVIS.getPresentedDate() = " + vaccinationVIS.getPresentedDate());
               registerIssue(pi.VaccinationVisPresentedDateIsAfterAdminDate);
             } else if (vaccination.getAdminDate().before(vaccinationVIS.getPresentedDate()))
             {
@@ -1034,7 +1036,7 @@ public class Validator extends ValidateMessage
       // a clock that is out of time.
       Calendar calendar = Calendar.getInstance();
       calendar.setTime(header.getMessageDate());
-      calendar.add(Calendar.HOUR, -12);
+      calendar.add(Calendar.HOUR_OF_DAY, -12);
       if (message.getReceivedDate().before(calendar.getTime()))
       {
         registerIssue(pi.Hl7MshMessageDateIsInFuture);
@@ -1243,7 +1245,7 @@ public class Validator extends ValidateMessage
       patient.setNameMiddle(middleName);
       if (!validNameChars(patient.getNameMiddle()))
       {
-        // TODO registerIssue(pi.PatientNameFirstIsMiddle);
+        registerIssue(pi.PatientMiddleNameIsInvalid);
       }
     }
 
@@ -1286,21 +1288,43 @@ public class Validator extends ValidateMessage
       registerIssue(pi.PatientNameMayBeTestName);
     }
 
+    if (knownNames.match(patient, KnownName.JUNK_NAME))
+    {
+      registerIssue(pi.PatientNameHasJunkName);
+    }
+
     if (notEmpty(patient.getMotherMaidenName(), pi.PatientMotherSMaidenNameIsMissing))
     {
       for (KnownName invalidName : knownNames.getKnownNameList(KnownName.INVALID_NAME))
       {
         if (invalidName.onlyNameLast() && patient.getMotherMaidenName().equalsIgnoreCase(invalidName.getNameLast()))
         {
-          registerIssue(pi.PatientNameFirstIsInvalid);
+          registerIssue(pi.PatientMotherSMaidenNameIsInvalid);
+          patient.setMotherMaidenName("");
+        }
+      }
+      for (KnownName junkName : knownNames.getKnownNameList(KnownName.JUNK_NAME))
+      {
+        if (junkName.onlyNameLast() && patient.getMotherMaidenName().equalsIgnoreCase(junkName.getNameLast()))
+        {
+          registerIssue(pi.PatientMotherSMaidenNameHasJunkName);
+          patient.setMotherMaidenName("");
+        }
+      }
+      for (KnownName junkName : knownNames.getKnownNameList(KnownName.INVALID_PREFIXES))
+      {
+        if (junkName.onlyNameLast() && patient.getMotherMaidenName().equalsIgnoreCase(junkName.getNameLast()))
+        {
+          registerIssue(pi.PatientMotherSMaidenNameHasInvalidPrefixes);
           patient.setMotherMaidenName("");
         }
       }
       if (patient.getMotherMaidenName().length() == 1)
       {
-        registerIssue(pi.PatientNameFirstIsInvalid);
+        registerIssue(pi.PatientMotherSMaidenNameIsTooShort);
         patient.setMotherMaidenName("");
       }
+
     }
 
     // TODO PatientNameMayBeTemporaryNewbornName

@@ -18,6 +18,7 @@ import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.openimmunizationsoftware.dqa.db.model.KnownName;
 import org.openimmunizationsoftware.dqa.db.model.received.Patient;
+import org.openimmunizationsoftware.dqa.db.model.received.types.Name;
 
 public class KnownNames implements Reload
 {
@@ -53,7 +54,19 @@ public class KnownNames implements Reload
   {
     for (KnownName knownName : getKnownNameList(nameType))
     {
-      if (knownName.match(patient))
+      if (knownName.match(patient.getName(), patient.getBirthDate()))
+      {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  public boolean match(Name name, String nameType)
+  {
+    for (KnownName knownName : getKnownNameList(nameType))
+    {
+      if (knownName.match(name, null))
       {
         return true;
       }

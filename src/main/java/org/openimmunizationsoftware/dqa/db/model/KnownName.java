@@ -11,6 +11,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import org.openimmunizationsoftware.dqa.db.model.received.Patient;
+import org.openimmunizationsoftware.dqa.db.model.received.types.Name;
 
 public class KnownName
 {
@@ -20,6 +21,7 @@ public class KnownName
   public static String INVALID_PREFIXES = "Invalid Prefixes";
   public static String TEST_PREFIXES = "Test Prefixes";
   public static String UNNAMED_PATIENT = "Unnamed Patient";
+  public static String JUNK_NAME = "Junk Name";
 
   private int knownNameId = 0;
   private String nameLast = "";
@@ -57,21 +59,21 @@ public class KnownName
     return sb.toString();
   }
 
-  public boolean match(Patient patient)
+  public boolean match(Name name, Date personBirthDate)
   {
-    if (nameLast != null && patient.getNameLast() != null && !nameLast.equalsIgnoreCase(patient.getNameLast()))
+    if (nameLast != null && name.getLast() != null && !nameLast.equalsIgnoreCase(name.getLast()))
     {
       return false;
     }
-    if (nameFirst != null && patient.getNameFirst() != null && !nameFirst.equalsIgnoreCase(patient.getNameFirst()))
+    if (nameFirst != null && name.getFirst() != null && !nameFirst.equalsIgnoreCase(name.getFirst()))
     {
       return false;
     }
-    if (nameMiddle != null && patient.getNameMiddle() != null && !nameMiddle.equalsIgnoreCase(patient.getNameMiddle()))
+    if (nameMiddle != null && name.getMiddle() != null && !nameMiddle.equalsIgnoreCase(name.getMiddle()))
     {
       return false;
     }
-    if (birthDate != null && patient.getBirthDate() != null && birthDate.equals(patient.getBirthDate()))
+    if (birthDate != null && personBirthDate != null && birthDate.equals(personBirthDate))
     {
       return false;
     }

@@ -281,6 +281,7 @@ public class PotentialIssues implements Reload
   public PotentialIssue PatientGuardianAddressZipIsMissing = null;
   public PotentialIssue PatientGuardianNameIsMissing = null;
   public PotentialIssue PatientGuardianNameIsSameAsUnderagePatient = null;
+  public PotentialIssue PatientGuardianNameHasJunkName = null;
   public PotentialIssue PatientGuardianNameFirstIsMissing = null;
   public PotentialIssue PatientGuardianNameLastIsMissing = null;
   public PotentialIssue PatientGuardianResponsiblePartyIsMissing = null;
@@ -299,11 +300,15 @@ public class PotentialIssues implements Reload
   public PotentialIssue PatientMedicaidNumberIsInvalid = null;
   public PotentialIssue PatientMedicaidNumberIsMissing = null;
   public PotentialIssue PatientMiddleNameIsMissing = null;
+  public PotentialIssue PatientMiddleNameIsInvalid = null;
   public PotentialIssue PatientMiddleNameMayBeInitial = null;
   public PotentialIssue PatientMiddleNameIsTooShort = null;
   public PotentialIssue PatientMiddleNameIsUnexpectedlyShort = null;
   public PotentialIssue PatientMiddleNameIsUnexpectedlyLong = null;
   public PotentialIssue PatientMiddleNameIsTooLong = null;
+  public PotentialIssue PatientMotherSMaidenNameIsInvalid = null;
+  public PotentialIssue PatientMotherSMaidenNameHasJunkName = null;
+  public PotentialIssue PatientMotherSMaidenNameHasInvalidPrefixes = null;
   public PotentialIssue PatientMotherSMaidenNameIsMissing = null;
   public PotentialIssue PatientMotherSMaidenNameIsTooShort = null;
   public PotentialIssue PatientMotherSMaidenNameIsUnexpectedlyShort = null;
@@ -311,6 +316,7 @@ public class PotentialIssues implements Reload
   public PotentialIssue PatientMotherSMaidenNameIsTooLong = null;
   public PotentialIssue PatientNameMayBeTemporaryNewbornName = null;
   public PotentialIssue PatientNameMayBeTestName = null;
+  public PotentialIssue PatientNameHasJunkName = null;
   public PotentialIssue PatientNameIsAKnownTestName = null;
   public PotentialIssue PatientNameFirstIsInvalid = null;
   public PotentialIssue PatientNameFirstIsMissing = null;
@@ -1000,6 +1006,7 @@ public class PotentialIssues implements Reload
     PatientGuardianAddressZipIsMissing = getPotentialIssue(session, "Patient", "guardian address zip", "is missing", "");
     PatientGuardianNameIsMissing = getPotentialIssue(session, "Patient", "guardian name", "is missing", "");
     PatientGuardianNameIsSameAsUnderagePatient = getPotentialIssue(session, "Patient", "guardian name", "is same as underage patient", "");
+    PatientGuardianNameHasJunkName = getPotentialIssue(session, "Patient", "guardian name", "has junk name", "");
     PatientGuardianNameFirstIsMissing = getPotentialIssue(session, "Patient", "guardian name first", "is missing", "");
     PatientGuardianNameLastIsMissing = getPotentialIssue(session, "Patient", "guardian name last", "is missing", "");
     PatientGuardianResponsiblePartyIsMissing = getPotentialIssue(session, "Patient", "guardian responsible party", "is missing", "");
@@ -1018,11 +1025,15 @@ public class PotentialIssues implements Reload
     PatientMedicaidNumberIsInvalid = getPotentialIssue(session, "Patient", "Medicaid number", "is invalid", "");
     PatientMedicaidNumberIsMissing = getPotentialIssue(session, "Patient", "Medicaid number", "is missing", "");
     PatientMiddleNameIsMissing = getPotentialIssue(session, "Patient", "middle name", "is missing", "");
+    PatientMiddleNameIsInvalid = getPotentialIssue(session, "Patient", "middle name", "is invalid", "");
     PatientMiddleNameMayBeInitial = getPotentialIssue(session, "Patient", "middle name", "may be initial", "");
     PatientMiddleNameIsTooShort = getPotentialIssue(session, "Patient", "middle name", "is too short", "");
     PatientMiddleNameIsUnexpectedlyShort = getPotentialIssue(session, "Patient", "middle name", "is unexpectedly short", "");
     PatientMiddleNameIsUnexpectedlyLong = getPotentialIssue(session, "Patient", "middle name", "is unexpectedly long", "");
     PatientMiddleNameIsTooLong = getPotentialIssue(session, "Patient", "middle name", "is too long", "");
+    PatientMotherSMaidenNameIsInvalid = getPotentialIssue(session, "Patient", "mother's maiden name", "is invalid", "");
+    PatientMotherSMaidenNameHasJunkName = getPotentialIssue(session, "Patient", "mother's maiden name", "has junk name", "");
+    PatientMotherSMaidenNameHasInvalidPrefixes = getPotentialIssue(session, "Patient", "mother's maiden name", "has invalid prefixes", "");
     PatientMotherSMaidenNameIsMissing = getPotentialIssue(session, "Patient", "mother's maiden name", "is missing", "");
     PatientMotherSMaidenNameIsTooShort = getPotentialIssue(session, "Patient", "mother's maiden name", "is too short", "");
     PatientMotherSMaidenNameIsUnexpectedlyShort = getPotentialIssue(session, "Patient", "mother's maiden name", "is unexpectedly short", "");
@@ -1030,6 +1041,7 @@ public class PotentialIssues implements Reload
     PatientMotherSMaidenNameIsTooLong = getPotentialIssue(session, "Patient", "mother's maiden name", "is too long", "");
     PatientNameMayBeTemporaryNewbornName = getPotentialIssue(session, "Patient", "name", "may be temporary newborn name", "");
     PatientNameMayBeTestName = getPotentialIssue(session, "Patient", "name", "may be test name", "");
+    PatientNameHasJunkName = getPotentialIssue(session, "Patient", "name", "has junk name", "");
     PatientNameIsAKnownTestName = getPotentialIssue(session, "Patient", "name", "is a known test name", "");
     PatientNameFirstIsInvalid = getPotentialIssue(session, "Patient", "name first", "is invalid", "");
     PatientNameFirstIsMissing = getPotentialIssue(session, "Patient", "name first", "is missing", "");
@@ -1327,7 +1339,6 @@ public class PotentialIssues implements Reload
     VaccinationSystemEntryTimeIsInvalid = getPotentialIssue(session, "Vaccination", "system entry time", "is invalid", "");
     VaccinationSystemEntryTimeIsMissing = getPotentialIssue(session, "Vaccination", "system entry time", "is missing", "");
 
-
     addToFieldIssueMap(Field.GENERAL_AUTHORIZATION, GeneralAuthorizationException);
     addToFieldIssueMap(Field.GENERAL_CONFIGURATION, GeneralConfigurationException);
     addToFieldIssueMap(Field.GENERAL_PARSE, GeneralParseException);
@@ -1576,6 +1587,7 @@ public class PotentialIssues implements Reload
     addToFieldIssueMap(Field.PATIENT_GUARDIAN_ADDRESS_ZIP, PatientGuardianAddressZipIsMissing);
     addToFieldIssueMap(Field.PATIENT_GUARDIAN_NAME, PatientGuardianNameIsMissing);
     addToFieldIssueMap(Field.PATIENT_GUARDIAN_NAME, PatientGuardianNameIsSameAsUnderagePatient);
+    addToFieldIssueMap(Field.PATIENT_GUARDIAN_NAME, PatientGuardianNameHasJunkName);
     addToFieldIssueMap(Field.PATIENT_GUARDIAN_NAME_FIRST, PatientGuardianNameFirstIsMissing);
     addToFieldIssueMap(Field.PATIENT_GUARDIAN_NAME_LAST, PatientGuardianNameLastIsMissing);
     addToFieldIssueMap(Field.PATIENT_GUARDIAN_RESPONSIBLE_PARTY, PatientGuardianResponsiblePartyIsMissing);
@@ -1594,11 +1606,15 @@ public class PotentialIssues implements Reload
     addToFieldIssueMap(Field.PATIENT_MEDICAID_NUMBER, PatientMedicaidNumberIsInvalid);
     addToFieldIssueMap(Field.PATIENT_MEDICAID_NUMBER, PatientMedicaidNumberIsMissing);
     addToFieldIssueMap(Field.PATIENT_MIDDLE_NAME, PatientMiddleNameIsMissing);
+    addToFieldIssueMap(Field.PATIENT_MIDDLE_NAME, PatientMiddleNameIsInvalid);
     addToFieldIssueMap(Field.PATIENT_MIDDLE_NAME, PatientMiddleNameMayBeInitial);
     addToFieldIssueMap(Field.PATIENT_MIDDLE_NAME, PatientMiddleNameIsTooShort);
     addToFieldIssueMap(Field.PATIENT_MIDDLE_NAME, PatientMiddleNameIsUnexpectedlyShort);
     addToFieldIssueMap(Field.PATIENT_MIDDLE_NAME, PatientMiddleNameIsUnexpectedlyLong);
     addToFieldIssueMap(Field.PATIENT_MIDDLE_NAME, PatientMiddleNameIsTooLong);
+    addToFieldIssueMap(Field.PATIENT_MOTHERS_MAIDEN_NAME, PatientMotherSMaidenNameIsInvalid);
+    addToFieldIssueMap(Field.PATIENT_MOTHERS_MAIDEN_NAME, PatientMotherSMaidenNameHasJunkName);
+    addToFieldIssueMap(Field.PATIENT_MOTHERS_MAIDEN_NAME, PatientMotherSMaidenNameHasInvalidPrefixes);
     addToFieldIssueMap(Field.PATIENT_MOTHERS_MAIDEN_NAME, PatientMotherSMaidenNameIsMissing);
     addToFieldIssueMap(Field.PATIENT_MOTHERS_MAIDEN_NAME, PatientMotherSMaidenNameIsTooShort);
     addToFieldIssueMap(Field.PATIENT_MOTHERS_MAIDEN_NAME, PatientMotherSMaidenNameIsUnexpectedlyShort);
@@ -1606,6 +1622,7 @@ public class PotentialIssues implements Reload
     addToFieldIssueMap(Field.PATIENT_MOTHERS_MAIDEN_NAME, PatientMotherSMaidenNameIsTooLong);
     addToFieldIssueMap(Field.PATIENT_NAME, PatientNameMayBeTemporaryNewbornName);
     addToFieldIssueMap(Field.PATIENT_NAME, PatientNameMayBeTestName);
+    addToFieldIssueMap(Field.PATIENT_NAME, PatientNameHasJunkName);
     addToFieldIssueMap(Field.PATIENT_NAME, PatientNameIsAKnownTestName);
     addToFieldIssueMap(Field.PATIENT_NAME_FIRST, PatientNameFirstIsInvalid);
     addToFieldIssueMap(Field.PATIENT_NAME_FIRST, PatientNameFirstIsMissing);
