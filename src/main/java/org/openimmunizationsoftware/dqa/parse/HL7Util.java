@@ -367,6 +367,10 @@ public class HL7Util
 
   public static String escapeHL7Chars(String s)
   {
+	  if (s == null)
+	  {
+		  return "";
+	  }
     StringBuilder sb = new StringBuilder();
     for (char c : s.toCharArray())
     {

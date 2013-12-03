@@ -824,8 +824,6 @@ public class Validator extends ValidateMessage
           {
             if (vaccination.getAdminDate().after(vaccinationVIS.getPresentedDate()))
             {
-              System.out.println("--> vaccination.getAdminDate()        = " + vaccination.getAdminDate());
-              System.out.println("--> vaccinationVIS.getPresentedDate() = " + vaccinationVIS.getPresentedDate());
               registerIssue(pi.VaccinationVisPresentedDateIsAfterAdminDate);
             } else if (vaccination.getAdminDate().before(vaccinationVIS.getPresentedDate()))
             {
@@ -1567,6 +1565,7 @@ public class Validator extends ValidateMessage
     {
       address.getState().setCode("");
       address.getCountry().setCode("USA");
+      address.getCountry().getCodeReceived().setCodeId(20006);
     } else if (address.getState().getCode().equalsIgnoreCase("mx") || address.getState().getCode().equalsIgnoreCase("mex")
         || address.getState().getCode().equalsIgnoreCase("mexico"))
     {
@@ -1778,6 +1777,7 @@ public class Validator extends ValidateMessage
     {
       CodeTable codeTable = CodesReceived.getCodeTable(codedEntity.getTableType());
       cr = getCodeReceived(codedEntity.getCode(), codedEntity.getText(), codeTable, context);
+      
       cr.incReceivedCount();
       session.update(cr);
       if (cr.getCodeStatus().isValid())

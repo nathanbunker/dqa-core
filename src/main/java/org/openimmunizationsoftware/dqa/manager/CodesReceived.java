@@ -136,7 +136,7 @@ public class CodesReceived
     if (context != null)
     {
       receivedValue = context.getContextWithCodeValue() + "-" + receivedValue;
-    }
+    } 
     return getCodeReceived(receivedValue, codeTable);
   }
 
@@ -280,9 +280,10 @@ public class CodesReceived
       codeReceived.setTable(codeTable);
       codeReceived.setCodeLabel(codeMaster.getCodeLabel());
       String receivedValue = codeReceived.getReceivedValue();
-      if (codeReceived.getContextValue() != null && !codeReceived.getContextValue().equals(""))
+      if (codeMaster.getContext() != null )
       {
-        receivedValue = codeReceived.getContextValue() + "-" + receivedValue;
+        receivedValue = codeMaster.getContextValue() + "-" + receivedValue;
+        codeReceived.setContextValue(codeMaster.getContextValue());
       }
       codeReceivedMap.put(receivedValue, codeReceived);
     }
