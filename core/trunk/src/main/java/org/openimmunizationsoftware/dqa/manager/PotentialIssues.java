@@ -2090,7 +2090,7 @@ public class PotentialIssues implements Reload
             if (description == null)
             {
 
-              if (!issue.getFieldValue().equals(""))
+              if (issue.getFieldValue() != null && !issue.getFieldValue().equals(""))
               {
                 description = documentationTextProperties.getProperty(issue.getIssueType() + " " + issue.getFieldValue());
               } else

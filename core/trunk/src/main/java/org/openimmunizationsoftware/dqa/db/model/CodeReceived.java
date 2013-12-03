@@ -55,6 +55,7 @@ public class CodeReceived implements Serializable
     this.codeStatus = parent.codeStatus;
     this.receivedCount = 0;
     this.codeLabel = codeLabel;
+    this.contextValue = parent.contextValue;
   }
   
   public long getCodeId()
