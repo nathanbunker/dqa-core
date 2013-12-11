@@ -471,11 +471,22 @@ public class CodeMasterManager
   {
     if (codedEntity.getTableType() != null && codedEntity.getTableType().getTableId() > 0)
     {
-      Query query = session.createQuery("from CodeMaster where table.tableId = ? and context = ? and codeValue = ?");
-      query.setParameter(0, codedEntity.getTableType().getTableId());
-      query.setParameter(1, codeMasterContext);
-      query.setParameter(2, codedEntity.getCode());
-      List<CodeMaster> codeMasterList = query.list();
+        List<CodeMaster> codeMasterList;
+    	if (codeMasterContext == null)
+    	{
+        	Query query = session.createQuery("from CodeMaster where table.tableId = ? and context is null and codeValue = ?");
+            query.setInteger(0, codedEntity.getTableType().getTableId());
+            query.setParameter(1, codedEntity.getCode());
+            codeMasterList = query.list();
+    	}
+    	else
+    	{
+        	Query query = session.createQuery("from CodeMaster where table.tableId = ? and context = ? and codeValue = ?");
+            query.setInteger(0, codedEntity.getTableType().getTableId());
+            query.setParameter(1, codeMasterContext);
+            query.setParameter(2, codedEntity.getCode());
+            codeMasterList = query.list();
+    	}
       if (codeMasterList.size() > 0)
       {
         return codeMasterList.get(0);
