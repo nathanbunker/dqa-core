@@ -310,7 +310,8 @@ public class Validator extends ValidateMessage
     }
 
     boolean vaccinationAdministeredOrHistorical = false;
-    if (vaccination.getCompletion().isEmpty() || vaccination.isCompletionCompletedOrPartiallyAdministered())
+    if ((vaccination.getCompletion().isEmpty() || vaccination.isCompletionCompletedOrPartiallyAdministered())
+    		&& (vaccination.getAdminCvxCode() != null && !vaccination.getAdminCvxCode().equals("998")))
     {
       vaccinationAdministeredOrHistorical = true;
     }

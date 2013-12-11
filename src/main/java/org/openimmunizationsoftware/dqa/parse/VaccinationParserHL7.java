@@ -244,7 +244,6 @@ public class VaccinationParserHL7 extends VaccinationParser
       {
         if (vaccination == null)
         {
-          registerIssue(pi.Hl7RxaSegmentIsMissing);
           continue;
         }
         populateOBX(message);
@@ -1317,7 +1316,7 @@ public class VaccinationParserHL7 extends VaccinationParser
     ack.append(sdf.format(vaccination.getAdminDate()) + "|");
     ack.append("|");
     ack.append(makeCodedValue(vaccination.getAdminCvx(), "CVX") + "|");
-    if (vaccination.getAmount().equals(""))
+    if (vaccination.getAmount() == null || vaccination.getAmount().equals(""))
     {
       ack.append("999|");
       ack.append("|");
