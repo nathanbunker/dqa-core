@@ -780,6 +780,7 @@ public class Validator extends ValidateMessage
     Map<String, VaccinationVIS> vaccinationVISMap = new HashMap<String, VaccinationVIS>();
     for (Observation observation : vaccination.getObservations())
     {
+      skippableItem = observation;
       handleCodeReceived(observation.getValueType(), PotentialIssues.Field.OBSERVATION_VALUE_TYPE);
       handleCodeReceived(observation.getObservationIdentifier(), PotentialIssues.Field.OBSERVATION_OBSERVATION_IDENTIFIER_CODE);
       if (!observation.isSkipped())
@@ -831,6 +832,7 @@ public class Validator extends ValidateMessage
         }
       }
     }
+    skippableItem = vaccination;
     if (vaccinationVISMap.size() == 0)
     {
       if (vaccination.isAdministered())
