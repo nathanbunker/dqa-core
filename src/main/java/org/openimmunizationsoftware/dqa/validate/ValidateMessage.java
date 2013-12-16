@@ -177,8 +177,6 @@ public abstract class ValidateMessage
   {
     if (potentialIssue != null)
     {
-      profile.getPotentialIssueStatus(potentialIssue);
-      profile.getPotentialIssueStatus(potentialIssue).getAction();
       registerIssue(potentialIssue, profile.getPotentialIssueStatus(potentialIssue).getAction(), null);
     }
   }
