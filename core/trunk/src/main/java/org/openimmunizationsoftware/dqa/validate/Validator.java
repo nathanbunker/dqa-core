@@ -311,7 +311,7 @@ public class Validator extends ValidateMessage
 
     boolean vaccinationAdministeredOrHistorical = false;
     if ((vaccination.getCompletion().isEmpty() || vaccination.isCompletionCompletedOrPartiallyAdministered())
-    		&& (vaccination.getAdminCvxCode() != null && !vaccination.getAdminCvxCode().equals("998")))
+        && (vaccination.getAdminCvxCode() != null && !vaccination.getAdminCvxCode().equals("998")))
     {
       vaccinationAdministeredOrHistorical = true;
     }
@@ -392,11 +392,31 @@ public class Validator extends ValidateMessage
       {
         if (vaccineCvx.getValidStartDate().after(vaccination.getAdminDate()) || trunc(vaccination.getAdminDate()).after(vaccineCvx.getValidEndDate()))
         {
-          registerIssue(pi.VaccinationCvxCodeIsInvalidForDateAdministered, vaccineCr);
+          if (vaccineCvx.getConceptType().equals(VaccineCvx.CONCEPT_TYPE_FOREIGN_VACCINE)
+              || vaccineCvx.getConceptType().equals(VaccineCvx.CONCEPT_TYPE_UNSPECIFIED))
+          {
+            if (vaccination.isAdministered())
+            {
+              registerIssue(pi.VaccinationCvxCodeIsInvalidForDateAdministered, vaccineCr);
+            }
+          } else
+          {
+            registerIssue(pi.VaccinationCvxCodeIsInvalidForDateAdministered, vaccineCr);
+          }
         } else if (vaccineCvx.getUseStartDate().after(vaccination.getAdminDate())
             || trunc(vaccination.getAdminDate()).after(vaccineCvx.getUseEndDate()))
         {
-          registerIssue(pi.VaccinationCvxCodeIsUnexpectedForDateAdministered, vaccineCr);
+          if (vaccineCvx.getConceptType().equals(VaccineCvx.CONCEPT_TYPE_FOREIGN_VACCINE)
+              || vaccineCvx.getConceptType().equals(VaccineCvx.CONCEPT_TYPE_UNSPECIFIED))
+          {
+            if (vaccination.isAdministered())
+            {
+              registerIssue(pi.VaccinationCvxCodeIsUnexpectedForDateAdministered, vaccineCr);
+            }
+          } else
+          {
+            registerIssue(pi.VaccinationCvxCodeIsUnexpectedForDateAdministered, vaccineCr);
+          }
         }
       }
     }
@@ -479,13 +499,36 @@ public class Validator extends ValidateMessage
       {
         if (vaccineCvx.getValidStartDate().after(vaccination.getAdminDate()) || trunc(vaccination.getAdminDate()).after(vaccineCvx.getValidEndDate()))
         {
-          registerIssue(pi.VaccinationAdminDateIsBeforeOrAfterLicensedVaccineRange, vaccineCr);
-          registerIssue(pi.VaccinationAdminCodeIsInvalidForDateAdministered, vaccineCr);
+          if (vaccineCvx.getConceptType().equals(VaccineCvx.CONCEPT_TYPE_FOREIGN_VACCINE)
+              || vaccineCvx.getConceptType().equals(VaccineCvx.CONCEPT_TYPE_UNSPECIFIED))
+          {
+            if (vaccination.isAdministered())
+            {
+              registerIssue(pi.VaccinationAdminDateIsBeforeOrAfterLicensedVaccineRange, vaccineCr);
+              registerIssue(pi.VaccinationAdminCodeIsInvalidForDateAdministered, vaccineCr);
+            }
+          } else
+          {
+            registerIssue(pi.VaccinationAdminDateIsBeforeOrAfterLicensedVaccineRange, vaccineCr);
+            registerIssue(pi.VaccinationAdminCodeIsInvalidForDateAdministered, vaccineCr);
+          }
         } else if (vaccineCvx.getUseStartDate().after(vaccination.getAdminDate())
             || trunc(vaccination.getAdminDate()).after(vaccineCvx.getUseEndDate()))
         {
-          registerIssue(pi.VaccinationAdminDateIsBeforeOrAfterExpectedVaccineUsageRange, vaccineCr);
-          registerIssue(pi.VaccinationAdminCodeIsUnexpectedForDateAdministered, vaccineCr);
+
+          if (vaccineCvx.getConceptType().equals(VaccineCvx.CONCEPT_TYPE_FOREIGN_VACCINE)
+              || vaccineCvx.getConceptType().equals(VaccineCvx.CONCEPT_TYPE_UNSPECIFIED))
+          {
+            if (vaccination.isAdministered())
+            {
+              registerIssue(pi.VaccinationAdminDateIsBeforeOrAfterExpectedVaccineUsageRange, vaccineCr);
+              registerIssue(pi.VaccinationAdminCodeIsUnexpectedForDateAdministered, vaccineCr);
+            }
+          } else
+          {
+            registerIssue(pi.VaccinationAdminDateIsBeforeOrAfterExpectedVaccineUsageRange, vaccineCr);
+            registerIssue(pi.VaccinationAdminCodeIsUnexpectedForDateAdministered, vaccineCr);
+          }
         }
         if (patient.getBirthDate() != null)
         {
@@ -1778,7 +1821,7 @@ public class Validator extends ValidateMessage
     {
       CodeTable codeTable = CodesReceived.getCodeTable(codedEntity.getTableType());
       cr = getCodeReceived(codedEntity.getCode(), codedEntity.getText(), codeTable, context);
-      
+
       cr.incReceivedCount();
       session.update(cr);
       if (cr.getCodeStatus().isValid())
