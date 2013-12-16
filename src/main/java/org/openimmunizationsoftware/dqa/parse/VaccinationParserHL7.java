@@ -1525,13 +1525,21 @@ public class VaccinationParserHL7 extends VaccinationParser
       ack.append("|");
       ack.append(patient.getNameLast() + "^" + patient.getNameFirst() + "^" + patient.getNameMiddle() + "^" + patient.getNameSuffix() + "^"
           + patient.getNamePrefix() + "^^" + patient.getNameTypeCode());
-      if (!patient.getAliasFirst().equals("") || !patient.getAliasLast().equals(""))
+      if ((patient.getAliasFirst() != null && !patient.getAliasFirst().equals("")) || 
+    		  (patient.getAliasLast() != null && !patient.getAliasLast().equals("")))
       {
-        ack.append("~" + patient.getAliasLast() + "^" + patient.getAliasFirst() + "^^^^^A");
+        ack.append("~" + (patient.getAliasLast() == null ? "" : patient.getAliasLast()) 
+        		+ "^" + (patient.getAliasFirst() == null ? "" : patient.getAliasFirst()) + "^^^^^A");
       }
       ack.append("|");
       ack.append(patient.getMotherMaidenName() + "|");
-      ack.append(sdf.format(patient.getBirthDate()) + "|");
+      if (patient.getBirthDate() != null ){
+        ack.append(sdf.format(patient.getBirthDate()) + "|");
+      }
+      else
+      {
+        ack.append("|");
+      }
       ack.append(patient.getSexCode() + "|");
       ack.append("|");
       ack.append(makeCodedValue(patient.getRace(), "HL70005") + "|");
