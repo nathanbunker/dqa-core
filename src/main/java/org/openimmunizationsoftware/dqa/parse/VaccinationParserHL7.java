@@ -378,7 +378,7 @@ public class VaccinationParserHL7 extends VaccinationParser
     // TODO private OrganizationName facility = new OrganizationName();
     readPatientId(3, patient);
     patient.setMotherMaidenName(getValue(6));
-    readName(5, patient.getName());
+    readName(5, patient.getName(), patient.getAlias());
     readPhoneNumber(13, patient);
     readCodeEntity(15, patient.getPrimaryLanguage());
     readCodeEntity(10, patient.getRace());
@@ -639,22 +639,15 @@ public class VaccinationParserHL7 extends VaccinationParser
   private void readPatientId(int position, Patient patient)
   {
     List<String[]> values = getRepeatValues(position);
-    if (values.size() > 0)
-    {
-      String[] fields = values.get(0);
-      PatientIdNumber id = patient.getIdSubmitter();
-      id.setPatient(patient);
-      id.setPositionId(1);
-      patient.getPatientIdNumberList().add(id);
-      readId(fields, id);
-    }
-    for (int i = 1; i < values.size(); i++)
+    boolean mrFound = false;
+    for (int i = 0; i < values.size(); i++)
     {
       String[] fields = values.get(i);
       PatientIdNumber id = null;
+      String typeCode = "";
       if (fields.length >= 5)
       {
-        String typeCode = fields[4];
+        typeCode = fields[4];
         if ("SS".equals(typeCode))
         {
           id = patient.getIdSsn();
@@ -664,16 +657,41 @@ public class VaccinationParserHL7 extends VaccinationParser
         } else if ("SR".equals(typeCode))
         {
           id = patient.getIdRegistry();
+        } else
+        {
+          if (mrFound)
+          {
+            id = new PatientIdNumber();
+          } else if (i == 1 && values.size() == 1 && "".equals(typeCode))
+          {
+            id = patient.getIdSubmitter();
+            mrFound = true;
+          } else if ("MR".equals(typeCode))
+          {
+            id = patient.getIdSubmitter();
+            mrFound = true;
+          } else if ("PT".equals(typeCode))
+          {
+            id = patient.getIdSubmitter();
+            mrFound = true;
+          } else if ("PI".equals(typeCode))
+          {
+            id = patient.getIdSubmitter();
+            mrFound = true;
+          }
         }
       }
-      if (id == null)
+      if (id == null && !mrFound && values.size() == 1 && "".equals(typeCode))
       {
         id = patient.getIdSubmitter();
       }
-      id.setPatient(patient);
-      id.setPositionId((i + 1));
-      patient.getPatientIdNumberList().add(id);
-      readId(fields, id);
+      if (id != null)
+      {
+        id.setPatient(patient);
+        id.setPositionId((i + 1));
+        patient.getPatientIdNumberList().add(id);
+        readId(fields, id);
+      }
     }
   }
 
@@ -715,6 +733,34 @@ public class VaccinationParserHL7 extends VaccinationParser
     name.setSuffix(field.length >= 4 ? field[3] : "");
     name.setPrefix(field.length >= 5 ? field[4] : "");
     name.setTypeCode(field.length >= 7 ? field[6] : "");
+  }
+
+  private void readName(int fieldNumber, Name name, Name alias)
+  {
+    List<String[]> fieldList = getRepeatValues(fieldNumber);
+    int positionId = 0;
+    for (String[] field : fieldList)
+    {
+      positionId++;
+      if (positionId == 1)
+      {
+        name.setLast(field.length >= 1 ? field[0] : "");
+        name.setFirst(field.length >= 2 ? field[1] : "");
+        name.setMiddle(field.length >= 3 ? field[2] : "");
+        name.setSuffix(field.length >= 4 ? field[3] : "");
+        name.setPrefix(field.length >= 5 ? field[4] : "");
+        name.setTypeCode(field.length >= 7 ? field[6] : "");
+      } else if (field.length >= 7 && field[6] != null && field[6].equals("A"))
+      {
+        alias.setLast(field.length >= 1 ? field[0] : "");
+        alias.setFirst(field.length >= 2 ? field[1] : "");
+        alias.setMiddle(field.length >= 3 ? field[2] : "");
+        alias.setSuffix(field.length >= 4 ? field[3] : "");
+        alias.setPrefix(field.length >= 5 ? field[4] : "");
+        alias.setTypeCode(field.length >= 7 ? field[6] : "");
+      }
+
+    }
   }
 
   private void readFields(String messageText)
@@ -1372,9 +1418,9 @@ public class VaccinationParserHL7 extends VaccinationParser
       return "";
     }
     CodeMaster codeMaster = CodeMasterManager.getCodeMaster(codedEntity, null, session);
-    if (codeMaster != null)
+    if (codeMaster != null && codeMaster.getCodeLabel() != null)
     {
-      codedEntity.setText(codeMaster.getCodeLabel());
+      codedEntity.setText(codeMaster.getCodeLabel().trim());
     }
     if (codeTableNameOverride != null)
     {
@@ -1465,11 +1511,25 @@ public class VaccinationParserHL7 extends VaccinationParser
     Patient patient = queryResult.getPatient();
     if (patient != null)
     {
-      ack.append(patient.getIdSubmitterNumber() + "^^^" + patient.getIdSubmitterAssigningAuthorityCode() + "^" + patient.getIdSubmitterTypeCode()
-          + "|");
+
+      ack.append(patient.getIdSubmitterNumber() + "^^^" + patient.getIdSubmitterAssigningAuthorityCode() + "^" + patient.getIdSubmitterTypeCode());
+      if (!patient.getIdMedicaid().isEmpty())
+      {
+        ack.append("~" + patient.getIdMedicaid().getNumber() + "^^^OIS^MA");
+      }
+      if (!patient.getIdSsn().isEmpty())
+      {
+        ack.append("~" + patient.getIdSsn().getNumber() + "^^^USA^SS");
+      }
+      ack.append("|");
       ack.append("|");
       ack.append(patient.getNameLast() + "^" + patient.getNameFirst() + "^" + patient.getNameMiddle() + "^" + patient.getNameSuffix() + "^"
-          + patient.getNamePrefix() + "^^" + patient.getNameTypeCode() + "|");
+          + patient.getNamePrefix() + "^^" + patient.getNameTypeCode());
+      if (!patient.getAliasFirst().equals("") || !patient.getAliasLast().equals(""))
+      {
+        ack.append("~" + patient.getAliasLast() + "^" + patient.getAliasFirst() + "^^^^^A");
+      }
+      ack.append("|");
       ack.append(patient.getMotherMaidenName() + "|");
       ack.append(sdf.format(patient.getBirthDate()) + "|");
       ack.append(patient.getSexCode() + "|");
@@ -1481,7 +1541,7 @@ public class VaccinationParserHL7 extends VaccinationParser
       printPhone(ack, patient);
       ack.append("|");
       ack.append("|");
-      ack.append("|");
+      ack.append(makeCodedValue(patient.getPrimaryLanguage(), "HL70296") + "|");
       ack.append("|");
       ack.append("|");
       ack.append("|");

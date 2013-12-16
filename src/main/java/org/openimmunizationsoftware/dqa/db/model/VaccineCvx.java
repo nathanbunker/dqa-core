@@ -21,6 +21,8 @@ public class VaccineCvx implements Serializable
   public static final String CONCEPT_TYPE_NON_VACCINE = "non vaccine";
   public static final String CONCEPT_TYPE_VACCINE = "vaccine";
   public static final String CONCEPT_TYPE_UNSPECIFIED = "unspecified";
+  public static final String CONCEPT_TYPE_NEVER_ACTIVE = "never active";
+  public static final String CONCEPT_TYPE_FOREIGN_VACCINE = "foreign vaccine";
   
   private int cvxId = 0;
   private String cvxCode = "";
