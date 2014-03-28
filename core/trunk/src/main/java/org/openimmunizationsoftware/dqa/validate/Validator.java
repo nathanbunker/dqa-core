@@ -1404,7 +1404,7 @@ public class Validator extends ValidateMessage
     if (notEmpty(patient.getIdSsnNumber(), PotentialIssues.Field.PATIENT_SSN))
     {
       String ssn = patient.getIdSsnNumber();
-      ssn = validateNumber(ssn, pi.PatientSsnIsInvalid, 9);
+      ssn = validateSsn(ssn, pi.PatientSsnIsInvalid);
       patient.setIdSsnNumber(ssn);
     }
     if (notEmpty(patient.getIdSubmitterNumber(), PotentialIssues.Field.PATIENT_SUBMITTER_ID))
@@ -1476,35 +1476,28 @@ public class Validator extends ValidateMessage
 
   private String validateNumber(String numericId, PotentialIssue invalidIssue, int length)
   {
-    if (numericId.length() != length || numericId.equals("123456789") || numericId.equals("987654321"))
+    if (numericId.length() != length || numericId.equals("123456789") || numericId.equals("987654321") || hasTooManyConsecutiveChars(numericId, 6))
     {
       registerIssue(invalidIssue);
       numericId = "";
-    } else
-    {
-      char lastC = 'S';
-      int count = 0;
-      for (char c : numericId.toCharArray())
-      {
-        if (lastC == c)
-        {
-          count++;
-        } else
-        {
-          count = 0;
-        }
-        if (count >= 6)
-        {
-          registerIssue(invalidIssue);
-          numericId = "";
-          break;
-        }
-        lastC = c;
-      }
     }
+    
     return numericId;
   }
 
+  private String validateSsn(String numericSsn, PotentialIssue invalidIssue)
+  {
+		// fail if: starts with 000, middle two digits are 00, is not 9 numeric chars, is 123456789, is 987654321, contains more than 6 consecutive digits
+		if ((numericSsn.indexOf("000") == 0)	||	(numericSsn.indexOf("00", 3) == 3)	||	(!numericSsn.matches("[0-9]{9}"))	||	(numericSsn.equals("123456789"))
+				|| numericSsn.equals("987654321")	||	(hasTooManyConsecutiveChars(numericSsn, 6))) 
+		{
+			registerIssue(invalidIssue);
+			numericSsn = "";
+		}
+
+		return numericSsn;
+  }
+  
   private void validatePhone(PhoneNumber phone, PotentialIssues.Field piPhone)
   {
     validatePhone(phone, piPhone, null, null);
@@ -1919,7 +1912,26 @@ public class Validator extends ValidateMessage
     return ((endYear - startYear) * cal.getMaximum(Calendar.MONTH)) + (endMonth - startMonth);
   }
 
-  private static boolean isEmpty(String s)
+  protected static boolean hasTooManyConsecutiveChars(String input, int maxConsecutiveChars)
+	{
+		char lastC = 'S';
+		int count = 0;
+		for (char c : input.toCharArray()) {
+			if (lastC == c) {
+				count++;
+			} else {
+				count = 1;
+			}
+			if (count > maxConsecutiveChars) {
+				return true;
+			}
+			lastC = c;
+		}
+	
+		return false;
+	}
+
+	private static boolean isEmpty(String s)
   {
     return s == null || s.equals("");
   }
