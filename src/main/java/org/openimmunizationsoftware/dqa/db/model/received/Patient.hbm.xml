@@ -56,5 +56,6 @@
     <property name="registryStatusCode" column="registry_status" type="string"/>
     <property name="sexCode" column="sex_code" type="string"/>
     <property name="skipped" column="skipped" type="yes_no"/>
+    <property name="systemCreationDate" column="system_creation_date" type="timestamp"/>
   </class>
 </hibernate-mapping>

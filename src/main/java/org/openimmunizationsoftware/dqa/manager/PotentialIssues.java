@@ -400,6 +400,10 @@ public class PotentialIssues implements Reload
   public PotentialIssue PatientSubmitterIdTypeCodeIsInvalid = null;
   public PotentialIssue PatientSubmitterIdTypeCodeIsUnrecognized = null;
   public PotentialIssue PatientSubmitterIdTypeCodeIsIgnored = null;
+  public PotentialIssue PatientSystemCreationDateIsMissing = null;
+  public PotentialIssue PatientSystemCreationDateIsInvalid = null;
+  public PotentialIssue PatientSystemCreationDateIsBeforeBirth = null;
+  public PotentialIssue PatientSystemCreationDateIsInFuture = null;
   public PotentialIssue PatientVfcEffectiveDateIsBeforeBirth = null;
   public PotentialIssue PatientVfcEffectiveDateIsInFuture = null;
   public PotentialIssue PatientVfcEffectiveDateIsInvalid = null;
@@ -464,6 +468,7 @@ public class PotentialIssues implements Reload
   public PotentialIssue VaccinationBodyRouteIsIgnored = null;
   public PotentialIssue VaccinationBodyRouteIsInvalid = null;
   public PotentialIssue VaccinationBodyRouteIsInvalidForVaccineIndicated = null;
+  public PotentialIssue VaccinationBodyRouteIsInvalidForBodySiteIndicated = null;
   public PotentialIssue VaccinationBodyRouteIsMissing = null;
   public PotentialIssue VaccinationBodyRouteIsUnrecognized = null;
   public PotentialIssue VaccinationBodySiteIsDeprecated = null;
@@ -508,6 +513,13 @@ public class PotentialIssues implements Reload
   public PotentialIssue VaccinationFacilityIdIsMissing = null;
   public PotentialIssue VaccinationFacilityIdIsUnrecognized = null;
   public PotentialIssue VaccinationFacilityNameIsMissing = null;
+  public PotentialIssue VaccinationFacilityTypeIsDeprecated = null;
+  public PotentialIssue VaccinationFacilityTypeIsIgnored = null;
+  public PotentialIssue VaccinationFacilityTypeIsInvalid = null;
+  public PotentialIssue VaccinationFacilityTypeIsMissing = null;
+  public PotentialIssue VaccinationFacilityTypeIsUnrecognized = null;
+  public PotentialIssue VaccinationFacilityTypeIsValuedAsPublic = null;
+  public PotentialIssue VaccinationFacilityTypeIsValuedAsPrivate = null;
   public PotentialIssue VaccinationFillerOrderNumberIsDeprecated = null;
   public PotentialIssue VaccinationFillerOrderNumberIsIgnored = null;
   public PotentialIssue VaccinationFillerOrderNumberIsInvalid = null;
@@ -613,9 +625,23 @@ public class PotentialIssues implements Reload
   public PotentialIssue VaccinationSystemEntryTimeIsInFuture = null;
   public PotentialIssue VaccinationSystemEntryTimeIsInvalid = null;
   public PotentialIssue VaccinationSystemEntryTimeIsMissing = null;
+  public PotentialIssue VaccinationTradeNameIsDeprecated = null;
+  public PotentialIssue VaccinationTradeNameIsIgnored = null;
+  public PotentialIssue VaccinationTradeNameIsInvalid = null;
+  public PotentialIssue VaccinationTradeNameIsMissing = null;
+  public PotentialIssue VaccinationTradeNameIsUnrecognized = null;
+  public PotentialIssue VaccinationTradeNameAndVaccineAreInconsistent = null;
+  public PotentialIssue VaccinationTradeNameAndManufacturerAreInconsistent = null;
+  public PotentialIssue VaccinationValidityCodeIsInvalid = null;
+  public PotentialIssue VaccinationValidityCodeIsDeprecated = null;
+  public PotentialIssue VaccinationValidityCodeIsIgnored = null;
+  public PotentialIssue VaccinationValidityCodeIsMissing = null;
+  public PotentialIssue VaccinationValidityCodeIsUnrecognized = null;
+  public PotentialIssue VaccinationValidityCodeIsValuedAsValid = null;
+  public PotentialIssue VaccinationValidityCodeIsValuedAsInvalid = null;
 
   public static enum Field {
-    GENERAL_AUTHORIZATION, GENERAL_CONFIGURATION, GENERAL_PARSE, GENERAL_PROCESSING, HL7_SEGMENT, HL7_SEGMENTS, HL7_MSH_ACCEPT_ACK_TYPE, HL7_MSH_ALT_CHARACTER_SET, HL7_MSH_APP_ACK_TYPE, HL7_MSH_CHARACTER_SET, HL7_MSH_COUNTRY_CODE, HL7_MSH_ENCODING_CHARACTER, HL7_MSH_MESSAGE_CONTROL_ID, HL7_MSH_MESSAGE_DATE, HL7_MSH_MESSAGE_PROFILE_ID, HL7_MSH_MESSAGE_STRUCTURE, HL7_MSH_MESSAGE_TRIGGER, HL7_MSH_MESSAGE_TYPE, HL7_MSH_PROCESSING_ID, HL7_MSH_RECEIVING_APPLICATION, HL7_MSH_RECEIVING_FACILITY, HL7_MSH_SEGMENT, HL7_MSH_SENDING_APPLICATION, HL7_MSH_SENDING_FACILITY, HL7_MSH_VERSION, HL7_NK1_SEGMENT, HL7_NK1_SET_ID, HL7_OBX_SEGMENT, HL7_ORC_SEGMENT, HL7_PD1_SEGMENT, HL7_PID_SEGMENT, HL7_PV1_SEGMENT, HL7_RXA_ADMIN_SUB_ID_COUNTER, HL7_RXA_GIVE_SUB_ID, HL7_RXA_SEGMENT, HL7_RXR_SEGMENT, NEXT_OF_KIN_ADDRESS, NEXT_OF_KIN_ADDRESS_CITY, NEXT_OF_KIN_ADDRESS_COUNTRY, NEXT_OF_KIN_ADDRESS_COUNTY, NEXT_OF_KIN_ADDRESS_STATE, NEXT_OF_KIN_ADDRESS_STREET, NEXT_OF_KIN_ADDRESS_STREET2, NEXT_OF_KIN_ADDRESS_TYPE, NEXT_OF_KIN_ADDRESS_ZIP, NEXT_OF_KIN_NAME, NEXT_OF_KIN_NAME_FIRST, NEXT_OF_KIN_NAME_LAST, NEXT_OF_KIN_PHONE_NUMBER, NEXT_OF_KIN_RELATIONSHIP, NEXT_OF_KIN_SSN, OBSERVATION_VALUE_TYPE, OBSERVATION_OBSERVATION_IDENTIFIER_CODE, OBSERVATION_OBSERVATION_VALUE, OBSERVATION_DATE_TIME_OF_OBSERVATION, PATIENT_ADDRESS, PATIENT_ADDRESS_CITY, PATIENT_ADDRESS_COUNTRY, PATIENT_ADDRESS_COUNTY, PATIENT_ADDRESS_STATE, PATIENT_ADDRESS_STREET, PATIENT_ADDRESS_STREET2, PATIENT_ADDRESS_TYPE, PATIENT_ADDRESS_ZIP, PATIENT_ALIAS, PATIENT_BIRTH_DATE, PATIENT_BIRTH_INDICATOR, PATIENT_BIRTH_ORDER, PATIENT_BIRTH_PLACE, PATIENT_BIRTH_REGISTRY_ID, PATIENT_CLASS, PATIENT_DEATH_DATE, PATIENT_DEATH_INDICATOR, PATIENT_ETHNICITY, PATIENT_GENDER, PATIENT_GUARDIAN_ADDRESS, PATIENT_GUARDIAN_ADDRESS_CITY, PATIENT_GUARDIAN_ADDRESS_STATE, PATIENT_GUARDIAN_ADDRESS_STREET, PATIENT_GUARDIAN_ADDRESS_ZIP, PATIENT_GUARDIAN_NAME, PATIENT_GUARDIAN_NAME_FIRST, PATIENT_GUARDIAN_NAME_LAST, PATIENT_GUARDIAN_RESPONSIBLE_PARTY, PATIENT_GUARDIAN_PHONE, PATIENT_GUARDIAN_RELATIONSHIP, PATIENT_IMMUNITY_CODE, PATIENT_IMMUNIZATION_REGISTRY_STATUS, PATIENT_MEDICAID_NUMBER, PATIENT_MIDDLE_NAME, PATIENT_MOTHERS_MAIDEN_NAME, PATIENT_NAME, PATIENT_NAME_FIRST, PATIENT_NAME_LAST, PATIENT_NAME_TYPE_CODE, PATIENT_PHONE, PATIENT_PHONE_TEL_USE_CODE, PATIENT_PHONE_TEL_EQUIP_CODE, PATIENT_PRIMARY_FACILITY_ID, PATIENT_PRIMARY_FACILITY_NAME, PATIENT_PRIMARY_LANGUAGE, PATIENT_PRIMARY_PHYSICIAN_ID, PATIENT_PRIMARY_PHYSICIAN_NAME, PATIENT_PROTECTION_INDICATOR, PATIENT_PUBLICITY_CODE, PATIENT_RACE, PATIENT_REGISTRY_ID, PATIENT_REGISTRY_STATUS, PATIENT_SSN, PATIENT_SUBMITTER_ID, PATIENT_SUBMITTER_ID_AUTHORITY, PATIENT_SUBMITTER_ID_TYPE_CODE, PATIENT_VFC_EFFECTIVE_DATE, PATIENT_VFC_STATUS, PATIENT_WIC_ID, VACCINATION_ACTION_CODE, VACCINATION_ADMIN_CODE, VACCINATION_ADMIN_CODE_TABLE, VACCINATION_ADMIN_DATE, VACCINATION_ADMIN_DATE_END, VACCINATION_ADMINISTERED_AMOUNT, VACCINATION_ADMINISTERED_UNIT, VACCINATION_BODY_ROUTE, VACCINATION_BODY_SITE, VACCINATION_COMPLETION_STATUS, VACCINATION_CONFIDENTIALITY_CODE, VACCINATION_CPT_CODE, VACCINATION_CVX_CODE, VACCINATION_CVX_CODE_AND_CPT_CODE, VACCINATION_FACILITY_ID, VACCINATION_FACILITY_NAME, VACCINATION_FILLER_ORDER_NUMBER, VACCINATION_FINANCIAL_ELIGIBILITY_CODE, VACCINATION_GIVEN_BY, VACCINATION_ID, VACCINATION_ID_OF_RECEIVER, VACCINATION_ID_OF_SENDER, VACCINATION_INFORMATION_SOURCE, VACCINATION_VIS, VACCINATION_VIS_CVX_CODE, VACCINATION_VIS_DOCUMENT_TYPE, VACCINATION_VIS_PUBLISHED_DATE, VACCINATION_VIS_PRESENTED_DATE, VACCINATION_LOT_EXPIRATION_DATE, VACCINATION_LOT_NUMBER, VACCINATION_MANUFACTURER_CODE, VACCINATION_ORDER_CONTROL_CODE, VACCINATION_ORDER_FACILITY_ID, VACCINATION_ORDER_FACILITY_NAME, VACCINATION_ORDERED_BY, VACCINATION_PLACER_ORDER_NUMBER, VACCINATION_PRODUCT, VACCINATION_RECORDED_BY, VACCINATION_REFUSAL_REASON, VACCINATION_SYSTEM_ENTRY_TIME,
+    GENERAL_AUTHORIZATION, GENERAL_CONFIGURATION, GENERAL_PARSE, GENERAL_PROCESSING, HL7_SEGMENT, HL7_SEGMENTS, HL7_MSH_ACCEPT_ACK_TYPE, HL7_MSH_ALT_CHARACTER_SET, HL7_MSH_APP_ACK_TYPE, HL7_MSH_CHARACTER_SET, HL7_MSH_COUNTRY_CODE, HL7_MSH_ENCODING_CHARACTER, HL7_MSH_MESSAGE_CONTROL_ID, HL7_MSH_MESSAGE_DATE, HL7_MSH_MESSAGE_PROFILE_ID, HL7_MSH_MESSAGE_STRUCTURE, HL7_MSH_MESSAGE_TRIGGER, HL7_MSH_MESSAGE_TYPE, HL7_MSH_PROCESSING_ID, HL7_MSH_RECEIVING_APPLICATION, HL7_MSH_RECEIVING_FACILITY, HL7_MSH_SEGMENT, HL7_MSH_SENDING_APPLICATION, HL7_MSH_SENDING_FACILITY, HL7_MSH_VERSION, HL7_NK1_SEGMENT, HL7_NK1_SET_ID, HL7_OBX_SEGMENT, HL7_ORC_SEGMENT, HL7_PD1_SEGMENT, HL7_PID_SEGMENT, HL7_PV1_SEGMENT, HL7_RXA_ADMIN_SUB_ID_COUNTER, HL7_RXA_GIVE_SUB_ID, HL7_RXA_SEGMENT, HL7_RXR_SEGMENT, NEXT_OF_KIN_ADDRESS, NEXT_OF_KIN_ADDRESS_CITY, NEXT_OF_KIN_ADDRESS_COUNTRY, NEXT_OF_KIN_ADDRESS_COUNTY, NEXT_OF_KIN_ADDRESS_STATE, NEXT_OF_KIN_ADDRESS_STREET, NEXT_OF_KIN_ADDRESS_STREET2, NEXT_OF_KIN_ADDRESS_TYPE, NEXT_OF_KIN_ADDRESS_ZIP, NEXT_OF_KIN_NAME, NEXT_OF_KIN_NAME_FIRST, NEXT_OF_KIN_NAME_LAST, NEXT_OF_KIN_PHONE_NUMBER, NEXT_OF_KIN_RELATIONSHIP, NEXT_OF_KIN_SSN, OBSERVATION_VALUE_TYPE, OBSERVATION_OBSERVATION_IDENTIFIER_CODE, OBSERVATION_OBSERVATION_VALUE, OBSERVATION_DATE_TIME_OF_OBSERVATION, PATIENT_ADDRESS, PATIENT_ADDRESS_CITY, PATIENT_ADDRESS_COUNTRY, PATIENT_ADDRESS_COUNTY, PATIENT_ADDRESS_STATE, PATIENT_ADDRESS_STREET, PATIENT_ADDRESS_STREET2, PATIENT_ADDRESS_TYPE, PATIENT_ADDRESS_ZIP, PATIENT_ALIAS, PATIENT_BIRTH_DATE, PATIENT_BIRTH_INDICATOR, PATIENT_BIRTH_ORDER, PATIENT_BIRTH_PLACE, PATIENT_BIRTH_REGISTRY_ID, PATIENT_CLASS, PATIENT_DEATH_DATE, PATIENT_DEATH_INDICATOR, PATIENT_ETHNICITY, PATIENT_GENDER, PATIENT_GUARDIAN_ADDRESS, PATIENT_GUARDIAN_ADDRESS_CITY, PATIENT_GUARDIAN_ADDRESS_STATE, PATIENT_GUARDIAN_ADDRESS_STREET, PATIENT_GUARDIAN_ADDRESS_ZIP, PATIENT_GUARDIAN_NAME, PATIENT_GUARDIAN_NAME_FIRST, PATIENT_GUARDIAN_NAME_LAST, PATIENT_GUARDIAN_RESPONSIBLE_PARTY, PATIENT_GUARDIAN_PHONE, PATIENT_GUARDIAN_RELATIONSHIP, PATIENT_IMMUNITY_CODE, PATIENT_IMMUNIZATION_REGISTRY_STATUS, PATIENT_MEDICAID_NUMBER, PATIENT_MIDDLE_NAME, PATIENT_MOTHERS_MAIDEN_NAME, PATIENT_NAME, PATIENT_NAME_FIRST, PATIENT_NAME_LAST, PATIENT_NAME_TYPE_CODE, PATIENT_PHONE, PATIENT_PHONE_TEL_USE_CODE, PATIENT_PHONE_TEL_EQUIP_CODE, PATIENT_PRIMARY_FACILITY_ID, PATIENT_PRIMARY_FACILITY_NAME, PATIENT_PRIMARY_LANGUAGE, PATIENT_PRIMARY_PHYSICIAN_ID, PATIENT_PRIMARY_PHYSICIAN_NAME, PATIENT_PROTECTION_INDICATOR, PATIENT_PUBLICITY_CODE, PATIENT_RACE, PATIENT_REGISTRY_ID, PATIENT_REGISTRY_STATUS, PATIENT_SSN, PATIENT_SUBMITTER_ID, PATIENT_SUBMITTER_ID_AUTHORITY, PATIENT_SUBMITTER_ID_TYPE_CODE, PATIENT_SYSTEM_CREATION_DATE, PATIENT_VFC_EFFECTIVE_DATE, PATIENT_VFC_STATUS, PATIENT_WIC_ID, VACCINATION_ACTION_CODE, VACCINATION_ADMIN_CODE, VACCINATION_ADMIN_CODE_TABLE, VACCINATION_ADMIN_DATE, VACCINATION_ADMIN_DATE_END, VACCINATION_ADMINISTERED_AMOUNT, VACCINATION_ADMINISTERED_UNIT, VACCINATION_BODY_ROUTE, VACCINATION_BODY_SITE, VACCINATION_COMPLETION_STATUS, VACCINATION_CONFIDENTIALITY_CODE, VACCINATION_CPT_CODE, VACCINATION_CVX_CODE, VACCINATION_CVX_CODE_AND_CPT_CODE, VACCINATION_FACILITY_ID, VACCINATION_FACILITY_NAME, VACCINATION_FACILITY_TYPE, VACCINATION_FILLER_ORDER_NUMBER, VACCINATION_FINANCIAL_ELIGIBILITY_CODE, VACCINATION_GIVEN_BY, VACCINATION_ID, VACCINATION_ID_OF_RECEIVER, VACCINATION_ID_OF_SENDER, VACCINATION_INFORMATION_SOURCE, VACCINATION_VIS, VACCINATION_VIS_CVX_CODE, VACCINATION_VIS_DOCUMENT_TYPE, VACCINATION_VIS_PUBLISHED_DATE, VACCINATION_VIS_PRESENTED_DATE, VACCINATION_LOT_EXPIRATION_DATE, VACCINATION_LOT_NUMBER, VACCINATION_MANUFACTURER_CODE, VACCINATION_ORDER_CONTROL_CODE, VACCINATION_ORDER_FACILITY_ID, VACCINATION_ORDER_FACILITY_NAME, VACCINATION_ORDERED_BY, VACCINATION_PLACER_ORDER_NUMBER, VACCINATION_PRODUCT, VACCINATION_RECORDED_BY, VACCINATION_REFUSAL_REASON, VACCINATION_SYSTEM_ENTRY_TIME, VACCINATION_TRADE_NAME, VACCINATION_TRADE_NAME_AND_VACCINE, VACCINATION_TRADE_NAME_AND_MANUFACTURER, VACCINATION_VALIDITY_CODE,
   }
 
   private HashMap<Field, HashMap<String, PotentialIssue>> fieldIssueMaps = new HashMap<PotentialIssues.Field, HashMap<String, PotentialIssue>>();
@@ -1125,6 +1151,10 @@ public class PotentialIssues implements Reload
     PatientSubmitterIdTypeCodeIsInvalid = getPotentialIssue(session, "Patient", "submitter id type code", "is invalid", "");
     PatientSubmitterIdTypeCodeIsUnrecognized = getPotentialIssue(session, "Patient", "submitter id type code", "is unrecognized", "");
     PatientSubmitterIdTypeCodeIsIgnored = getPotentialIssue(session, "Patient", "submitter id type code", "is ignored", "");
+    PatientSystemCreationDateIsMissing = getPotentialIssue(session, "Patient", "system creation date", "is missing", "");
+    PatientSystemCreationDateIsInvalid = getPotentialIssue(session, "Patient", "system creation date", "is invalid", "");
+    PatientSystemCreationDateIsBeforeBirth = getPotentialIssue(session, "Patient", "system creation date", "is before birth", "");
+    PatientSystemCreationDateIsInFuture = getPotentialIssue(session, "Patient", "system creation date", "is in future", "");
     PatientVfcEffectiveDateIsBeforeBirth = getPotentialIssue(session, "Patient", "VFC effective date", "is before birth", "");
     PatientVfcEffectiveDateIsInFuture = getPotentialIssue(session, "Patient", "VFC effective date", "is in future", "");
     PatientVfcEffectiveDateIsInvalid = getPotentialIssue(session, "Patient", "VFC effective date", "is invalid", "");
@@ -1189,6 +1219,7 @@ public class PotentialIssues implements Reload
     VaccinationBodyRouteIsIgnored = getPotentialIssue(session, "Vaccination", "body route", "is ignored", "");
     VaccinationBodyRouteIsInvalid = getPotentialIssue(session, "Vaccination", "body route", "is invalid", "");
     VaccinationBodyRouteIsInvalidForVaccineIndicated = getPotentialIssue(session, "Vaccination", "body route", "is invalid for vaccine indicated", "");
+    VaccinationBodyRouteIsInvalidForBodySiteIndicated = getPotentialIssue(session, "Vaccination", "body route", "is invalid for body site indicated", "");
     VaccinationBodyRouteIsMissing = getPotentialIssue(session, "Vaccination", "body route", "is missing", "");
     VaccinationBodyRouteIsUnrecognized = getPotentialIssue(session, "Vaccination", "body route", "is unrecognized", "");
     VaccinationBodySiteIsDeprecated = getPotentialIssue(session, "Vaccination", "body site", "is deprecated", "");
@@ -1233,6 +1264,13 @@ public class PotentialIssues implements Reload
     VaccinationFacilityIdIsMissing = getPotentialIssue(session, "Vaccination", "facility id", "is missing", "");
     VaccinationFacilityIdIsUnrecognized = getPotentialIssue(session, "Vaccination", "facility id", "is unrecognized", "");
     VaccinationFacilityNameIsMissing = getPotentialIssue(session, "Vaccination", "facility name", "is missing", "");
+    VaccinationFacilityTypeIsDeprecated = getPotentialIssue(session, "Vaccination", "facility type", "is deprecated", "");
+    VaccinationFacilityTypeIsIgnored = getPotentialIssue(session, "Vaccination", "facility type", "is ignored", "");
+    VaccinationFacilityTypeIsInvalid = getPotentialIssue(session, "Vaccination", "facility type", "is invalid", "");
+    VaccinationFacilityTypeIsMissing = getPotentialIssue(session, "Vaccination", "facility type", "is missing", "");
+    VaccinationFacilityTypeIsUnrecognized = getPotentialIssue(session, "Vaccination", "facility type", "is unrecognized", "");
+    VaccinationFacilityTypeIsValuedAsPublic = getPotentialIssue(session, "Vaccination", "facility type", "is valued as", "public");
+    VaccinationFacilityTypeIsValuedAsPrivate = getPotentialIssue(session, "Vaccination", "facility type", "is valued as", "private");
     VaccinationFillerOrderNumberIsDeprecated = getPotentialIssue(session, "Vaccination", "filler order number", "is deprecated", "");
     VaccinationFillerOrderNumberIsIgnored = getPotentialIssue(session, "Vaccination", "filler order number", "is ignored", "");
     VaccinationFillerOrderNumberIsInvalid = getPotentialIssue(session, "Vaccination", "filler order number", "is invalid", "");
@@ -1338,6 +1376,21 @@ public class PotentialIssues implements Reload
     VaccinationSystemEntryTimeIsInFuture = getPotentialIssue(session, "Vaccination", "system entry time", "is in future", "");
     VaccinationSystemEntryTimeIsInvalid = getPotentialIssue(session, "Vaccination", "system entry time", "is invalid", "");
     VaccinationSystemEntryTimeIsMissing = getPotentialIssue(session, "Vaccination", "system entry time", "is missing", "");
+    VaccinationTradeNameIsDeprecated = getPotentialIssue(session, "Vaccination", "trade name", "is deprecated", "");
+    VaccinationTradeNameIsIgnored = getPotentialIssue(session, "Vaccination", "trade name", "is ignored", "");
+    VaccinationTradeNameIsInvalid = getPotentialIssue(session, "Vaccination", "trade name", "is invalid", "");
+    VaccinationTradeNameIsMissing = getPotentialIssue(session, "Vaccination", "trade name", "is missing", "");
+    VaccinationTradeNameIsUnrecognized = getPotentialIssue(session, "Vaccination", "trade name", "is unrecognized", "");
+    VaccinationTradeNameAndVaccineAreInconsistent = getPotentialIssue(session, "Vaccination", "trade name and vaccine", "are inconsistent", "");
+    VaccinationTradeNameAndManufacturerAreInconsistent = getPotentialIssue(session, "Vaccination", "trade name and manufacturer", "are inconsistent", "");
+    VaccinationValidityCodeIsInvalid = getPotentialIssue(session, "Vaccination", "validity code", "is invalid", "");
+    VaccinationValidityCodeIsDeprecated = getPotentialIssue(session, "Vaccination", "validity code", "is deprecated", "");
+    VaccinationValidityCodeIsIgnored = getPotentialIssue(session, "Vaccination", "validity code", "is ignored", "");
+    VaccinationValidityCodeIsMissing = getPotentialIssue(session, "Vaccination", "validity code", "is missing", "");
+    VaccinationValidityCodeIsUnrecognized = getPotentialIssue(session, "Vaccination", "validity code", "is unrecognized", "");
+    VaccinationValidityCodeIsValuedAsValid = getPotentialIssue(session, "Vaccination", "validity code", "is valued as", "valid");
+    VaccinationValidityCodeIsValuedAsInvalid = getPotentialIssue(session, "Vaccination", "validity code", "is valued as", "invalid");
+
 
     addToFieldIssueMap(Field.GENERAL_AUTHORIZATION, GeneralAuthorizationException);
     addToFieldIssueMap(Field.GENERAL_CONFIGURATION, GeneralConfigurationException);
@@ -1706,6 +1759,10 @@ public class PotentialIssues implements Reload
     addToFieldIssueMap(Field.PATIENT_SUBMITTER_ID_TYPE_CODE, PatientSubmitterIdTypeCodeIsInvalid);
     addToFieldIssueMap(Field.PATIENT_SUBMITTER_ID_TYPE_CODE, PatientSubmitterIdTypeCodeIsUnrecognized);
     addToFieldIssueMap(Field.PATIENT_SUBMITTER_ID_TYPE_CODE, PatientSubmitterIdTypeCodeIsIgnored);
+    addToFieldIssueMap(Field.PATIENT_SYSTEM_CREATION_DATE, PatientSystemCreationDateIsMissing);
+    addToFieldIssueMap(Field.PATIENT_SYSTEM_CREATION_DATE, PatientSystemCreationDateIsInvalid);
+    addToFieldIssueMap(Field.PATIENT_SYSTEM_CREATION_DATE, PatientSystemCreationDateIsBeforeBirth);
+    addToFieldIssueMap(Field.PATIENT_SYSTEM_CREATION_DATE, PatientSystemCreationDateIsInFuture);
     addToFieldIssueMap(Field.PATIENT_VFC_EFFECTIVE_DATE, PatientVfcEffectiveDateIsBeforeBirth);
     addToFieldIssueMap(Field.PATIENT_VFC_EFFECTIVE_DATE, PatientVfcEffectiveDateIsInFuture);
     addToFieldIssueMap(Field.PATIENT_VFC_EFFECTIVE_DATE, PatientVfcEffectiveDateIsInvalid);
@@ -1770,6 +1827,7 @@ public class PotentialIssues implements Reload
     addToFieldIssueMap(Field.VACCINATION_BODY_ROUTE, VaccinationBodyRouteIsIgnored);
     addToFieldIssueMap(Field.VACCINATION_BODY_ROUTE, VaccinationBodyRouteIsInvalid);
     addToFieldIssueMap(Field.VACCINATION_BODY_ROUTE, VaccinationBodyRouteIsInvalidForVaccineIndicated);
+    addToFieldIssueMap(Field.VACCINATION_BODY_ROUTE, VaccinationBodyRouteIsInvalidForBodySiteIndicated);
     addToFieldIssueMap(Field.VACCINATION_BODY_ROUTE, VaccinationBodyRouteIsMissing);
     addToFieldIssueMap(Field.VACCINATION_BODY_ROUTE, VaccinationBodyRouteIsUnrecognized);
     addToFieldIssueMap(Field.VACCINATION_BODY_SITE, VaccinationBodySiteIsDeprecated);
@@ -1814,6 +1872,13 @@ public class PotentialIssues implements Reload
     addToFieldIssueMap(Field.VACCINATION_FACILITY_ID, VaccinationFacilityIdIsMissing);
     addToFieldIssueMap(Field.VACCINATION_FACILITY_ID, VaccinationFacilityIdIsUnrecognized);
     addToFieldIssueMap(Field.VACCINATION_FACILITY_NAME, VaccinationFacilityNameIsMissing);
+    addToFieldIssueMap(Field.VACCINATION_FACILITY_TYPE, VaccinationFacilityTypeIsDeprecated);
+    addToFieldIssueMap(Field.VACCINATION_FACILITY_TYPE, VaccinationFacilityTypeIsIgnored);
+    addToFieldIssueMap(Field.VACCINATION_FACILITY_TYPE, VaccinationFacilityTypeIsInvalid);
+    addToFieldIssueMap(Field.VACCINATION_FACILITY_TYPE, VaccinationFacilityTypeIsMissing);
+    addToFieldIssueMap(Field.VACCINATION_FACILITY_TYPE, VaccinationFacilityTypeIsUnrecognized);
+    addToFieldIssueMap(Field.VACCINATION_FACILITY_TYPE, VaccinationFacilityTypeIsValuedAsPublic);
+    addToFieldIssueMap(Field.VACCINATION_FACILITY_TYPE, VaccinationFacilityTypeIsValuedAsPrivate);
     addToFieldIssueMap(Field.VACCINATION_FILLER_ORDER_NUMBER, VaccinationFillerOrderNumberIsDeprecated);
     addToFieldIssueMap(Field.VACCINATION_FILLER_ORDER_NUMBER, VaccinationFillerOrderNumberIsIgnored);
     addToFieldIssueMap(Field.VACCINATION_FILLER_ORDER_NUMBER, VaccinationFillerOrderNumberIsInvalid);
@@ -1919,6 +1984,20 @@ public class PotentialIssues implements Reload
     addToFieldIssueMap(Field.VACCINATION_SYSTEM_ENTRY_TIME, VaccinationSystemEntryTimeIsInFuture);
     addToFieldIssueMap(Field.VACCINATION_SYSTEM_ENTRY_TIME, VaccinationSystemEntryTimeIsInvalid);
     addToFieldIssueMap(Field.VACCINATION_SYSTEM_ENTRY_TIME, VaccinationSystemEntryTimeIsMissing);
+    addToFieldIssueMap(Field.VACCINATION_TRADE_NAME, VaccinationTradeNameIsDeprecated);
+    addToFieldIssueMap(Field.VACCINATION_TRADE_NAME, VaccinationTradeNameIsIgnored);
+    addToFieldIssueMap(Field.VACCINATION_TRADE_NAME, VaccinationTradeNameIsInvalid);
+    addToFieldIssueMap(Field.VACCINATION_TRADE_NAME, VaccinationTradeNameIsMissing);
+    addToFieldIssueMap(Field.VACCINATION_TRADE_NAME, VaccinationTradeNameIsUnrecognized);
+    addToFieldIssueMap(Field.VACCINATION_TRADE_NAME_AND_VACCINE, VaccinationTradeNameAndVaccineAreInconsistent);
+    addToFieldIssueMap(Field.VACCINATION_TRADE_NAME_AND_MANUFACTURER, VaccinationTradeNameAndManufacturerAreInconsistent);
+    addToFieldIssueMap(Field.VACCINATION_VALIDITY_CODE, VaccinationValidityCodeIsInvalid);
+    addToFieldIssueMap(Field.VACCINATION_VALIDITY_CODE, VaccinationValidityCodeIsDeprecated);
+    addToFieldIssueMap(Field.VACCINATION_VALIDITY_CODE, VaccinationValidityCodeIsIgnored);
+    addToFieldIssueMap(Field.VACCINATION_VALIDITY_CODE, VaccinationValidityCodeIsMissing);
+    addToFieldIssueMap(Field.VACCINATION_VALIDITY_CODE, VaccinationValidityCodeIsUnrecognized);
+    addToFieldIssueMap(Field.VACCINATION_VALIDITY_CODE, VaccinationValidityCodeIsValuedAsValid);
+    addToFieldIssueMap(Field.VACCINATION_VALIDITY_CODE, VaccinationValidityCodeIsValuedAsInvalid);
 
 
     tx.commit();
@@ -2003,7 +2082,7 @@ public class PotentialIssues implements Reload
             if (description == null)
             {
 
-              if (!issue.getFieldValue().equals(""))
+              if (issue.getFieldValue() != null && !issue.getFieldValue().equals(""))
               {
                 description = documentationTextProperties.getProperty(issue.getIssueType() + " " + issue.getFieldValue());
               } else

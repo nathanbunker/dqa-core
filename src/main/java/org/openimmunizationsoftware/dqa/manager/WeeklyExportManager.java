@@ -346,6 +346,7 @@ public class WeeklyExportManager extends ManagerThread
       // This should not happen, but if it does
       receiveQueue.setSubmitStatus(SubmitStatus.EXCLUDED);
       messageReceived.setSubmitStatus(SubmitStatus.EXCLUDED);
+      return;
     }
     messageReceived.setPatient(patients.get(0));
     // Message Header

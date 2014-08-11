@@ -8,6 +8,8 @@
 package org.openimmunizationsoftware.dqa.quality;
 
 import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.text.ParseException;
@@ -18,14 +20,18 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.hibernate.Hibernate;
 import org.hibernate.Query;
 import org.hibernate.Session;
+import org.hibernate.Transaction;
 import org.openimmunizationsoftware.dqa.db.model.IssueAction;
 import org.openimmunizationsoftware.dqa.db.model.IssueFound;
 import org.openimmunizationsoftware.dqa.db.model.MessageBatch;
 import org.openimmunizationsoftware.dqa.db.model.MessageReceived;
 import org.openimmunizationsoftware.dqa.db.model.PotentialIssue;
 import org.openimmunizationsoftware.dqa.db.model.ReceiveQueue;
+import org.openimmunizationsoftware.dqa.db.model.Submission;
+import org.openimmunizationsoftware.dqa.db.model.SubmissionAnalysis;
 import org.openimmunizationsoftware.dqa.db.model.SubmitterProfile;
 import org.openimmunizationsoftware.dqa.db.model.VaccineCpt;
 import org.openimmunizationsoftware.dqa.db.model.VaccineCvx;
@@ -38,10 +44,18 @@ public class AnalysisReport extends QualityReport
 {
 
   private File analysisDir = null;
+  private File analysisFile = null;
+  private Submission submission = null;
+  private String prefix = null;
   private MessageReceived messageReceivedError = null;
   private MessageReceived messageReceivedWarn = null;
   private MessageReceived messageReceivedAccept = null;
   private MessageReceived messageReceivedSkip = null;
+
+  public File getAnalysisFile()
+  {
+    return analysisFile;
+  }
 
   public AnalysisReport(QualityCollector qualityCollector, Session session, SubmitterProfile profile, File analysisDir) {
     super(qualityCollector, profile, session, null);
@@ -50,12 +64,24 @@ public class AnalysisReport extends QualityReport
     {
       analysisDir.mkdir();
     }
+  }
 
+  public AnalysisReport(QualityCollector qualityCollector, Session session, SubmitterProfile profile, Submission submission) {
+    super(qualityCollector, profile, session, null);
+    this.submission = submission;
+    this.prefix = submission.getProfile().getProfileId() + "." + submission.getRequestName();
   }
 
   public void printReport() throws IOException
   {
-    out = new PrintWriter(new File(analysisDir, "Analysis Report.html"));
+    if (analysisDir != null)
+    {
+      out = new PrintWriter(new File(analysisDir, "Analysis Report.html"));
+    } else
+    {
+      analysisFile = File.createTempFile(prefix, ".analysis.hl7");
+      out = new PrintWriter(new FileWriter(analysisFile));
+    }
     MessageBatch messageBatch = qualityCollector.getMessageBatch();
     printHead(out, "Analysis Report");
     try
@@ -268,10 +294,20 @@ public class AnalysisReport extends QualityReport
       throw new NullPointerException("Unexpected parse exception");
     }
 
-    PrintWriter messageOut = new PrintWriter(new File(analysisDir, messageName + ".html"));
+    File file = null;
+    PrintWriter messageOut;
+    if (analysisDir != null)
+    {
+      messageOut = new PrintWriter(new File(analysisDir, messageName + ".html"));
+    } else
+    {
+      file = File.createTempFile(prefix, messageName + ".html");
+      messageOut = new PrintWriter(file);
+    }
     printHead(messageOut, messageName);
     Query query;
-    String messageName1 = "Message " + messageReceived.getInternalTemporaryId() + " " + messageReceived.getIssueAction().getActionLabelForMessageReceivedPastTense() + "";
+    String messageName1 = "Message " + messageReceived.getInternalTemporaryId() + " "
+        + messageReceived.getIssueAction().getActionLabelForMessageReceivedPastTense() + "";
     messageOut.println("<h2>" + messageName1 + "</h2>");
     messageOut.println("<h4>Message Received:</h4>");
     messageOut.println("<pre>");
@@ -812,11 +848,29 @@ public class AnalysisReport extends QualityReport
 
     printFoot(messageOut);
     messageOut.close();
+    
+    if (analysisDir == null)
+    {
+      Transaction transaction = session.beginTransaction();
+      SubmissionAnalysis submissionAnalysis = new SubmissionAnalysis();
+      submissionAnalysis.setSubmission(submission);
+      submissionAnalysis.setAnalysisLabel(messageName);
+      submissionAnalysis.setMessageReceived(messageReceived);
+      submissionAnalysis.setAnalysisContent(Hibernate.createClob(" ", session));
+      session.save(submissionAnalysis);
+      session.flush();
+      FileReader fileReader = new FileReader(file);
+      submissionAnalysis.setAnalysisContent(Hibernate.createClob(fileReader, file.length(), session));
+      session.update(submissionAnalysis);
+      transaction.commit();
+      fileReader.close();
+    }
   }
 
   public void printMessageText(MessageReceived messageReceived, PrintWriter messageOut)
   {
-    String messageName = "Message " + messageReceived.getInternalTemporaryId() + " " + messageReceived.getIssueAction().getActionLabelForMessageReceivedPastTense() + "";
+    String messageName = "Message " + messageReceived.getInternalTemporaryId() + " "
+        + messageReceived.getIssueAction().getActionLabelForMessageReceivedPastTense() + "";
     messageOut.println("<h3>" + messageName + "</h3>");
     messageOut.println("<h4>Message Received:</h4>");
     messageOut.println("<pre>");

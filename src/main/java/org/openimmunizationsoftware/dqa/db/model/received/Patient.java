@@ -64,6 +64,17 @@ public class Patient implements Skippable, Serializable
   private boolean skipped = false;
   private List<PatientPhone> patientPhoneList = new ArrayList<PatientPhone>();
   private List<PatientImmunity> patientImmunityList = new ArrayList<PatientImmunity>();
+  private Date systemCreationDate = null;
+
+  public Date getSystemCreationDate()
+  {
+    return systemCreationDate;
+  }
+
+  public void setSystemCreationDate(Date systemCreationDate)
+  {
+    this.systemCreationDate = systemCreationDate;
+  }
 
   public List<PatientImmunity> getPatientImmunityList()
   {

@@ -816,22 +816,7 @@ public class VaccinationParserHL7 extends VaccinationParser
     return createDate(piInvalid, piNoTimeZone, fieldValue);
   }
 
-  private Date createDate(PotentialIssue piInvalid, PotentialIssue piNoTimeZone, String fieldValue)
-  {
-    HL7DateAnalyzer dateAnalyzer = new HL7DateAnalyzer(fieldValue);
-
-    if (dateAnalyzer.hasErrors())
-    {
-      registerIssue(piInvalid);
-    }
-    if (piNoTimeZone != null && !dateAnalyzer.isHasTimezone())
-    {
-      registerIssue(piNoTimeZone);
-    }
-    return dateAnalyzer.getDate();
-
-  }
-
+  
   private void registerIssueIfEmpty(int fieldNumber, PotentialIssue pi)
   {
     if (isEmpty(fieldNumber))
