@@ -15,7 +15,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.hamcrest.core.IsAnything;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.openimmunizationsoftware.dqa.db.model.CodeReceived;
@@ -977,6 +976,8 @@ public class Validator extends ValidateMessage
       }
 
     }
+    
+
 
   }
 
@@ -1467,6 +1468,24 @@ public class Validator extends ValidateMessage
     }
     patient.setUnderAged(patientUnderAged);
 
+    if (patient.getSystemCreationDate() == null)
+    {
+      registerIssue(pi.PatientSystemCreationDateIsMissing);
+    } else
+    {
+      if (patient.getBirthDate() != null)
+      {
+        if (patient.getSystemCreationDate().before(patient.getBirthDate()))
+        {
+          registerIssue(pi.PatientSystemCreationDateIsBeforeBirth);
+        }
+      }
+      if (message.getReceivedDate().before(trunc(patient.getSystemCreationDate())))
+      {
+        registerIssue(pi.PatientSystemCreationDateIsInFuture);
+      }
+    }
+
     for (SectionValidator sectionValidator : patientValidators)
     {
       sectionValidator.validatePatient(message, this);
@@ -1481,23 +1500,25 @@ public class Validator extends ValidateMessage
       registerIssue(invalidIssue);
       numericId = "";
     }
-    
+
     return numericId;
   }
 
   private String validateSsn(String numericSsn, PotentialIssue invalidIssue)
   {
-		// fail if: starts with 000, middle two digits are 00, is not 9 numeric chars, is 123456789, is 987654321, contains more than 6 consecutive digits
-		if ((numericSsn.indexOf("000") == 0)	||	(numericSsn.indexOf("00", 3) == 3)	||	(!numericSsn.matches("[0-9]{9}"))	||	(numericSsn.equals("123456789"))
-				|| numericSsn.equals("987654321")	||	(hasTooManyConsecutiveChars(numericSsn, 6))) 
-		{
-			registerIssue(invalidIssue);
-			numericSsn = "";
-		}
+    // fail if: starts with 000, middle two digits are 00, is not 9 numeric
+    // chars, is 123456789, is 987654321, contains more than 6 consecutive
+    // digits
+    if ((numericSsn.indexOf("000") == 0) || (numericSsn.indexOf("00", 3) == 3) || (!numericSsn.matches("[0-9]{9}"))
+        || (numericSsn.equals("123456789")) || numericSsn.equals("987654321") || (hasTooManyConsecutiveChars(numericSsn, 6)))
+    {
+      registerIssue(invalidIssue);
+      numericSsn = "";
+    }
 
-		return numericSsn;
+    return numericSsn;
   }
-  
+
   private void validatePhone(PhoneNumber phone, PotentialIssues.Field piPhone)
   {
     validatePhone(phone, piPhone, null, null);
@@ -1913,25 +1934,29 @@ public class Validator extends ValidateMessage
   }
 
   protected static boolean hasTooManyConsecutiveChars(String input, int maxConsecutiveChars)
-	{
-		char lastC = 'S';
-		int count = 0;
-		for (char c : input.toCharArray()) {
-			if (lastC == c) {
-				count++;
-			} else {
-				count = 1;
-			}
-			if (count > maxConsecutiveChars) {
-				return true;
-			}
-			lastC = c;
-		}
-	
-		return false;
-	}
+  {
+    char lastC = 'S';
+    int count = 0;
+    for (char c : input.toCharArray())
+    {
+      if (lastC == c)
+      {
+        count++;
+      } else
+      {
+        count = 1;
+      }
+      if (count > maxConsecutiveChars)
+      {
+        return true;
+      }
+      lastC = c;
+    }
 
-	private static boolean isEmpty(String s)
+    return false;
+  }
+
+  private static boolean isEmpty(String s)
   {
     return s == null || s.equals("");
   }

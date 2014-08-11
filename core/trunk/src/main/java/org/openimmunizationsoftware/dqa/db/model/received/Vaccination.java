@@ -53,6 +53,7 @@ public class Vaccination implements Skippable, Serializable
   private Id enteredBy = new Id(CodeTable.Type.PHYSICIAN_NUMBER);
   private Date expirationDate = null;
   private OrganizationName facility = new OrganizationName();
+  private CodedEntity facilityType = new CodedEntity(CodeTable.Type.FACILITY_TYPE);
   private CodedEntity financialEligibility = new CodedEntity(CodeTable.Type.FINANCIAL_STATUS_CODE);
   private Id givenBy = new Id(CodeTable.Type.PHYSICIAN_NUMBER);
   private String idPlacer = "";
@@ -75,6 +76,53 @@ public class Vaccination implements Skippable, Serializable
   private String refusalReason = "";
   private List<VaccinationVIS> vaccinationVisList = new ArrayList<VaccinationVIS>();
   private TestEvent testEvent = null;
+  private CodedEntity tradeName = new CodedEntity(CodeTable.Type.VACCINATION_TRADE_NAME);
+  private CodedEntity vaccineValidity = new CodedEntity(CodeTable.Type.VACCINATION_VALIDITY);
+
+  public CodedEntity getFacilityType()
+  {
+    return facilityType;
+  }
+
+  public String getFacilityTypeCode()
+  {
+    return facilityType.getCode();
+  }
+
+  public void setFacilityTypeCode(String facilityTypeCode)
+  {
+    this.facilityType.setCode(facilityTypeCode);
+  }
+
+  public CodedEntity getTradeName()
+  {
+    return tradeName;
+  }
+
+  public String getTradeNameCode()
+  {
+    return tradeName.getCode();
+  }
+
+  public void setTradeNameCode(String tradeNameCode)
+  {
+    this.tradeName.setCode(tradeNameCode);
+  }
+
+  public CodedEntity getVaccineValidity()
+  {
+    return vaccineValidity;
+  }
+
+  public String getVaccineValidityCode()
+  {
+    return vaccineValidity.getCode();
+  }
+
+  public void setVaccineValidityCode(String vaccineValidityCode)
+  {
+    this.vaccineValidity.setCode(vaccineValidityCode);
+  }
 
   public List<VaccinationVIS> getVaccinationVisList()
   {

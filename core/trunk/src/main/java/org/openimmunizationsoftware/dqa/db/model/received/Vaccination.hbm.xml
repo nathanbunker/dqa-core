@@ -24,6 +24,7 @@
     <property name="expirationDate" column="expiration_date" type="date"/>
     <property name="facilityIdNumber" column="facility_id" type="string"/>
     <property name="facilityName" column="facility_name" type="string"/>
+    <property name="facilityTypeCode" column="facility_type_code" type="string"/>
     <property name="financialEligibilityCode" column="financial_eligibility_code" type="string"/>
     <property name="givenByNumber" column="given_by_number" type="string"/>
     <property name="givenByNameLast" column="given_by_name_last" type="string"/>
@@ -41,5 +42,7 @@
     <property name="orderControlCode" column="order_control_code" type="string"/>
     <property name="skipped" column="skipped" type="yes_no"/>
     <property name="actionCode" column="action_code" type="string"/>
+    <property name="tradeNameCode" column="trade_name_code" type="string"/>
+    <property name="vaccineValidityCode" column="vaccine_validity_code" type="string"/>
   </class>
 </hibernate-mapping>

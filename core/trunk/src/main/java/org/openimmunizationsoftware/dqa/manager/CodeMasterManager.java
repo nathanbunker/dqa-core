@@ -466,6 +466,12 @@ public class CodeMasterManager
   public static final String VACCINATION_REFUSAL_RELIGIOUS_EXEMPTION = "01";
   public static final String VACCINATION_REFUSAL_OTHER = "02";
   public static final String VACCINATION_REFUSAL_PATIENT_DECISION = "03";
+  
+  public static final String FACILITY_TYPE_PRIVATE = "PRI";
+  public static final String FACILITY_TYPE_PUBLIC = "PUB";
+
+  public static final String VACCINATION_VALIDITY_VALID = "V";
+  public static final String VACCINATION_VALIDITY_INVALID = "I";
 
   public static CodeMaster getCodeMaster(CodedEntity codedEntity, CodeMaster codeMasterContext, Session session)
   {
