@@ -686,7 +686,9 @@ public class QualityReport
       printRow("Sending Facility", exampleHeader.getSendingFacility());
       printRow("Receiving Application", exampleHeader.getReceivingApplication());
       printRow("Receiving Facility", exampleHeader.getReceivingFacility());
-      printRow("Message Type", exampleHeader.getMessageType() + "^" + exampleHeader.getMessageTrigger());
+      printRow("Message Type", exampleHeader.getMessageType());
+      printRow("Message Trigger", exampleHeader.getMessageTrigger());
+      printRow("Message Structure", exampleHeader.getMessageStructure());
       printRow("Processing Id", exampleHeader.getProcessingStatus().getCode());
       printRow("HL7 Version", exampleHeader.getMessageVersion());
       out.println("    </table>");

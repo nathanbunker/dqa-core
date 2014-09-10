@@ -176,6 +176,10 @@ public class QualityCollector
           || vaccination.isCompletionRefused())
       {
         report.incVaccinationNotAdministeredCount();
+        if (vaccination.isCompletionRefused())
+        {
+          report.incVaccinationRefusalCount();
+        }
       } else if (vaccination.isInformationSourceAdmin())
       {
         report.incVaccinationAdministeredCount();
@@ -433,6 +437,9 @@ public class QualityCollector
     } else if (completenessRow.getReportDenominator() == ReportDenominator.VACCINATION_VIS_COUNT)
     {
       denominator = report.getVaccinationVisCount();
+    } else if (completenessRow.getReportDenominator() == ReportDenominator.VACCINATION_REFUSAL_COUNT)
+    {
+      denominator = report.getVaccinationRefusalCount();
     }
     return denominator;
   }

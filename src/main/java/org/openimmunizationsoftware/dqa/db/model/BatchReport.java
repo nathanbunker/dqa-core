@@ -12,9 +12,9 @@ import java.util.Date;
 
 public class BatchReport implements Serializable
 {
-  
+
   private static final long serialVersionUID = 1l;
-  
+
   private static Date max(Date d1, Date d2)
   {
     if (d1 == null)
@@ -29,6 +29,7 @@ public class BatchReport implements Serializable
     }
     return d2;
   }
+
   private static Date min(Date d1, Date d2)
   {
     if (d1 == null)
@@ -43,6 +44,7 @@ public class BatchReport implements Serializable
     }
     return d2;
   }
+
   private int batchReportId = 0;
   private int completenessPatientScore = 0;
   private int completenessScore = 0;
@@ -77,6 +79,7 @@ public class BatchReport implements Serializable
   private int vaccinationVisCount = 0;
   private int observationCount = 0;
   private int vaccinationNotAdministeredCount = 0;
+  private int vaccinationRefusalCount = 0;
 
   public void addToCounts(BatchReport report)
   {
@@ -112,6 +115,7 @@ public class BatchReport implements Serializable
     vaccinationDeleteCount += report.getVaccinationDeleteCount();
     vaccinationHistoricalCount += report.getVaccinationHistoricalCount();
     vaccinationNotAdministeredCount += report.getVaccinationNotAdministeredCount();
+    vaccinationRefusalCount += report.getVaccinationRefusalCount();
     vaccinationVisCount += report.getVaccinationVisCount();
     observationCount += report.getObservationCount();
   }
@@ -263,11 +267,8 @@ public class BatchReport implements Serializable
 
   public int getVaccinationCount()
   {
-    return vaccinationAdministeredCount + vaccinationHistoricalCount + vaccinationDeleteCount
-        + vaccinationNotAdministeredCount;
+    return vaccinationAdministeredCount + vaccinationHistoricalCount + vaccinationDeleteCount + vaccinationNotAdministeredCount;
   }
-  
-  
 
   public int getVaccinationDeleteCount()
   {
@@ -277,6 +278,16 @@ public class BatchReport implements Serializable
   public int getVaccinationHistoricalCount()
   {
     return vaccinationHistoricalCount;
+  }
+
+  public int getVaccinationRefusalCount()
+  {
+    return vaccinationRefusalCount;
+  }
+
+  public void setVaccinationRefusalCount(int vaccinationRefusalCount)
+  {
+    this.vaccinationRefusalCount = vaccinationRefusalCount;
   }
 
   public int getVaccinationNotAdministeredCount()
@@ -343,12 +354,12 @@ public class BatchReport implements Serializable
   {
     this.vaccinationAdministeredCount++;
   }
-  
+
   public void incVaccinationVisCount(int amount)
   {
     this.vaccinationVisCount += amount;
   }
-  
+
   public void incObservationCount(int amount)
   {
     this.observationCount += amount;
@@ -367,6 +378,11 @@ public class BatchReport implements Serializable
   public void incVaccinationNotAdministeredCount()
   {
     this.vaccinationNotAdministeredCount++;
+  }
+
+  public void incVaccinationRefusalCount()
+  {
+    this.vaccinationRefusalCount++;
   }
 
   public void setBatchReportId(int reportId)
@@ -513,30 +529,37 @@ public class BatchReport implements Serializable
   {
     this.vaccinationAdministeredCount = vaccinationAdministeredCount;
   }
+
   public void setVaccinationDeleteCount(int vaccinationDeleteCount)
   {
     this.vaccinationDeleteCount = vaccinationDeleteCount;
   }
+
   public void setVaccinationHistoricalCount(int vaccinationHistoricalCount)
   {
     this.vaccinationHistoricalCount = vaccinationHistoricalCount;
   }
+
   public void setVaccinationNotAdministeredCount(int vaccinationNotAdministeredCount)
   {
     this.vaccinationNotAdministeredCount = vaccinationNotAdministeredCount;
   }
+
   public int getVaccinationVisCount()
   {
     return vaccinationVisCount;
   }
+
   public void setVaccinationVisCount(int vaccinationVisCount)
   {
     this.vaccinationVisCount = vaccinationVisCount;
   }
+
   public int getObservationCount()
   {
     return observationCount;
   }
+
   public void setObservationCount(int observationCount)
   {
     this.observationCount = observationCount;
