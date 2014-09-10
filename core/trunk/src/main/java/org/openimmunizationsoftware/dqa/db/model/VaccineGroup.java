@@ -18,15 +18,9 @@ public class VaccineGroup implements Serializable
   
   private static final long serialVersionUID = 1l;
   
-  public static final String GROUP_STATUS_EXPECTED = "Expected";
-  public static final String GROUP_STATUS_RECCOMMENDED = "Recommended";
-  public static final String GROUP_STATUS_NOT_EXPECTED = "Not Expected";
-  public static final String GROUP_STATUS_OPTIONAL = "Optional";
-
   private String groupCode = "";
   private int groupId = 0;
   private String groupLabel = "";
-  private String groupStatus = "";
   private ToolTip toolTip = null;
   private List<VaccineCvx> vaccineCvxList = new ArrayList<VaccineCvx>();
 
@@ -43,11 +37,6 @@ public class VaccineGroup implements Serializable
   public String getGroupLabel()
   {
     return groupLabel;
-  }
-
-  public String getGroupStatus()
-  {
-    return groupStatus;
   }
 
   public ToolTip getToolTip()
@@ -77,11 +66,6 @@ public class VaccineGroup implements Serializable
   public void setGroupLabel(String groupLabel)
   {
     this.groupLabel = groupLabel;
-  }
-
-  public void setGroupStatus(String groupStatus)
-  {
-    this.groupStatus = groupStatus;
   }
 
   public void setToolTip(ToolTip toolTip)

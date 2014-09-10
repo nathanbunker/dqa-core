@@ -20,6 +20,7 @@ import org.hibernate.Session;
 import org.openimmunizationsoftware.dqa.db.model.CodeReceived;
 import org.openimmunizationsoftware.dqa.db.model.CodeStatus;
 import org.openimmunizationsoftware.dqa.db.model.CodeTable;
+import org.openimmunizationsoftware.dqa.db.model.KeyedSetting;
 import org.openimmunizationsoftware.dqa.db.model.KnownName;
 import org.openimmunizationsoftware.dqa.db.model.MessageHeader;
 import org.openimmunizationsoftware.dqa.db.model.MessageReceived;
@@ -764,9 +765,14 @@ public class Validator extends ValidateMessage
       registerIssue(pi.VaccinationRefusalReasonConflictsCompletionStatus);
     } else if (vaccination.isCompletionRefused() && vaccination.getRefusalCode().equals(""))
     {
-      registerIssue(pi.VaccinationRefusalReasonIsMissing);
+      if (vaccination.getRefusalCode().equals(""))
+      {
+        registerIssue(pi.VaccinationRefusalReasonIsMissing);
+      } else
+      {
+        handleCodeReceived(vaccination.getRefusal(), PotentialIssues.Field.VACCINATION_REFUSAL_REASON, vaccination.isCompletionRefused());
+      }
     }
-    handleCodeReceived(vaccination.getRefusal(), PotentialIssues.Field.VACCINATION_REFUSAL_REASON, vaccination.isCompletionRefused());
 
     if (notEmpty(vaccination.getSystemEntryDate(), pi.VaccinationSystemEntryTimeIsMissing) && message.getReceivedDate() != null)
     {
@@ -781,12 +787,12 @@ public class Validator extends ValidateMessage
     {
       skippableItem = observation;
       handleCodeReceived(observation.getValueType(), PotentialIssues.Field.OBSERVATION_VALUE_TYPE);
-      handleCodeReceived(observation.getObservationIdentifier(), PotentialIssues.Field.OBSERVATION_OBSERVATION_IDENTIFIER_CODE);
+      handleCodeReceived(observation.getObservationIdentifier(), PotentialIssues.Field.OBSERVATION_IDENTIFIER_CODE);
       if (!observation.isSkipped())
       {
         if (financialEligibilityCode == null && observation.getObservationIdentifierCode().equals(OBX_VACCINE_FUNDING))
         {
-          if (notEmpty(observation.getObservationValue(), pi.ObservationObservationValueIsMissing))
+          if (notEmpty(observation.getObservationValue(), pi.ObservationValueIsMissing))
           {
             financialEligibilityCode = observation.getObservationValue();
           }
@@ -976,8 +982,6 @@ public class Validator extends ValidateMessage
       }
 
     }
-    
-
 
   }
 
@@ -1418,16 +1422,19 @@ public class Validator extends ValidateMessage
     // TODO PatientVfcEffectiveDateIsInFuture
     // TODO PatientVfcEffectiveDateIsInvalid
     // TODO PatientVfcEffectiveDateIsMissing
-    handleCodeReceived(patient.getFinancialEligibility(), PotentialIssues.Field.PATIENT_VFC_STATUS);
-    if (patient.getFinancialEligibilityDate() != null)
+    if (!ksm.getKeyedValueBoolean(KeyedSetting.VALIDATE_PATIENT_FINANCIAL_STATUS_IGNORE, true))
     {
-      if (patient.getBirthDate() != null && patient.getFinancialEligibilityDate().before(trunc(patient.getBirthDate())))
+      handleCodeReceived(patient.getFinancialEligibility(), PotentialIssues.Field.PATIENT_VFC_STATUS);
+      if (patient.getFinancialEligibilityDate() != null)
       {
-        registerIssue(pi.PatientVfcEffectiveDateIsBeforeBirth);
-      }
-      if (message.getReceivedDate().before(trunc(patient.getFinancialEligibilityDate())))
-      {
-        registerIssue(pi.PatientVfcEffectiveDateIsInFuture);
+        if (patient.getBirthDate() != null && patient.getFinancialEligibilityDate().before(trunc(patient.getBirthDate())))
+        {
+          registerIssue(pi.PatientVfcEffectiveDateIsBeforeBirth);
+        }
+        if (message.getReceivedDate().before(trunc(patient.getFinancialEligibilityDate())))
+        {
+          registerIssue(pi.PatientVfcEffectiveDateIsInFuture);
+        }
       }
     }
     if (notEmpty(patient.getDeathIndicator(), pi.PatientDeathIndicatorIsMissing))

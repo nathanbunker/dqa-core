@@ -25,7 +25,7 @@ public class KeyedSetting implements Serializable
   public static final String IN_FILE_THREAD_COUNT_MAX = "in.file.thread.count.max";
   public static final String IN_FILE_WAIT = "in.file.wait";
   public static final String IN_SUBMISSION_ENABLE = "in.submission.enabled";
-  public static final String IN_SUBMISSION_WAIT = "in.file.wait";
+  public static final String IN_SUBMISSION_WAIT = "in.submission.wait";
   public static final String OUT_FILE_DIR = "out.file.dir";
   public static final String OUT_HL7_MSH_PROCESSING_ID = "out.hl7.msh.processing_id";
   public static final String OUT_HL7_MSH_RECEIVING_APPLICATION = "out.hl7.msh.receiving_application";
@@ -40,6 +40,7 @@ public class KeyedSetting implements Serializable
   public static final String VALIDATE_VACCINATION_FACILITY_MIN_LEN = "validate.vaccination.facility.min_len";
   public static final String VALIDATE_VACCINATION_FACILITY_NUMERIC = "validate.vaccination.facility.numeric";
   public static final String VALIDATE_VACCINATION_FACILITY_PFS = "validate.vaccination.facility.pfs";
+  public static final String VALIDATE_PATIENT_FINANCIAL_STATUS_IGNORE = "validate.patient.financialStatus.ignore";
   public static final String WEEKLY_BATCH_DAY = "weekly.batch.day";
   public static final String WEEKLY_BATCH_END_TIME = "weekly.batch.end_time";
   public static final String WEEKLY_BATCH_START_TIME = "weekly.batch.start_time";
@@ -52,6 +53,7 @@ public class KeyedSetting implements Serializable
   public static final String WEEKLY_EXPORT_START_TIME = "weekly.export.start_time";
   public static final String UPLOAD_ENABLED = "upload.enabled";
   public static final String UPLOAD_DIR = "upload.dir";
+  public static final String REMOTE_ENABLED = "remote.enabled";
   public static final String DQA_REPORT_READY_FOR_PRODUCTION_ENABLED = "dqa_report.ready_for_production.enabled";
   public static final String DQA_REPORT_READY_FOR_PRODUCTION_TRIGGER_LEVEL = "dqa_report.ready_for_production.trigger_level";
   public static final String CDS_SOFTWARE_SERVICE_ENABLED = "cds_software.service.enabled";

@@ -9,6 +9,5 @@
     </id>
     <property name="groupCode" column="group_code" type="string"/>
     <property name="groupLabel" column="group_label" type="string"/>
-    <property name="groupStatus" column="group_status" type="string"/>
   </class>
 </hibernate-mapping>

@@ -94,8 +94,8 @@ public class VaccinationParserHL7 extends VaccinationParser
     pi = PotentialIssues.getPotentialIssues();
   }
 
-  private static final String[] RECOGNIZED_SEGMENTS = { "MSH", "SFT", "PID", "PD1", "NK1", "PV1", "IN1", "IN3", "IN4", "PD2", "RXA", "ORC", "OBX",
-      "BTS", "FTS", "FHS", "BHS", "RXR", "GT1" };
+  private static final String[] RECOGNIZED_SEGMENTS = { "MSH", "SFT", "PID", "PD1", "NK1", "PV1", "PV2", "GT1", "IN1", "IN3", "IN4", "PD2", "ORC",
+      "TQ1", "TQ2", "RXA", "RXR", "OBX", "NTE", "BTS", "FTS", "FHS", "BHS" };
 
   @Override
   public void createVaccinationUpdateMessage(MessageReceived messageReceived)
@@ -816,7 +816,6 @@ public class VaccinationParserHL7 extends VaccinationParser
     return createDate(piInvalid, piNoTimeZone, fieldValue);
   }
 
-  
   private void registerIssueIfEmpty(int fieldNumber, PotentialIssue pi)
   {
     if (isEmpty(fieldNumber))
@@ -1510,18 +1509,18 @@ public class VaccinationParserHL7 extends VaccinationParser
       ack.append("|");
       ack.append(patient.getNameLast() + "^" + patient.getNameFirst() + "^" + patient.getNameMiddle() + "^" + patient.getNameSuffix() + "^"
           + patient.getNamePrefix() + "^^" + patient.getNameTypeCode());
-      if ((patient.getAliasFirst() != null && !patient.getAliasFirst().equals("")) || 
-    		  (patient.getAliasLast() != null && !patient.getAliasLast().equals("")))
+      if ((patient.getAliasFirst() != null && !patient.getAliasFirst().equals(""))
+          || (patient.getAliasLast() != null && !patient.getAliasLast().equals("")))
       {
-        ack.append("~" + (patient.getAliasLast() == null ? "" : patient.getAliasLast()) 
-        		+ "^" + (patient.getAliasFirst() == null ? "" : patient.getAliasFirst()) + "^^^^^A");
+        ack.append("~" + (patient.getAliasLast() == null ? "" : patient.getAliasLast()) + "^"
+            + (patient.getAliasFirst() == null ? "" : patient.getAliasFirst()) + "^^^^^A");
       }
       ack.append("|");
       ack.append(patient.getMotherMaidenName() + "|");
-      if (patient.getBirthDate() != null ){
+      if (patient.getBirthDate() != null)
+      {
         ack.append(sdf.format(patient.getBirthDate()) + "|");
-      }
-      else
+      } else
       {
         ack.append("|");
       }
