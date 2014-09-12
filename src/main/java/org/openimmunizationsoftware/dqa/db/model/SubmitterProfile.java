@@ -19,10 +19,10 @@ import org.openimmunizationsoftware.dqa.manager.PotentialIssues;
 
 public class SubmitterProfile implements Serializable
 {
-  
+
   private static final long serialVersionUID = 1l;
-  
-public static final int MASTER_HL7 = 1;
+
+  public static final int MASTER_HL7 = 1;
   public static final int TEST_HL7 = 101;
 
   public static final String DATA_FORMAT_HL7V2 = "HL7v2";
@@ -35,11 +35,17 @@ public static final int MASTER_HL7 = 1;
   public static final String PROFILE_STATUS_VALIDATE = "Validate";
   public static final String PROFILE_STATUS_TEST = "Test";
 
+  public static final String[] PROFILE_STATUS = { PROFILE_STATUS_CLOSED, PROFILE_STATUS_HOLD, PROFILE_STATUS_PROD, PROFILE_STATUS_SETUP,
+      PROFILE_STATUS_TEMPLATE, PROFILE_STATUS_VALIDATE, PROFILE_STATUS_TEST };
+
   public static final String TRANSFER_PRIORITY_HIGH = "High";
   public static final String TRANSFER_PRIORITY_HIGHEST = "Highest";
   public static final String TRANSFER_PRIORITY_LOW = "Low";
   public static final String TRANSFER_PRIORITY_LOWEST = "Lowest";
   public static final String TRANSFER_PRIORITY_NORMAL = "Normal";
+
+  public static final String[] TRANSFER_PRIORITY = { TRANSFER_PRIORITY_HIGH, TRANSFER_PRIORITY_HIGHEST, TRANSFER_PRIORITY_LOW,
+      TRANSFER_PRIORITY_LOWEST, TRANSFER_PRIORITY_NORMAL };
 
   private String accessKey = "";
   private CodesReceived codesReceived = null;
@@ -137,12 +143,11 @@ public static final int MASTER_HL7 = 1;
             pis = new PotentialIssueStatus(templatePisList.get(0), this);
             session.saveOrUpdate(pis);
             potentialIssueStatusMap.put(potentialIssue, pis);
-          }
-          else
+          } else
           {
             pis = new PotentialIssueStatus(potentialIssue, this);
             session.saveOrUpdate(pis);
-            potentialIssueStatusMap.put(potentialIssue, pis);            
+            potentialIssueStatusMap.put(potentialIssue, pis);
           }
         }
 

@@ -11,9 +11,9 @@ import java.io.Serializable;
 
 public class ReportTemplate implements Serializable
 {
-  
+
   private static final long serialVersionUID = 1l;
-  
+
   private int templateId = 0;
   private String templateLabel = "";
   private ReportType reportType = null;
@@ -79,5 +79,15 @@ public class ReportTemplate implements Serializable
   public void setBaseProfile(SubmitterProfile baseProfile)
   {
     this.baseProfile = baseProfile;
+  }
+
+  @Override
+  public boolean equals(Object arg0)
+  {
+    if (arg0 instanceof ReportTemplate)
+    {
+      return ((ReportTemplate) arg0).getTemplateId() == this.getTemplateId();
+    }
+    return super.equals(arg0);
   }
 }

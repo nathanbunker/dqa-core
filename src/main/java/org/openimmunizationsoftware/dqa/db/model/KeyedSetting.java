@@ -8,6 +8,7 @@
 package org.openimmunizationsoftware.dqa.db.model;
 
 import java.io.Serializable;
+import java.util.Date;
 
 public class KeyedSetting implements Serializable
 {
@@ -15,6 +16,16 @@ public class KeyedSetting implements Serializable
   private static final long serialVersionUID = 1l;
   
   public static final String APPLICATION_EXTERNAL_URL_BASE = "application.external.url.base";
+  public static final String DATABASE_CLEANUP_ENABLED = "database_cleanup.enabled";
+  public static final String DATABASE_CLEANUP_DAY = "database_cleanup.day";
+  public static final String DATABASE_CLEANUP_END_TIME = "database_cleanup.end_time";
+  public static final String DATABASE_CLEANUP_START_TIME = "database_cleanup.start_time";
+  public static final String DATABASE_CLEANUP_DATA_FIELDS_AFTER_DAYS = "database_cleanup.data_fields.after_days";
+  public static final String DATABASE_CLEANUP_MESSAGE_TEXT_AFTER_DAYS = "database_cleanup.message_text.after_days";
+  public static final String DATABASE_CLEANUP_MESSAGE_ANALYSIS_AFTER_DAYS = "database_cleanup.message_analysis.after_days";
+  public static final String DATABASE_CLEANUP_BATCH_REPORTS_SUBMITTED_AFTER_DAYS = "database_cleanup.batch_reports_submitted.after_days";
+  public static final String DATABASE_CLEANUP_BATCH_REPORTS_WEEKLY_AFTER_DAYS = "database_cleanup.batch_reports_weekly.after_days";
+  public static final String DATABASE_CLEANUP_SUBMISSIONS_AFTER_DAYS = "database_cleanup.submissions.after_days";
   public static final String IN_FILE_ACCEPTED_DIR_NAME = "in.file.accepted_dir.name";
   public static final String IN_FILE_DIR = "in.file.dir";
   public static final String IN_FILE_DQA_DIR_NAME = "in.file.dqa_dir.name";
