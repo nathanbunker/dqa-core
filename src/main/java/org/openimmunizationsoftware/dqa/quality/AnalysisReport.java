@@ -856,7 +856,6 @@ public class AnalysisReport extends QualityReport
       submissionAnalysis.setSubmission(submission);
       submissionAnalysis.setAnalysisLabel(messageName);
       submissionAnalysis.setMessageReceived(messageReceived);
-      submissionAnalysis.setAnalysisContent(Hibernate.createClob(" ", session));
       session.save(submissionAnalysis);
       session.flush();
       FileReader fileReader = new FileReader(file);
