@@ -21,7 +21,7 @@
     <property name="responseDetailError" column="response_detail_error" type="clob"/>
     <property name="responseReport" column="response_report" type="clob"/>
     <property name="responseAnalysis" column="response_analysis" type="clob"/>
-    <many-to-one name="batch" column="batch_id" class="MessageBatch"/>
+     <many-to-one name="batch" column="batch_id" class="MessageBatch"/>
     <property name="submissionStatus" column="submission_status" type="string"/>
     <property name="submissionStatusDate" column="submission_status_date" type="timestamp"/>
     <property name="createdDate" column="created_date" type="timestamp"/>
