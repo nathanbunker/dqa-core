@@ -37,6 +37,7 @@ public class KeyedSetting implements Serializable
   public static final String IN_FILE_WAIT = "in.file.wait";
   public static final String IN_SUBMISSION_ENABLE = "in.submission.enabled";
   public static final String IN_SUBMISSION_WAIT = "in.submission.wait";
+  public static final String IN_SUBMISSION_VERIFY_UNIQUE_CONTROL_ID = "in.submission.verify-unique-control-id";
   public static final String OUT_FILE_DIR = "out.file.dir";
   public static final String OUT_HL7_MSH_PROCESSING_ID = "out.hl7.msh.processing_id";
   public static final String OUT_HL7_MSH_RECEIVING_APPLICATION = "out.hl7.msh.receiving_application";

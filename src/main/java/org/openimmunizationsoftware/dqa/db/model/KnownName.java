@@ -51,7 +51,7 @@ public class KnownName
     }
     if (birthDate != null)
     {
-      SimpleDateFormat sdf = new SimpleDateFormat("mm/DD/yyyy");
+      SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy");
       sb.append(sdf.format(birthDate));
       sb.append(" ");
     }
