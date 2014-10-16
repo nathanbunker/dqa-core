@@ -3,7 +3,7 @@
   <groupId>org.openimmunizationsoftware.dqa</groupId>
   <artifactId>ois-dqa-core</artifactId>
   <packaging>jar</packaging>
-  <version>1.8</version>
+  <version>1.9</version>
   <name>DQA-CORE</name>
   <description></description>
   <organization>
