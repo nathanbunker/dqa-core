@@ -384,7 +384,7 @@ public class WeeklyExportManager extends ManagerThread
   {
     {
       KeyedSettingManager ksm = KeyedSettingManager.getKeyedSettingManager();
-      exportDir = new File(ksm.getKeyedValue(KeyedSetting.OUT_FILE_DIR, "c:\\data\\out"));
+      exportDir = new File(ksm.getKeyedValue(KeyedSetting.OUT_FILE_DIR, "c:\\MDHApps\\data\\out"));
       if (!exportDir.exists())
       {
         internalLog.append("Internal dir '" + exportDir + "' does not exist, unable to export");
