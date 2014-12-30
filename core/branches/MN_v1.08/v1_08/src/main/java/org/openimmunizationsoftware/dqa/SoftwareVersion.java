@@ -10,8 +10,8 @@ package org.openimmunizationsoftware.dqa;
 public class SoftwareVersion
 {
   public static final String VENDOR = "OIS";
-  public static final String VERSION = "1.08.03";
+  public static final String VERSION = "1.08.04";               // For App version number
   public static final String PRODUCT = "DQA";
-  public static final String RELEASE_DATE = "16 Oct 2014";
+  public static final String RELEASE_DATE = "12 Dec 2014";     // For App date release
   public static final String BINARY_ID = "";
 }
