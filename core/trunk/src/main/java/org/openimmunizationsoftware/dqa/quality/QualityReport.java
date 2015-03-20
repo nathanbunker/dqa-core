@@ -1279,13 +1279,13 @@ public class QualityReport
   {
     initDocumentation(messageBatch);
 
-    Map<PotentialIssue, PotentialIssueStatus> potentialIssueStatusMap = new HashMap<PotentialIssue, PotentialIssueStatus>();
+    Map<PotentialIssue, IssueAction> potentialIssueActionMap = new HashMap<PotentialIssue, IssueAction>();
 
     for (PotentialIssueStatus potentialIssueStatus : potentialIssueStatusList)
     {
       if (potentialIssueFoundSet.contains(potentialIssueStatus.getIssue()))
       {
-        potentialIssueStatusMap.put(potentialIssueStatus.getIssue(), potentialIssueStatus);
+        potentialIssueActionMap.put(potentialIssueStatus.getIssue(), potentialIssueStatus.getAction());
       }
     }
 
@@ -1295,7 +1295,7 @@ public class QualityReport
 
     for (Field field : fieldList)
     {
-      out.print(potentialIssues.getDocumentationForAnalysis(field, potentialIssueStatusMap, examples));
+      out.print(potentialIssues.getDocumentationForAnalysis(field, potentialIssueActionMap, examples));
     }
   }
 
@@ -1303,13 +1303,13 @@ public class QualityReport
   {
     initDocumentation(messageBatch);
 
-    Map<PotentialIssue, PotentialIssueStatus> potentialIssueStatusMap = new HashMap<PotentialIssue, PotentialIssueStatus>();
+    Map<PotentialIssue, IssueAction> potentialIssueActionMap = new HashMap<PotentialIssue, IssueAction>();
 
     for (PotentialIssueStatus potentialIssueStatus : potentialIssueStatusList)
     {
       if (potentialIssueFoundSet.contains(potentialIssueStatus.getIssue()))
       {
-        potentialIssueStatusMap.put(potentialIssueStatus.getIssue(), potentialIssueStatus);
+        potentialIssueActionMap.put(potentialIssueStatus.getIssue(), potentialIssueStatus.getAction());
       }
     }
 
@@ -1317,7 +1317,7 @@ public class QualityReport
 
     for (Field field : fieldList)
     {
-      printWriter.print(potentialIssues.getDocumentationForAnalysis(field, potentialIssueStatusMap, null));
+      printWriter.print(potentialIssues.getDocumentationForAnalysis(field, potentialIssueActionMap, null));
     }
   }
 

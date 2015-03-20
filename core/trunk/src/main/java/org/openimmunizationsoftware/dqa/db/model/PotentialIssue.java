@@ -9,6 +9,7 @@ package org.openimmunizationsoftware.dqa.db.model;
 
 import java.io.Serializable;
 
+import org.openimmunizationsoftware.dqa.manager.PotentialIssues.Field;
 import org.openimmunizationsoftware.dqa.quality.ToolTip;
 
 public class PotentialIssue implements Serializable

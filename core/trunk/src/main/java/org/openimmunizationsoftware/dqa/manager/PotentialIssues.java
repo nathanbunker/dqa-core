@@ -645,6 +645,7 @@ public class PotentialIssues implements Reload
   }
 
   private HashMap<Field, HashMap<String, PotentialIssue>> fieldIssueMaps = new HashMap<PotentialIssues.Field, HashMap<String, PotentialIssue>>();
+  private HashMap<PotentialIssue, Field> issueFieldMaps = new HashMap<PotentialIssue, Field>();
   private List<PotentialIssue> allPotentialIssues = new ArrayList<PotentialIssue>();
   private Map<String, PotentialIssue> allPotentialIssuesMap = new HashMap<String, PotentialIssue>();
 
@@ -681,6 +682,7 @@ public class PotentialIssues implements Reload
 
   private void addToFieldIssueMap(Field field, PotentialIssue issue)
   {
+    issueFieldMaps.put(issue, field);
     HashMap<String, PotentialIssue> issueMap = fieldIssueMaps.get(field);
     if (issueMap == null)
     {
@@ -695,6 +697,11 @@ public class PotentialIssues implements Reload
       return;
     }
     issueMap.put(issue.getIssueType(), issue);
+  }
+  
+  public Field getFieldForPotentialIssue(PotentialIssue issue)
+  {
+    return issueFieldMaps.get(issue);
   }
 
   private String readDocumentation(Field field)
@@ -2109,14 +2116,29 @@ public class PotentialIssues implements Reload
     }
     return "";
   }
+  
+  public String getDocumentationForAnalysis(PotentialIssue potentialIssue, IssueAction issueAction)
+  {
+    Map<PotentialIssue, IssueAction> potentialIssueActionMap = new HashMap<PotentialIssue, IssueAction>();
+    potentialIssueActionMap.put(potentialIssue, issueAction);
+    Field field = getFieldForPotentialIssue(potentialIssue);
+    return getDocumentationForAnalysis(field, potentialIssueActionMap, null, true);
+  }
 
-  public String getDocumentationForAnalysis(Field field, Map<PotentialIssue, PotentialIssueStatus> potentialIssueStatusMap,
+  public String getDocumentationForAnalysis(Field field, Map<PotentialIssue, IssueAction> potentialIssueActionMap,
       Map<PotentialIssue, MessageReceived> potentialIssueFoundMessageReceivedExample)
+  {
+    return getDocumentationForAnalysis(field, potentialIssueActionMap, null, false);
+  }
+  
+  
+  public String getDocumentationForAnalysis(Field field, Map<PotentialIssue, IssueAction> potentialIssueActionMap,
+      Map<PotentialIssue, MessageReceived> potentialIssueFoundMessageReceivedExample, boolean showAccept)
   {
     if (fieldDocumentation.containsKey(field))
     {
       StringBuilder sb = null;
-      if (potentialIssueStatusMap != null)
+      if (potentialIssueActionMap != null)
       {
         List<MessageReceived> messageReceivedExampleList = new ArrayList<MessageReceived>();
         HashMap<String, PotentialIssue> potentialIssueMap = fieldIssueMaps.get(field);
@@ -2125,8 +2147,8 @@ public class PotentialIssues implements Reload
         for (String potentialIssueType : potentialIssueTypeList)
         {
           PotentialIssue issue = potentialIssueMap.get(potentialIssueType);
-          PotentialIssueStatus potentialIssueStatus = potentialIssueStatusMap.get(issue);
-          if (potentialIssueStatus != null && !potentialIssueStatus.getAction().equals(IssueAction.ACCEPT))
+          IssueAction action = potentialIssueActionMap.get(issue);
+          if (action != null && (showAccept || !action.equals(IssueAction.ACCEPT)))
           {
             if (sb == null)
             {
@@ -2162,9 +2184,9 @@ public class PotentialIssues implements Reload
             {
               sb.append("    <td>" + hl7Reference + "</td>");
             }
-            if (potentialIssueStatus != null)
+            if (action != null)
             {
-              sb.append("    <td>" + potentialIssueStatus.getAction().getActionLabel() + "</td>");
+              sb.append("    <td>" + action.getActionLabel() + "</td>");
             }
             String description = documentationTextProperties.getProperty(issue.getDisplayText());
             if (description == null)
