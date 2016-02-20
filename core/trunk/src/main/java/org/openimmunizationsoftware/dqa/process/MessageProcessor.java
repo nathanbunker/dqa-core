@@ -7,6 +7,7 @@
  */
 package org.openimmunizationsoftware.dqa.process;
 
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -224,8 +225,8 @@ public class MessageProcessor
     } catch (Exception exception)
     {
       PotentialIssue pi = PotentialIssues.getPotentialIssues().GeneralProcessingException;
-      String ackMessage = HL7Util.makeAckMessage(HL7Util.ACK_ERROR, HL7Util.SEVERITY_ERROR, "Unable to process because of unexpected exception:  "
-          + exception.getMessage(), request, pi);
+      String ackMessage = HL7Util.makeAckMessage(HL7Util.ACK_ERROR, HL7Util.SEVERITY_ERROR,
+          "Unable to process because of unexpected exception:  " + exception.getMessage(), request, pi);
       messageReceived.setResponseText(ackMessage);
       messageReceived.setSuccessfulCompletion(false);
       messageReceived.setException(exception);
@@ -411,13 +412,7 @@ public class MessageProcessor
             TestCase testCase = new TestCase();
             testCase.setEvalDate(new Date());
 
-            testCase.setPatientSex(patient.getSexCode().equals("M") ? "M" : "F"); // force
-                                                                                  // to
-                                                                                  // be
-                                                                                  // either
-                                                                                  // male
-                                                                                  // or
-                                                                                  // female
+            testCase.setPatientSex(patient.getSexCode().equals("M") ? "M" : "F");
             testCase.setPatientDob(patient.getBirthDate());
             List<TestEvent> testEventList = new ArrayList<TestEvent>();
             for (Vaccination vaccination : queryResult.getVaccinationList())
@@ -442,8 +437,14 @@ public class MessageProcessor
             software.setService(Service.getService(cdsServiceType));
 
             ConnectorInterface connector = ConnectFactory.createConnecter(software, ForecastItem.getForecastItemList());
-            List<ForecastActual> forecastActualList = connector.queryForForecast(testCase);
-            queryResult.setForecastActualList(forecastActualList);
+            try
+            {
+              List<ForecastActual> forecastActualList = connector.queryForForecast(testCase);
+              queryResult.setForecastActualList(forecastActualList);
+            } catch (IOException ioe)
+            {
+              ioe.printStackTrace();
+            }
           }
         }
       }
@@ -459,8 +460,8 @@ public class MessageProcessor
     } catch (Exception exception)
     {
       PotentialIssue pi = PotentialIssues.getPotentialIssues().GeneralProcessingException;
-      String ackMessage = HL7Util.makeAckMessage(HL7Util.ACK_ERROR, HL7Util.SEVERITY_ERROR, "Unable to process because of unexpected exception:  "
-          + exception.getMessage(), request, pi);
+      String ackMessage = HL7Util.makeAckMessage(HL7Util.ACK_ERROR, HL7Util.SEVERITY_ERROR,
+          "Unable to process because of unexpected exception:  " + exception.getMessage(), request, pi);
       queryReceived.setResponseText(ackMessage);
       queryReceived.setSuccessfulCompletion(false);
       queryReceived.setException(exception);
