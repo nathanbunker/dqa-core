@@ -978,6 +978,7 @@ public class VaccinationParserHL7 extends VaccinationParser
       if (queryResult.getPatient().getPatientImmunityList().size() > 0)
       {
         int count = 0;
+        makeORC(ack, "9999");
         makeRXA998(ack);
         for (PatientImmunity patientImmunity : queryResult.getPatient().getPatientImmunityList())
         {
@@ -990,7 +991,7 @@ public class VaccinationParserHL7 extends VaccinationParser
           obsId.setTable("LN");
           obsValue.setCode(patientImmunity.getImmunityCode());
           obsValue.setTable("SCT");
-          makeOBX(ack, count, obsId, obsValue, null, obsMethod, 0);
+          makeOBX(ack, count, obsId, obsValue, null, obsMethod, 1);
         }
       }
       for (Vaccination vaccination : queryResult.getVaccinationList())
@@ -1036,7 +1037,7 @@ public class VaccinationParserHL7 extends VaccinationParser
             obsId.setCode("29768-9");
             obsId.setText("Date vaccine information statement published");
             obsId.setTable("LN");
-            makeOBX(ack, 1, obsId, vaccinationVIS.getPublishedDate(), subId);
+            makeOBX(ack, count++, obsId, vaccinationVIS.getPublishedDate(), subId);
           }
           if (vaccinationVIS.getPresentedDate() != null)
           {
@@ -1044,7 +1045,7 @@ public class VaccinationParserHL7 extends VaccinationParser
             obsId.setCode("29769-7");
             obsId.setText("Date vaccine information statement presented");
             obsId.setTable("LN");
-            makeOBX(ack, 1, obsId, vaccinationVIS.getPresentedDate(), subId);
+            makeOBX(ack, count++, obsId, vaccinationVIS.getPresentedDate(), subId);
           }
         }
         if (vaccination.getTestEvent() != null)
@@ -1052,9 +1053,9 @@ public class VaccinationParserHL7 extends VaccinationParser
           List<EvaluationActual> evaluationActualList = vaccination.getTestEvent().getEvaluationActualList();
           if (evaluationActualList != null)
           {
-            int groupCount = 1;
             for (EvaluationActual evaluationActual : evaluationActualList)
             {
+              subId++;
               CodedEntity obsId = new CodedEntity(CodeTable.Type.OBSERVATION_IDENTIFIER);
               CodedEntity obsValue = new CodedEntity(CodeTable.Type.VACCINATION_CVX_CODE);
               obsId.setCode("30956-7");
@@ -1062,7 +1063,7 @@ public class VaccinationParserHL7 extends VaccinationParser
               obsId.setTable("LN");
               obsValue.setCode(evaluationActual.getVaccineCvx());
               obsValue.setTable("CVX");
-              makeOBX(ack, count++, obsId, obsValue, today);
+              makeOBX(ack, count++, obsId, obsValue, today, subId);
 
               obsId = new CodedEntity(CodeTable.Type.OBSERVATION_IDENTIFIER);
               obsValue = new CodedEntity(CodeTable.Type.CDC_PHIN_VADS);
@@ -1072,100 +1073,108 @@ public class VaccinationParserHL7 extends VaccinationParser
               obsValue.setCode("VXC16");
               obsValue.setText("ACIP Schedule");
               obsValue.setTable("CDCPHINVS");
-              makeOBX(ack, count++, obsId, obsValue, today);
+              makeOBX(ack, count++, obsId, obsValue, today, subId);
 
               obsId = new CodedEntity(CodeTable.Type.OBSERVATION_IDENTIFIER);
               obsId.setCode("30982-3");
               obsId.setText("Evaluation reason");
               obsId.setTable("LN");
-              makeOBX(ack, count++, obsId, "U^" + evaluationActual.getReasonText() + "^MCIR", today);
+              makeOBX(ack, count++, obsId, evaluationActual.getReasonText(), today, subId);
 
               obsId = new CodedEntity(CodeTable.Type.OBSERVATION_IDENTIFIER);
               obsId.setCode("59781-5");
               obsId.setText("Dose Validity");
               obsId.setTable("LN");
-              makeOBX(ack, count++, obsId, evaluationActual.getDoseValid(), today);
-              groupCount++;
+              makeOBX(ack, count++, obsId, evaluationActual.getDoseValid(), today, subId);
             }
           }
         }
       }
-      int count = 0;
-      for (ForecastActual forecastActual : queryResult.getForecastActualList())
+      if (queryResult.getForecastActualList().size() > 0)
       {
-        count++;
-        makeORC(ack, System.currentTimeMillis() + "." + count);
+        int count = 1;
+        int subId = 0;
+        makeORC(ack, "9999");
         makeRXA998(ack);
-
-        CodedEntity obsId;
-        CodedEntity obsValue;
-
-        obsId = new CodedEntity(CodeTable.Type.OBSERVATION_IDENTIFIER);
-        obsValue = new CodedEntity(CodeTable.Type.VACCINATION_CVX_CODE);
-        obsId.setCode("30979-9");
-        obsId.setText("Vaccine due next");
-        obsId.setTable("LN");
-        String vaccineCvx = forecastActual.getVaccineCvx();
-        if (vaccineCvx.equals(""))
+        for (ForecastActual forecastActual : queryResult.getForecastActualList())
         {
-          vaccineCvx = forecastActual.getForecastItem().getVaccineCvx();
-        }
-        obsValue.setCode(vaccineCvx);
-        obsValue.setText(forecastActual.getForecastItem().getLabel());
-        obsValue.setTable("CVX");
-        makeOBX(ack, 1, obsId, obsValue, today);
-
-        obsId = new CodedEntity(CodeTable.Type.OBSERVATION_IDENTIFIER);
-        obsValue = new CodedEntity(CodeTable.Type.CDC_PHIN_VADS);
-        obsId.setCode("59779-9");
-        obsId.setText("Immunization Schedule used");
-        obsId.setTable("LN");
-        obsValue.setCode("VXC16");
-        obsValue.setText("ACIP Schedule");
-        obsValue.setTable("CDCPHINVS");
-        makeOBX(ack, 2, obsId, obsValue, today);
-
-        obsId = new CodedEntity(CodeTable.Type.OBSERVATION_IDENTIFIER);
-        obsId.setCode("59783-1");
-        obsId.setText("Status in immunization series");
-        obsId.setTable("LN");
-        if (forecastActual.isComplete())
-        {
-          makeOBX(ack, 3, obsId, "1^Complete^MCIR", today);
-        } else if (forecastActual.getDueDate().after(today))
-        {
-          makeOBX(ack, 3, obsId, "2^Up-to-date^MCIR", today);
-        } else if (forecastActual.getOverdueDate().before(today))
-        {
-          makeOBX(ack, 3, obsId, "3^Due^MCIR", today);
-        } else
-        {
-          makeOBX(ack, 3, obsId, "4^Overdue^MCIR", today);
-        }
-
-        if (!forecastActual.isComplete())
-        {
+          subId++;
+          CodedEntity obsId;
+          CodedEntity obsValue;
           obsId = new CodedEntity(CodeTable.Type.OBSERVATION_IDENTIFIER);
-          obsId.setCode("30980-7");
-          obsId.setText("Date vaccine due");
+          obsValue = new CodedEntity(CodeTable.Type.VACCINATION_CVX_CODE);
+          obsId.setCode("30979-9");
+          obsId.setText("Vaccine due next");
           obsId.setTable("LN");
-          makeOBX(ack, 1, obsId, forecastActual.getDueDate(), today);
-          if (forecastActual.getValidDate() != null)
+          String vaccineCvx = forecastActual.getVaccineCvx();
+          if (vaccineCvx.equals(""))
+          {
+            vaccineCvx = forecastActual.getForecastItem().getVaccineCvx();
+          }
+          obsValue.setCode(vaccineCvx);
+          obsValue.setText(forecastActual.getForecastItem().getLabel());
+          obsValue.setTable("CVX");
+          makeOBX(ack, count++, obsId, obsValue, today, subId);
+
+          obsId = new CodedEntity(CodeTable.Type.OBSERVATION_IDENTIFIER);
+          obsValue = new CodedEntity(CodeTable.Type.CDC_PHIN_VADS);
+          obsId.setCode("59779-9");
+          obsId.setText("Immunization Schedule used");
+          obsId.setTable("LN");
+          obsValue.setCode("VXC16");
+          obsValue.setText("ACIP Schedule");
+          obsValue.setTable("CDCPHINVS");
+          makeOBX(ack, count++, obsId, obsValue, today, subId);
+
+          obsId = new CodedEntity(CodeTable.Type.OBSERVATION_IDENTIFIER);
+          obsId.setCode("59783-1");
+          obsId.setText("Status in immunization series");
+          obsId.setTable("LN");
+          if (forecastActual.isComplete())
+          {
+            makeOBX(ack, count++, obsId, "Complete", today, subId);
+          } else if (forecastActual.getDueDate() != null && forecastActual.getDueDate().after(today))
+          {
+            makeOBX(ack, count++, obsId, "Up-to-date", today, subId);
+          } else if (forecastActual.getOverdueDate() != null && forecastActual.getOverdueDate().before(today))
+          {
+            makeOBX(ack, count++, obsId, "Due", today, subId);
+          } else
+          {
+            makeOBX(ack, count++, obsId, "Overdue", today, subId);
+          }
+
+          if (forecastActual.getDueDate() != null && !forecastActual.isComplete())
           {
             obsId = new CodedEntity(CodeTable.Type.OBSERVATION_IDENTIFIER);
+            obsId.setCode("30980-7");
+            obsId.setText("Date vaccine due");
             obsId.setTable("LN");
-            obsId.setCode("30981-5");
-            obsId.setText("Earliest date to give");
-            makeOBX(ack, 1, obsId, forecastActual.getValidDate(), today);
+            makeOBX(ack, count++, obsId, forecastActual.getDueDate(), today, subId);
+            if (forecastActual.getValidDate() != null)
+            {
+              obsId = new CodedEntity(CodeTable.Type.OBSERVATION_IDENTIFIER);
+              obsId.setTable("LN");
+              obsId.setCode("30981-5");
+              obsId.setText("Earliest date to give");
+              makeOBX(ack, count++, obsId, forecastActual.getValidDate(), today, subId);
+            }
           }
-        }
-        if (!forecastActual.getDoseNumber().equals("*") && !forecastActual.getDoseNumber().equals(""))
-        {
-          obsId = new CodedEntity(CodeTable.Type.OBSERVATION_IDENTIFIER);
-          obsId.setCode("30973-2");
-          obsId.setText("Vaccine due next dose number");
-          obsId.setTable("LN");
-          makeOBX(ack, 2, obsId, forecastActual.getDoseNumber(), today);
+          if (forecastActual.getDoseNumber() != null && !forecastActual.getDoseNumber().equals("*") && !forecastActual.getDoseNumber().equals(""))
+          {
+            obsId = new CodedEntity(CodeTable.Type.OBSERVATION_IDENTIFIER);
+            obsId.setCode("30973-2");
+            obsId.setText("Vaccine due next dose number");
+            obsId.setTable("LN");
+            try
+            {
+              makeOBX(ack, count++, obsId, Integer.parseInt(forecastActual.getDoseNumber()), today, subId);
+            } catch (NumberFormatException nfe)
+            {
+              makeOBX(ack, count++, obsId, forecastActual.getDoseNumber(), today, subId);
+            }
+
+          }
         }
       }
     }
@@ -1224,12 +1233,11 @@ public class VaccinationParserHL7 extends VaccinationParser
 
   public void makeOBX(StringBuilder ack, int position, CodedEntity obsId, CodedEntity obsValue)
   {
-    SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
     ack.append("OBX|");
     ack.append(position + "|");
     ack.append("CE|");
     ack.append(makeCodedValue(obsId) + "|");
-    ack.append("0|");
+    ack.append("1|");
     ack.append(makeCodedValue(obsValue) + "|");
     ack.append("|");
     ack.append("|");
@@ -1243,12 +1251,17 @@ public class VaccinationParserHL7 extends VaccinationParser
 
   public void makeOBX(StringBuilder ack, int position, CodedEntity obsId, CodedEntity obsValue, Date date)
   {
+    makeOBX(ack, position, obsId, obsValue, date, 1);
+  }
+
+  public void makeOBX(StringBuilder ack, int position, CodedEntity obsId, CodedEntity obsValue, Date date, int subId)
+  {
     SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
     ack.append("OBX|");
     ack.append(position + "|");
     ack.append("CE|");
     ack.append(makeCodedValue(obsId) + "|");
-    ack.append("0|");
+    ack.append(subId + "|");
     ack.append(makeCodedValue(obsValue) + "|");
     ack.append("|");
     ack.append("|");
@@ -1269,12 +1282,42 @@ public class VaccinationParserHL7 extends VaccinationParser
 
   public void makeOBX(StringBuilder ack, int position, CodedEntity obsId, String obsValue, Date date)
   {
+    makeOBX(ack, position, obsId, obsValue, date, 1);
+  }
+
+  public void makeOBX(StringBuilder ack, int position, CodedEntity obsId, int obsValue, Date date, int subId)
+  {
     SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
     ack.append("OBX|");
     ack.append(position + "|");
-    ack.append("CE|");
+    ack.append("NM|");
     ack.append(makeCodedValue(obsId) + "|");
-    ack.append("0|");
+    ack.append(subId + "|");
+    ack.append(obsValue + "|");
+    ack.append("|");
+    ack.append("|");
+    ack.append("|");
+    ack.append("|");
+    ack.append("|");
+    ack.append("F|");
+    if (date != null)
+    {
+      ack.append("|");
+      ack.append("|");
+      ack.append(sdf.format(date));
+      ack.append("|");
+    }
+    ack.append("\r");
+  }
+
+  public void makeOBX(StringBuilder ack, int position, CodedEntity obsId, String obsValue, Date date, int subId)
+  {
+    SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
+    ack.append("OBX|");
+    ack.append(position + "|");
+    ack.append("ST|");
+    ack.append(makeCodedValue(obsId) + "|");
+    ack.append(subId + "|");
     ack.append(obsValue + "|");
     ack.append("|");
     ack.append("|");
@@ -1294,7 +1337,7 @@ public class VaccinationParserHL7 extends VaccinationParser
 
   public void makeOBX(StringBuilder ack, int position, CodedEntity obsId, Date obsValue, Date date)
   {
-    makeOBX(ack, position, obsId, obsValue, date, 0);
+    makeOBX(ack, position, obsId, obsValue, date, 1);
   }
 
   public void makeOBX(StringBuilder ack, int position, CodedEntity obsId, Date obsValue, int subId)
@@ -1307,7 +1350,7 @@ public class VaccinationParserHL7 extends VaccinationParser
     SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
     ack.append("OBX|");
     ack.append(position + "|");
-    ack.append("CE|");
+    ack.append("TS|");
     ack.append(makeCodedValue(obsId) + "|");
     ack.append(subId + "|");
     ack.append(sdf.format(obsValue) + "|");
@@ -1324,7 +1367,6 @@ public class VaccinationParserHL7 extends VaccinationParser
       ack.append(sdf.format(date));
       ack.append("|");
     }
-
     ack.append("\r");
   }
 
@@ -1371,7 +1413,12 @@ public class VaccinationParserHL7 extends VaccinationParser
     ack.append(makeCodedValue(vaccination.getManufacturer(), "MVX") + "|");
     ack.append(makeCodedValue(vaccination.getRefusal(), "NIP002") + "|");
     ack.append("|");
-    ack.append(vaccination.getCompletionCode() + "|");
+    String completionCode = vaccination.getCompletionCode();
+    if (completionCode.equals(""))
+    {
+      completionCode = "CP";
+    }
+    ack.append(completionCode + "|");
     ack.append(vaccination.getActionCode() + "|");
     ack.append("\r");
   }
@@ -1387,6 +1434,7 @@ public class VaccinationParserHL7 extends VaccinationParser
     ack.append("|");
     ack.append("998^No vaccine administered^CVX|");
     ack.append("999|");
+    ack.append("|||||||||||||NA|");
     ack.append("\r");
   }
 
@@ -1424,7 +1472,7 @@ public class VaccinationParserHL7 extends VaccinationParser
   {
     ack.append("ORC|");
     ack.append("RE|");
-    ack.append(vaccination.getIdSubmitter() + "|");
+    ack.append(vaccination.getIdSubmitter() + "^Submitter|");
     ack.append(vaccination.getVaccinationId() + "^DQA|");
     ack.append("\r");
   }
@@ -1442,16 +1490,18 @@ public class VaccinationParserHL7 extends VaccinationParser
   {
     SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
     ack.append("QPD|");
-    ack.append(queryReceived.getMessageQueryName() + "|");
+    String messageQueryName = queryReceived.getMessageQueryName();
+    String messageQueryNameText = createMessageQueryText(messageQueryName);
+    ack.append(messageQueryName + "^" + messageQueryNameText + "^CDCPHINVS|");
     ack.append(queryReceived.getQueryTag() + "|");
     Patient patient = queryReceived.getPatient();
     if (patient != null)
     {
-      ack.append(patient.getIdSubmitterNumber() + "^^^" + patient.getIdSubmitterAssigningAuthorityCode() + "^" + patient.getIdSubmitterTypeCode()
-          + "|");
+      ack.append(
+          patient.getIdSubmitterNumber() + "^^^" + patient.getIdSubmitterAssigningAuthorityCode() + "^" + patient.getIdSubmitterTypeCode() + "|");
       ack.append(patient.getNameLast() + "^" + patient.getNameFirst() + "^" + patient.getNameMiddle() + "^" + patient.getNameSuffix() + "^"
           + patient.getNamePrefix() + "^^" + patient.getNameTypeCode() + "|");
-      ack.append(patient.getMotherMaidenName() + "|");
+      ack.append(patient.getMotherMaidenName() + "^^^^^^M|");
       if (patient.getBirthDate() != null)
       {
         ack.append(sdf.format(patient.getBirthDate()) + "|");
@@ -1472,6 +1522,19 @@ public class VaccinationParserHL7 extends VaccinationParser
     ack.append("\r");
   }
 
+  public String createMessageQueryText(String messageQueryName)
+  {
+    String messageQueryNameText = "";
+    if (messageQueryName.equals("Z34"))
+    {
+      messageQueryNameText = "Request Immunization History";
+    } else if (messageQueryName.equals("Z44"))
+    {
+      messageQueryNameText = "Request Evaluated History and Forecast";
+    }
+    return messageQueryNameText;
+  }
+
   private void makeNK1(StringBuilder ack, NextOfKin nextOfKin, int position)
   {
     ack.append("NK1|");
@@ -1489,7 +1552,7 @@ public class VaccinationParserHL7 extends VaccinationParser
   private void makePID(QueryResult queryResult, StringBuilder ack)
   {
     SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
-    ack.append("PID|");
+    ack.append("PID|1");
     ack.append("|");
     ack.append("|");
     Patient patient = queryResult.getPatient();
@@ -1516,7 +1579,7 @@ public class VaccinationParserHL7 extends VaccinationParser
             + (patient.getAliasFirst() == null ? "" : patient.getAliasFirst()) + "^^^^^A");
       }
       ack.append("|");
-      ack.append(patient.getMotherMaidenName() + "|");
+      ack.append(patient.getMotherMaidenName() + "^^^^^^M|");
       if (patient.getBirthDate() != null)
       {
         ack.append(sdf.format(patient.getBirthDate()) + "|");
@@ -1526,7 +1589,7 @@ public class VaccinationParserHL7 extends VaccinationParser
       }
       ack.append(patient.getSexCode() + "|");
       ack.append("|");
-      ack.append(makeCodedValue(patient.getRace(), "HL70005") + "|");
+      ack.append(makeCodedValue(patient.getRace(), "CDCREC") + "|");
       printAddress(ack, patient);
       ack.append("|");
       ack.append("|");
@@ -1604,7 +1667,11 @@ public class VaccinationParserHL7 extends VaccinationParser
 
   private void makeQAK(QueryReceived queryReceived, StringBuilder ack, String queryResponse)
   {
-    ack.append("QAK|" + queryReceived.getQueryTag() + "|" + queryResponse + "|" + queryReceived.getMessageQueryName() + "|\r");
+    ack.append("QAK|" + queryReceived.getQueryTag() + "|" + queryResponse + "|");
+    String messageQueryName = queryReceived.getMessageQueryName();
+    String messageQueryNameText = createMessageQueryText(messageQueryName);
+    ack.append(messageQueryName + "^" + messageQueryNameText + "^CDCPHINVS|");
+    ack.append("|\r");
   }
 
   private void makeMSA(QueryReceived queryReceived, StringBuilder ack)
@@ -1653,9 +1720,15 @@ public class VaccinationParserHL7 extends VaccinationParser
           break;
         }
       }
-    } else if (hasErrors(messageReceived))
+    } else if (hasErrorsOrWarnings(messageReceived))
     {
-      text = "Message rejected: Because of serious problems encountered none of the information in this message will be accepted (see error details above)";
+      if (hasErrors(messageReceived))
+      {
+        text = "Message rejected: Because of serious problems encountered none of the information in this message will be accepted (see error details above)";
+      } else
+      {
+        text = "Message accepted but some data was lost (see error details above)";
+      }
       ackCode = ACK_ERROR;
       severity = "E";
       for (IssueFound issueFound : messageReceived.getIssuesFound())
@@ -1675,9 +1748,115 @@ public class VaccinationParserHL7 extends VaccinationParser
       }
     }
     StringBuilder ack = new StringBuilder();
-    makeHeader(ack, message, null, null);
-    ack.append("SFT|" + SoftwareVersion.VENDOR + "|" + SoftwareVersion.VERSION + "|" + SoftwareVersion.PRODUCT + "|" + SoftwareVersion.BINARY_ID
-        + "|\r");
+    makeHeader(ack, message, HL7Util.PROFILE_ACKNWOLEDGMENT, null);
+    ack.append(
+        "SFT|" + SoftwareVersion.VENDOR + "|" + SoftwareVersion.VERSION + "|" + SoftwareVersion.PRODUCT + "|" + SoftwareVersion.BINARY_ID + "|\r");
+    ack.append("MSA|" + ackCode + "|" + controlId + "|\r");
+    for (IssueFound issueFound : messageReceived.getIssuesFound())
+    {
+      if (issueFound.isError())
+      {
+        HL7Util.makeERRSegment(ack, issueFound);
+      }
+    }
+    for (IssueFound issueFound : messageReceived.getIssuesFound())
+    {
+      if (issueFound.isWarn())
+      {
+        HL7Util.makeERRSegment(ack, issueFound);
+      }
+      if (issueFound.isSkip())
+      {
+        HL7Util.makeERRSegment(ack, issueFound);
+      }
+    }
+    if (processingId.equals(PROCESSING_ID_DEBUG))
+    {
+      for (IssueFound issueFound : messageReceived.getIssuesFound())
+      {
+        if (issueFound.isAccept())
+        {
+          HL7Util.makeERRSegment(ack, issueFound);
+        }
+      }
+    }
+    HL7Util.makeERRSegment(ack, severity, hl7ErrorCode, text, null);
+    return ack.toString();
+
+  }
+
+  public String makeAckMessageR14(MessageReceived messageReceived)
+  {
+    String controlId = messageReceived.getMessageHeader().getMessageControl();
+    String processingId = message.getMessageHeader().getProcessingStatusCode();
+    String ackCode = ACK_ACCEPT;
+    String hl7ErrorCode = "0";
+    String severity = "I";
+    int countVaccNotSkipped = 0;
+    for (Vaccination vaccination : messageReceived.getVaccinations())
+    {
+      if (!vaccination.isSkipped())
+      {
+        countVaccNotSkipped++;
+      }
+    }
+    String text = "Message accepted";
+    if (countVaccNotSkipped == 0)
+    {
+      text = "Message accepted with no vaccinations";
+    } else if (countVaccNotSkipped == 1)
+    {
+      text = "Message accepted with 1 vaccination";
+    } else
+    {
+      text = "Message accepted with " + countVaccNotSkipped + " vaccinations";
+    }
+    PotentialIssue potentialIssue = null;
+    if (messageReceived.getPatient().isSkipped())
+    {
+      text = "Message skipped: Message did not have any errors but because of business rules listed above, none of the information submitted will be accepted";
+      ackCode = ACK_ACCEPT;
+      severity = "I";
+      for (IssueFound issueFound : messageReceived.getIssuesFound())
+      {
+        if (issueFound.isSkip())
+        {
+          // text += issueFound.getDisplayText();
+          potentialIssue = issueFound.getIssue();
+          break;
+        }
+      }
+    } else if (hasErrorsOrWarnings(messageReceived))
+    {
+      if (hasErrors(messageReceived))
+      {
+        text = "Message rejected: Because of serious problems encountered none of the information in this message will be accepted (see error details above)";
+      } else
+      {
+        text = "Message accepted but some data was lost (see error details above)";
+      }
+      ackCode = ACK_ERROR;
+      severity = "E";
+      for (IssueFound issueFound : messageReceived.getIssuesFound())
+      {
+        if (issueFound.isError())
+        {
+          // text += issueFound.getDisplayText();
+
+          potentialIssue = issueFound.getIssue();
+          hl7ErrorCode = issueFound.getIssue().getHl7ErrorCode();
+          if (hl7ErrorCode != null && hl7ErrorCode.startsWith("2"))
+          {
+            ackCode = ACK_REJECT;
+          }
+          break;
+        }
+      }
+    }
+    StringBuilder ack = new StringBuilder();
+    makeHeaderR14(ack, message, null, null);
+    ack.append(
+        "SFT|" + SoftwareVersion.VENDOR + "|" + SoftwareVersion.VERSION + "|" + SoftwareVersion.PRODUCT + "|" + SoftwareVersion.BINARY_ID + "|\r");
     ack.append("MSA|" + ackCode + "|" + controlId + "|\r");
     for (IssueFound issueFound : messageReceived.getIssuesFound())
     {
@@ -1746,6 +1925,63 @@ public class VaccinationParserHL7 extends VaccinationParser
     ack.append("|"); // MSH-8 Security
     if (responseType == null)
     {
+      String messageTrigger = message.getMessageHeader().getMessageTrigger();
+      if (messageTrigger.equals(""))
+      {
+        messageTrigger = "V04";
+      }
+      responseType = "ACK^" + message.getMessageHeader().getMessageTrigger() + "^ACK";
+    }
+    ack.append("|" + responseType); // MSH-9
+    // Message
+    // Type
+    ack.append("|" + messageDate + "." + getNextAckCount()); // MSH-10 Message
+                                                             // Control ID
+    ack.append("|P"); // MSH-11 Processing ID
+    ack.append("|2.5.1"); // MSH-12 Version ID
+    ack.append("|");
+    ack.append("||NE|NE||||");
+    if (profileId != null)
+    {
+      ack.append("|" + profileId + "^CDCPHINVS|");
+    }
+    ack.append("\r");
+  }
+
+  public static void makeHeaderR14(StringBuilder ack, MessageReceivedGeneric message, String profileId, String responseType)
+  {
+    String receivingApplication = message.getMessageHeader().getSendingApplication();
+    String receivingFacility = message.getMessageHeader().getSendingFacility();
+    String sendingApplication = message.getMessageHeader().getReceivingApplication();
+    String sendingFacility = message.getMessageHeader().getReceivingFacility();
+    if (receivingApplication == null)
+    {
+      receivingApplication = "";
+    }
+    if (receivingFacility == null)
+    {
+      receivingFacility = "";
+    }
+    if (sendingApplication == null || sendingApplication.equals(""))
+    {
+      sendingApplication = "MCIR";
+    }
+    if (sendingFacility == null || sendingFacility.equals(""))
+    {
+      sendingFacility = "MCIR";
+    }
+    SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmssZ");
+    String messageDate = sdf.format(new Date());
+    // MSH
+    ack.append("MSH|^~\\&");
+    ack.append("|" + sendingApplication); // MSH-3 Sending Application
+    ack.append("|" + sendingFacility); // MSH-4 Sending Facility
+    ack.append("|" + receivingApplication); // MSH-5 Receiving Application
+    ack.append("|" + receivingFacility); // MSH-6 Receiving Facility
+    ack.append("|" + messageDate); // MSH-7 Date/Time of Message
+    ack.append("|"); // MSH-8 Security
+    if (responseType == null)
+    {
       responseType = "ACK^" + message.getMessageHeader().getMessageTrigger() + "^" + message.getMessageHeader().getMessageStructure();
     }
     ack.append("|" + responseType); // MSH-9
@@ -1769,6 +2005,18 @@ public class VaccinationParserHL7 extends VaccinationParser
     for (IssueFound issueFound : messageReceived.getIssuesFound())
     {
       if (issueFound.getIssueAction().equals(IssueAction.ERROR))
+      {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private static boolean hasErrorsOrWarnings(MessageReceivedGeneric messageReceived)
+  {
+    for (IssueFound issueFound : messageReceived.getIssuesFound())
+    {
+      if (issueFound.getIssueAction().equals(IssueAction.ERROR) || issueFound.getIssueAction().equals(IssueAction.WARN))
       {
         return true;
       }

@@ -34,6 +34,7 @@ public class HL7Util
   public static final String PROCESSING_ID_PRODUCTION = "P";
   public static final String PROCESSING_ID_TRAINING = "T";
 
+  public static final String PROFILE_ACKNWOLEDGMENT = "Z23";
   public static final String QUERY_RESULT_NO_MATCHES = "Z34";
   public static final String QUERY_RESULT_LIST_OF_CANDIDATES = "Z31";
   public static final String QUERY_RESULT_IMMUNIZATION_HISTORY = "Z32";
@@ -116,14 +117,14 @@ public class HL7Util
     ack.append("|" + ppme.getReceivingFacility()); // MSH-6 Receiving Facility
     ack.append("|" + messageDate); // MSH-7 Date/Time of Message
     ack.append("|"); // MSH-8 Security
-    ack.append("|ACK"); // MSH-9
+    ack.append("|ACK^V04^ACK"); // MSH-9
     // Message
     // Type
     ack.append("|" + messageDate + "." + getNextAckCount()); // MSH-10 Message
                                                              // Control ID
     ack.append("|P"); // MSH-11 Processing ID
     ack.append("|2.5.1"); // MSH-12 Version ID
-    ack.append("|\r");
+    ack.append("|||NE|NE|||||Z23^CDCPHINVS|\r");
     ack.append("SFT|" + SoftwareVersion.VENDOR + "|" + SoftwareVersion.VERSION + "|" + SoftwareVersion.PRODUCT + "|" + SoftwareVersion.BINARY_ID
         + "|\r");
     ack.append("MSA|" + ackType + "|" + ppme.getMessageKey() + "|\r");
@@ -286,15 +287,11 @@ public class HL7Util
           ack.append("Data was ignored");
         }
         ack.append("^HL70533");
-
-      } else
-      {
-        ack.append("^^^");
-      }
-      ack.append("DQA" + padZeros(pi.getIssueId()));
-      ack.append("^");
-      ack.append(pi.getDisplayText());
-      ack.append("^HL70533");
+        ack.append("DQA" + padZeros(pi.getIssueId()));
+        ack.append("^");
+        ack.append(pi.getDisplayText());
+        ack.append("^HL70533");
+      } 
     }
 
   }
@@ -321,7 +318,7 @@ public class HL7Util
       if (hl7Reference.length() > 0)
       {
         ack.append("^");
-        pos = hl7Reference.indexOf("\\.");
+        pos = hl7Reference.indexOf(".");
         if (pos == -1)
         {
           ack.append(hl7Reference);

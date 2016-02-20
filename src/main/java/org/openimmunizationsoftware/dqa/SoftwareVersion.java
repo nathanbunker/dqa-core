@@ -9,9 +9,9 @@ package org.openimmunizationsoftware.dqa;
 
 public class SoftwareVersion
 {
-  public static final String VENDOR = "OIS";
-  public static final String VERSION = "1.09.00";
+  public static final String VENDOR = "AIRA";
+  public static final String VERSION = "1.10.00";
   public static final String PRODUCT = "DQA";
-  public static final String RELEASE_DATE = "16 Oct 2014";
-  public static final String BINARY_ID = "";
+  public static final String RELEASE_DATE = "19 Feb 2016";
+  public static final String BINARY_ID = "1.10.00.20160219";
 }
