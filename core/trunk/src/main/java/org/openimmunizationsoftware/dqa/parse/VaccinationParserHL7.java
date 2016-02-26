@@ -53,6 +53,7 @@ import org.openimmunizationsoftware.dqa.db.model.received.types.PhoneNumber;
 import org.openimmunizationsoftware.dqa.manager.CodeMasterManager;
 import org.openimmunizationsoftware.dqa.manager.PotentialIssues;
 import org.openimmunizationsoftware.dqa.process.QueryResult;
+import org.tch.fc.model.Admin;
 import org.tch.fc.model.EvaluationActual;
 import org.tch.fc.model.ForecastActual;
 
@@ -1107,12 +1108,8 @@ public class VaccinationParserHL7 extends VaccinationParser
           obsId.setText("Vaccine due next");
           obsId.setTable("LN");
           String vaccineCvx = forecastActual.getVaccineCvx();
-          if (vaccineCvx.equals(""))
-          {
-            vaccineCvx = forecastActual.getForecastItem().getVaccineCvx();
-          }
           obsValue.setCode(vaccineCvx);
-          obsValue.setText(forecastActual.getForecastItem().getLabel());
+          obsValue.setText(forecastActual.getVaccineGroup().getLabel());
           obsValue.setTable("CVX");
           makeOBX(ack, count++, obsId, obsValue, today, subId);
 
@@ -1130,37 +1127,9 @@ public class VaccinationParserHL7 extends VaccinationParser
           obsId.setCode("59783-1");
           obsId.setText("Status in immunization series");
           obsId.setTable("LN");
-          if (forecastActual.isComplete())
-          {
-            makeOBX(ack, count++, obsId, "Complete", today, subId);
-          } else if (forecastActual.getDueDate() != null && forecastActual.getDueDate().after(today))
-          {
-            makeOBX(ack, count++, obsId, "Up-to-date", today, subId);
-          } else if (forecastActual.getOverdueDate() != null && forecastActual.getOverdueDate().before(today))
-          {
-            makeOBX(ack, count++, obsId, "Due", today, subId);
-          } else
-          {
-            makeOBX(ack, count++, obsId, "Overdue", today, subId);
-          }
+          makeOBX(ack, count++, obsId, forecastActual.getAdmin().getLabel(), today, subId);
 
-          if (forecastActual.getDueDate() != null && !forecastActual.isComplete())
-          {
-            obsId = new CodedEntity(CodeTable.Type.OBSERVATION_IDENTIFIER);
-            obsId.setCode("30980-7");
-            obsId.setText("Date vaccine due");
-            obsId.setTable("LN");
-            makeOBX(ack, count++, obsId, forecastActual.getDueDate(), today, subId);
-            if (forecastActual.getValidDate() != null)
-            {
-              obsId = new CodedEntity(CodeTable.Type.OBSERVATION_IDENTIFIER);
-              obsId.setTable("LN");
-              obsId.setCode("30981-5");
-              obsId.setText("Earliest date to give");
-              makeOBX(ack, count++, obsId, forecastActual.getValidDate(), today, subId);
-            }
-          }
-          if (forecastActual.getDoseNumber() != null && !forecastActual.getDoseNumber().equals("*") && !forecastActual.getDoseNumber().equals(""))
+          if (forecastActual.getDoseNumber() != null && !forecastActual.getDoseNumber().equals(""))
           {
             obsId = new CodedEntity(CodeTable.Type.OBSERVATION_IDENTIFIER);
             obsId.setCode("30973-2");
@@ -1173,7 +1142,38 @@ public class VaccinationParserHL7 extends VaccinationParser
             {
               makeOBX(ack, count++, obsId, forecastActual.getDoseNumber(), today, subId);
             }
-
+          }
+          if (forecastActual.getDueDate() != null)
+          {
+            obsId = new CodedEntity(CodeTable.Type.OBSERVATION_IDENTIFIER);
+            obsId.setCode("30980-7");
+            obsId.setText("Date vaccine due");
+            obsId.setTable("LN");
+            makeOBX(ack, count++, obsId, forecastActual.getDueDate(), today, subId);
+          }
+          if (forecastActual.getValidDate() != null)
+          {
+            obsId = new CodedEntity(CodeTable.Type.OBSERVATION_IDENTIFIER);
+            obsId.setTable("LN");
+            obsId.setCode("30981-5");
+            obsId.setText("Earliest date to give");
+            makeOBX(ack, count++, obsId, forecastActual.getValidDate(), today, subId);
+          }
+          if (forecastActual.getOverdueDate() != null)
+          {
+            obsId = new CodedEntity(CodeTable.Type.OBSERVATION_IDENTIFIER);
+            obsId.setTable("LN");
+            obsId.setCode("59778-1");
+            obsId.setText("Date dose is overdue");
+            makeOBX(ack, count++, obsId, forecastActual.getOverdueDate(), today, subId);
+          }
+          if (forecastActual.getFinishedDate() != null)
+          {
+            obsId = new CodedEntity(CodeTable.Type.OBSERVATION_IDENTIFIER);
+            obsId.setTable("LN");
+            obsId.setCode("59777-3");
+            obsId.setText("Latest date to give");
+            makeOBX(ack, count++, obsId, forecastActual.getFinishedDate(), today, subId);
           }
         }
       }
@@ -1676,7 +1676,12 @@ public class VaccinationParserHL7 extends VaccinationParser
 
   private void makeMSA(QueryReceived queryReceived, StringBuilder ack)
   {
-    ack.append("MSA|AA|" + queryReceived.getMessageHeader().getMessageControl() + "|\r");
+    String messageControlId = queryReceived.getMessageHeader().getMessageControl();
+    if (messageControlId.equals(""))
+    {
+      messageControlId = "NONE PROVIDED";
+    }
+    ack.append("MSA|AA|" + messageControlId + "|\r");
   }
 
   public String makeAckMessage(MessageReceived messageReceived)
@@ -1725,12 +1730,13 @@ public class VaccinationParserHL7 extends VaccinationParser
       if (hasErrors(messageReceived))
       {
         text = "Message rejected: Because of serious problems encountered none of the information in this message will be accepted (see error details above)";
+        severity = "E";
       } else
       {
         text = "Message accepted but some data was lost (see error details above)";
+        severity = "W";
       }
       ackCode = ACK_ERROR;
-      severity = "E";
       for (IssueFound issueFound : messageReceived.getIssuesFound())
       {
         if (issueFound.isError())
