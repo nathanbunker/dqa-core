@@ -48,9 +48,9 @@ import org.openimmunizationsoftware.dqa.validate.Validator;
 import org.tch.fc.ConnectFactory;
 import org.tch.fc.ConnectorInterface;
 import org.tch.fc.model.ForecastActual;
-import org.tch.fc.model.ForecastItem;
 import org.tch.fc.model.Service;
 import org.tch.fc.model.Software;
+import org.tch.fc.model.SoftwareResult;
 import org.tch.fc.model.TestCase;
 import org.tch.fc.model.TestEvent;
 
@@ -436,10 +436,11 @@ public class MessageProcessor
             software.setServiceUrl(cdsServiceUrl);
             software.setService(Service.getService(cdsServiceType));
 
-            ConnectorInterface connector = ConnectFactory.createConnecter(software, ForecastItem.getForecastItemList());
+            ConnectorInterface connector = ConnectFactory.createConnecter(software);
             try
             {
-              List<ForecastActual> forecastActualList = connector.queryForForecast(testCase);
+              SoftwareResult softwareResult = new SoftwareResult();
+              List<ForecastActual> forecastActualList = connector.queryForForecast(testCase, softwareResult);
               queryResult.setForecastActualList(forecastActualList);
             } catch (IOException ioe)
             {
